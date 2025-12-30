@@ -1,0 +1,655 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F8955D39-435B-43B1-B0F7-0F66989D0FCC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>IDK</RootNamespace>
+    <AssemblyName>IDK</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>D:\games\Tabs Moded\TABS Moded\BepInEx\plugins</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>D:\games\Tabs Moded\TABS Moded\BepInEx\plugins</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AbilityCreatorSavePatch.cs" />
+    <Compile Include="Bundle %28butt%29 Stuff\Bundle Manager.cs" />
+    <Compile Include="BundledAbilitesManager.cs" />
+    <Compile Include="Code.cs" />
+    <Compile Include="DestroySelfWhenObjectDestroyed.cs" />
+    <Compile Include="DontDestroyOnLoad.cs" />
+    <Compile Include="DontGetDestroyed.cs" />
+    <Compile Include="ExampleAbilites\UpdateSaveManager.cs" />
+    <Compile Include="ExampleManager.cs" />
+    <Compile Include="FixNodeSystem.cs" />
+    <Compile Include="GlobalSettings.cs" />
+    <Compile Include="Help Componets\FunctionStoreer.cs" />
+    <Compile Include="Help Componets\MakeUnitStealth.cs" />
+    <Compile Include="IgnoreProjectileForTeam.cs" />
+    <Compile Include="MyModalPanel.cs" />
+    <Compile Include="Node Related Scripts\RunNodeAttackEffect.cs" />
+    <Compile Include="NodeScripts\AddOnCollisionAction.cs" />
+    <Compile Include="NodeScripts\GetUnitFromGameobject.cs" />
+    <Compile Include="NodeScripts\ColorObjectNodeHSV.cs" />
+    <Compile Include="NodeScripts\ColorObjectNode.cs" />
+    <Compile Include="NodeScripts\AddProjectileOnHitAction.cs" />
+    <Compile Include="NodeScripts\AnythingToUnit.cs" />
+    <Compile Include="NodeScripts\AnythingToObj.cs" />
+    <Compile Include="NodeScripts\ConvertComp2.cs" />
+    <Compile Include="NodeScripts\ConvertComp.cs" />
+    <Compile Include="NodeScripts\ConvertUnit.cs" />
+    <Compile Include="NodeScripts\FilterNode.cs" />
+    <Compile Include="NodeScripts\GetValueOfObjectVariableNode.cs" />
+    <Compile Include="NodeScripts\CreateObjectVariableNode.cs" />
+    <Compile Include="NodeScripts\DoAnimation.cs" />
+    <Compile Include="NodeScripts\GetClothes.cs" />
+    <Compile Include="NodeScripts\GetAbilites.cs" />
+    <Compile Include="NodeScripts\GetWeaponOfName.cs" />
+    <Compile Include="NodeScripts\ForEachNode.cs" />
+    <Compile Include="NodeScripts\IsAlive.cs" />
+    <Compile Include="NodeScripts\ReapetVarNode.cs" />
+    <Compile Include="NodeScripts\ClearObjectVariable.cs" />
+    <Compile Include="NodeScripts\SetObjectVariableTo.cs" />
+    <Compile Include="NodeScripts\SetWillBeRevived.cs" />
+    <Compile Include="NodeScripts\IsDead.cs" />
+    <Compile Include="NodeScripts\ReDie.cs" />
+    <Compile Include="NodeScripts\SetFistNode.cs" />
+    <Compile Include="NodeScripts\SetWeaponNode.cs" />
+    <Compile Include="NodeScripts\RotateTowardsNode.cs" />
+    <Compile Include="NodeScripts\SetActive.cs" />
+    <Compile Include="NodeScripts\GetDistanceFrom.cs" />
+    <Compile Include="NodeScripts\ConvertObj.cs" />
+    <Compile Include="NodeScripts\Duplicate.cs" />
+    <Compile Include="NodeScripts\GetEye.cs" />
+    <Compile Include="NodeScripts\GetWeapon.cs" />
+    <Compile Include="NodeScripts\LogAnything.cs" />
+    <Compile Include="NodeScripts\RunFunctionNode.cs" />
+    <Compile Include="NodeScripts\CreateFunctionNode.cs" />
+    <Compile Include="NodeScripts\IsBattleState.cs" />
+    <Compile Include="NodeScripts\PlaySlice.cs" />
+    <Compile Include="NodeScripts\ParryProjectile.cs" />
+    <Compile Include="NodeScripts\QuickBuff.cs" />
+    <Compile Include="NodeScripts\GetFieldNode.cs" />
+    <Compile Include="NodeScripts\LetGoNode.cs" />
+    <Compile Include="NodeScripts\SwapTeam.cs" />
+    <Compile Include="NodeScripts\AddProps.cs" />
+    <Compile Include="NodeScripts\TransformPositionNodeAnim.cs" />
+    <Compile Include="NodeScripts\TransfromScaleAnimated.cs" />
+    <Compile Include="NodeScripts\WhenUnitDamaged.cs" />
+    <Compile Include="NodeScripts\WhenUnitSpawned.cs" />
+    <Compile Include="NodeScripts\WhenProjectileEntersRange.cs" />
+    <Compile Include="EnumerableHelper.cs" />
+    <Compile Include="objectStorer.cs" />
+    <Compile Include="ProjectileHitHarmonyPatch.cs" />
+    <Compile Include="RemoveAfterSecondsObject.cs" />
+    <Compile Include="KillYourself.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="Node Related Scripts\connection stuff\NodeConnections.cs" />
+    <Compile Include="Node Related Scripts\connection stuff\NodeConnector.cs" />
+    <Compile Include="Node Related Scripts\NodeRunner.cs" />
+    <Compile Include="Node Related Scripts\NodeRunnerFixer.cs" />
+    <Compile Include="Node Related Scripts\NodeScene.cs" />
+    <Compile Include="Node Related Scripts\NodeSceneMovement.cs" />
+    <Compile Include="Node Related Scripts\NodeWindow.cs" />
+    <Compile Include="Main.cs" />
+    <Compile Include="Node Related Scripts\Node.cs" />
+    <Compile Include="Node Related Scripts\NodeBlueprint.cs" />
+    <Compile Include="Node Related Scripts\NodeManager.cs" />
+    <Compile Include="Node Related Scripts\Variable.cs" />
+    <Compile Include="Node Related Scripts\NodeField.cs" />
+    <Compile Include="NodeScripts\AllOtherTeam.cs" />
+    <Compile Include="NodeScripts\MostExspensiveEnemy.cs" />
+    <Compile Include="NodeScripts\MostExspensiveTeamMateUnit.cs" />
+    <Compile Include="NodeScripts\ClosestTeamMateUnit.cs" />
+    <Compile Include="NodeScripts\AllTeam.cs" />
+    <Compile Include="NodeScripts\GetMaxUnitHealth.cs" />
+    <Compile Include="NodeScripts\EndBattle.cs" />
+    <Compile Include="NodeScripts\SetUnitDamage.cs" />
+    <Compile Include="NodeScripts\SetAttackSpeed.cs" />
+    <Compile Include="NodeScripts\SetUnitHealth.cs" />
+    <Compile Include="NodeScripts\GetUnitHealth.cs" />
+    <Compile Include="NodeScripts\RandomNode.cs" />
+    <Compile Include="NodeScripts\LogVariable.cs" />
+    <Compile Include="NodeScripts\SpawnParticleNode.cs" />
+    <Compile Include="NodeScripts\WhenAbilityTriggered.cs" />
+    <Compile Include="NodeScripts\UnitWasAttacked.cs" />
+    <Compile Include="NodeScripts\WhenUnitAttacks.cs" />
+    <Compile Include="NodeScripts\WhenUnitDamages.cs" />
+    <Compile Include="NodeScripts\WhenUnitDies.cs" />
+    <Compile Include="NodeScripts\DoEveryNode.cs" />
+    <Compile Include="NodeScripts\ITriggerNode.cs" />
+    <Compile Include="NodeScripts\IfVariableNode.cs" />
+    <Compile Include="NodeScripts\SetVariableTo.cs" />
+    <Compile Include="NodeScripts\ChangeVariableBy.cs" />
+    <Compile Include="NodeScripts\InvokeMethodNode.cs" />
+    <Compile Include="NodeScripts\CreateVariableNode.cs" />
+    <Compile Include="NodeScripts\SetFieldNode.cs" />
+    <Compile Include="NodeScripts\AddForceNode.cs" />
+    <Compile Include="NodeScripts\AddGForceNode.cs" />
+    <Compile Include="NodeScripts\AddComponentNode.cs" />
+    <Compile Include="NodeScripts\GetComponentNode.cs" />
+    <Compile Include="NodeScripts\TransformRotationNode.cs" />
+    <Compile Include="NodeScripts\DestroyNode.cs" />
+    <Compile Include="NodeScripts\TransformScaleNode.cs" />
+    <Compile Include="NodeScripts\TransformPositionNode.cs" />
+    <Compile Include="NodeScripts\GoToUnitNode.cs" />
+    <Compile Include="NodeScripts\PlaySoundNode.cs" />
+    <Compile Include="NodeScripts\ToggleProps.cs" />
+    <Compile Include="NodeScripts\MakeUnitImmune.cs" />
+    <Compile Include="NodeScripts\PlayAllAbilites.cs" />
+    <Compile Include="NodeScripts\SpawnUnitNode.cs" />
+    <Compile Include="NodeScripts\StunWeaponsNode.cs" />
+    <Compile Include="NodeScripts\SpawnExplosionNode.cs" />
+    <Compile Include="NodeScripts\AddEffectNode.cs" />
+    <Compile Include="NodeScripts\SpawnProjectileNode.cs" />
+    <Compile Include="NodeScripts\Die.cs" />
+    <Compile Include="NodeScripts\GetGameobject.cs" />
+    <Compile Include="NodeScripts\FreezeNode.cs" />
+    <Compile Include="NodeScripts\ReapetNode.cs" />
+    <Compile Include="NodeScripts\PauseNode.cs" />
+    <Compile Include="NodeScripts\Deal Damage.cs" />
+    <Compile Include="NodeScripts\IBehaviorNode.cs" />
+    <Compile Include="NodeScripts\INode.cs" />
+    <Compile Include="NodeScripts\IValueNode.cs" />
+    <Compile Include="NodeScripts\EnemyNode.cs" />
+    <Compile Include="NodeScripts\CreateGameobject.cs" />
+    <Compile Include="NodeScripts\SelfNode.cs" />
+    <Compile Include="NodeScripts\WhenBattleBegins.cs" />
+    <Compile Include="object holder.cs" />
+    <Compile Include="OnlyRunWhenAddedToUnit.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuickLine.cs" />
+    <Compile Include="Refelection.cs" />
+    <Compile Include="Node Related Scripts\Saving Stuff\SavedNode.cs" />
+    <Compile Include="Node Related Scripts\Saving Stuff\SavedNodeScene.cs" />
+    <Compile Include="Node Related Scripts\Saving Stuff\SavedNodeSceneStorer.cs" />
+    <Compile Include="Revive.cs" />
+    <Compile Include="SetSiblingIndex.cs" />
+    <Compile Include="StreamedSceneManager.cs" />
+    <Compile Include="SurfaceEvent.cs" />
+    <Compile Include="temp.cs" />
+    <Compile Include="Utility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Accessibility" />
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="AstarPathfindingProject">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\AstarPathfindingProject.dll</HintPath>
+    </Reference>
+    <Reference Include="Backtrace.Unity">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Backtrace.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="BakeryRuntimeAssembly">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\BakeryRuntimeAssembly.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Harmony">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\BepInEx.Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Preloader">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\BepInEx.Preloader.dll</HintPath>
+    </Reference>
+    <Reference Include="BitCode">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\BitCode.dll</HintPath>
+    </Reference>
+    <Reference Include="BitCode.Debug">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\BitCode.Debug.dll</HintPath>
+    </Reference>
+    <Reference Include="BitCode.Platform">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\BitCode.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="BitCode.Platform.Steamworks">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\BitCode.Platform.Steamworks.dll</HintPath>
+    </Reference>
+    <Reference Include="bolt">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\bolt.dll</HintPath>
+    </Reference>
+    <Reference Include="bolt.user">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\bolt.user.dll</HintPath>
+    </Reference>
+    <Reference Include="Cinemachine">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Cinemachine.dll</HintPath>
+    </Reference>
+    <Reference Include="HarmonyXInterop">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\HarmonyXInterop.dll</HintPath>
+    </Reference>
+    <Reference Include="InControl">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\InControl.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip.Unity">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Ionic.Zip.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="modio.UnityPlugin">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\modio.UnityPlugin.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Data.Sqlite">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Mono.Data.Sqlite.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Mono.Posix.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.WebBrowser">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Mono.WebBrowser.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\core\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="NaughtyAttributes.Core">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\NaughtyAttributes.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NaughtyAttributes.Test">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\NaughtyAttributes.Test.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Novell.Directory.Ldap">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Novell.Directory.Ldap.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.ClipperLib">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Pathfinding.ClipperLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.Ionic.Zip.Reduced">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
+    <Reference Include="Pathfinding.Poly2Tri">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Pathfinding.Poly2Tri.dll</HintPath>
+    </Reference>
+    <Reference Include="Photon3Unity3D">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Photon3Unity3D.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonBolt">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\PhotonBolt.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonRealtime">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\PhotonRealtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.OdinInspector.Attributes">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.OdinInspector.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.OdinInspector.CompatibilityLayer">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.OdinInspector.CompatibilityLayer.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization.AOTGenerated">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.Serialization.AOTGenerated.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization.Config">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.Serialization.Config.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Utilities">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Sirenix.Utilities.dll</HintPath>
+    </Reference>
+    <Reference Include="SonyNP">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\SonyNP.dll</HintPath>
+    </Reference>
+    <Reference Include="SonyPS4CommonDialog">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\SonyPS4CommonDialog.dll</HintPath>
+    </Reference>
+    <Reference Include="SonyPS4SaveData">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\SonyPS4SaveData.dll</HintPath>
+    </Reference>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Steamworks.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="udpkit">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\udpkit.dll</HintPath>
+    </Reference>
+    <Reference Include="udpkit.common">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\udpkit.common.dll</HintPath>
+    </Reference>
+    <Reference Include="udpkit.platform.dotnet">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\udpkit.platform.dotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="udpkit.platform.null">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\udpkit.platform.null.dll</HintPath>
+    </Reference>
+    <Reference Include="udpkit.platform.photon">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\udpkit.platform.photon.dll</HintPath>
+    </Reference>
+    <Reference Include="UMTL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\plugins\UMTL.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.DataPrivacy">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Analytics.DataPrivacy.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.StandardEvents">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Analytics.StandardEvents.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.Tracker">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Analytics.Tracker.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst.Cecil">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst.Cecil.Mdb">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst.Cecil.Pdb">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst.Cecil.Rocks">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Burst.Unsafe">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Burst.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Collections">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Entities">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Entities.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Entities.Hybrid">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Entities.Hybrid.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Entities.Properties">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Entities.Properties.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Entities.StaticTypeRegistry">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Entities.StaticTypeRegistry.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Jobs">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Jobs.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.MemoryProfiler">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.MemoryProfiler.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Postprocessing.Runtime">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Properties">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Properties.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Timeline">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Transforms">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Transforms.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Transforms.Hybrid">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Transforms.Hybrid.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AccessibilityModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AndroidJNIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ARModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ARModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterInputModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterRendererModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CrashReportingModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DSPGraphModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GameCenterModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GridModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.GridModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.HotReloadModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.LocalizationModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PerformanceReportingModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ProfilerModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpatialTracking">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SpatialTracking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteMaskModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteShapeModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.StreamingModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubstanceModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.SubsystemsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainPhysicsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TextCoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TilemapModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TLSModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UmbraModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UNETModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UNETModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityConnectModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityTestProtocolModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VehiclesModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VFXModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.VFXModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VideoModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.WindModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.WindModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.XR.LegacyInputHelpers">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.XR.LegacyInputHelpers.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\UnityEngine.XRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\websocket-sharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Bundle %28butt%29 Stuff\ability" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Bundle %28butt%29 Stuff\scenes" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\" />
+    <Folder Include="obj\Debug\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Bundle %28butt%29 Stuff\scenes.manifest" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13#FFCC00Death Explosion#ff0000.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13Baisic Damage.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13Baisic Parry.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13Spawn#ff0000 Vampires.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13#00AAFFCat Lives.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Examplesize=13#ff0000RA#00ff00IN#0000ffBOW #ffdfc4SKIN.abilityEncoded" />
+    <EmbeddedResource Include="ExampleAbilites\size=8Example#339933size=13Throw up.abilityEncoded" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ExampleAbilites\Cat lives.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
