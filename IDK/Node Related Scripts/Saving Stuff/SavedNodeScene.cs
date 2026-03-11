@@ -31,7 +31,7 @@ namespace IDK
             SavedNodeSceneStorer.savedNodeScenes.Add(savedNodeScene);
             SavedNode[] EveryNode = nodescene.everyNode;
             int[] EveryID = new int[0];
-            Debug.Log($"Starting to Save {nodescene.sceneName}");
+            DeveloperLogger.Log($"Starting to Save {nodescene.sceneName}");
             // Convert every SavedNode into an id 
             for (int i = 0; i < EveryNode.Length; i++)
             {
@@ -39,12 +39,12 @@ namespace IDK
                 int CurrentID = EveryNode[i].GetNodeInstanceID();
                 // Add Blueprint
                 savedNodeScene.blueprints.Add(CurrentID);
-                savedNodeScene.blueprints2.Add(EveryNode[i].blueprint.key);
-                Debug.Log($"Saved blueprint for {EveryNode[i].blueprint.Name} ({CurrentID})");
+                savedNodeScene.blueprints2.Add(EveryNode[i].Blueprint.key);
+                DeveloperLogger.Log($"Saved blueprint for {EveryNode[i].Blueprint.Name} ({CurrentID})");
                 // Add Position
                 savedNodeScene.Positions.Add(CurrentID);
                 savedNodeScene.Positions2.Add(EveryNode[i].position);
-                Debug.Log($"Saved position for {EveryNode[i].blueprint.Name} ({CurrentID})");
+                DeveloperLogger.Log($"Saved position for {EveryNode[i].Blueprint.Name} ({CurrentID})");
                 // Add Connections
                 if (EveryNode[i].connections != null)
                 {
@@ -53,14 +53,14 @@ namespace IDK
                         connectionsTypes = new List<NodeBlueprint.ConnectionType>(),
                         otherIDs = new List<int>(),
                     };
-                    Debug.Log("Begining adding connections, connection count is" + EveryNode[i].connections.Count);
+                    DeveloperLogger.Log("Begining adding connections, connection count is" + EveryNode[i].connections.Count);
                     List<Node.Connection> fixedConnections = EveryNode[i].connections.ToList().Where(n => n.savedNode != null).ToList();
                     if (fixedConnections.Count != 0)
                     {
                         for (int connectionsIndex = 0; connectionsIndex < fixedConnections.Count; connectionsIndex++)
                         {
-                            Debug.Log($"Adding connection {fixedConnections[connectionsIndex].savedNode.blueprint.Name}");
-                            Debug.Log($"With connectionType of {fixedConnections[connectionsIndex].connectionsType}");
+                            DeveloperLogger.Log($"Adding connection {fixedConnections[connectionsIndex].savedNode.Blueprint.Name}");
+                            DeveloperLogger.Log($"With connectionType of {fixedConnections[connectionsIndex].connectionsType}");
                             if (fixedConnections[connectionsIndex].savedNode == null)
                             {
                                 savedConnections.connectionsTypes.Add(fixedConnections[connectionsIndex].connectionsType);
@@ -78,9 +78,9 @@ namespace IDK
                     savedNodeScene.connections2.Add(savedConnections);
                 }
                 
-                Debug.Log($"Saved connections for {EveryNode[i].blueprint.Name} ({CurrentID})");
+                DeveloperLogger.Log($"Saved connections for {EveryNode[i].Blueprint.Name} ({CurrentID})");
                 // Add Fields
-                Debug.Log("Commencing field saving");
+                DeveloperLogger.Log("Commencing field saving");
                 savedNodeScene.fields.Add(CurrentID);
                 string fieldsCombined = "";
                 for (int fieldIndex = 0; fieldIndex < EveryNode[i].fields.Count; fieldIndex++)
@@ -88,7 +88,7 @@ namespace IDK
                     fieldsCombined += EveryNode[i].fields[fieldIndex] + "###";
                 }
                 savedNodeScene.fields2.Add(fieldsCombined);
-                Debug.Log($"Saved fields for {EveryNode[i].blueprint.Name} ({CurrentID})");
+                DeveloperLogger.Log($"Saved fields for {EveryNode[i].Blueprint.Name} ({CurrentID})");
 
 
             }
@@ -98,9 +98,9 @@ namespace IDK
             savedNodeScene.sceneImage = nodescene.sceneImage;
             savedNodeScene.sceneName = nodescene.sceneName;
             savedNodeScene.zoom = nodescene.zoom;
-            Debug.Log($"Saved Extra Info");
-            Debug.Log($"Done saving {nodescene.sceneName}");
-            Debug.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
+            DeveloperLogger.Log($"Saved Extra Info");
+            DeveloperLogger.Log($"Done saving {nodescene.sceneName}");
+            DeveloperLogger.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
             return savedNodeScene;
 
         }
@@ -114,34 +114,34 @@ namespace IDK
             for (int i = 0; i < Positions.Count; i++)
             {
                 int currentID = Positions[i];
-                Debug.Log("starting with node:" + currentID);
+                DeveloperLogger.Log("starting with node:" + currentID);
                 GameObject node = new GameObject("Saved Node");
-                Debug.Log("Node:" + node);
+                DeveloperLogger.Log("Node:" + node);
                 Object.DontDestroyOnLoad(node);
                 SavedNode savedNode = node.AddComponent<SavedNode>();
                 SavedNodeSceneStorer.SavedNodes.Add(savedNode);
                 //blueprint
-                savedNode.blueprint = Main.nodeDatabase[blueprints2[i]];
-                Debug.Log($"Converted blueprint for {savedNode.blueprint.Name}");
+                savedNode.blueprintName = blueprints2[i];
+                DeveloperLogger.Log($"Converted blueprint for {blueprints2[i]}");
                 //position
                 savedNode.position = Positions2[i];
-                Debug.Log($"Converted position for {savedNode.blueprint.Name}");
+                DeveloperLogger.Log($"Converted position for {blueprints2[i]}");
                 // fields
                 savedNode.fields = fields2[i].Split(separator: new string[] { "###" }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
 
-                Debug.Log($"Converted fields for {savedNode.blueprint.Name}");
+                DeveloperLogger.Log($"Converted fields for {blueprints2[i]}");
                 conversion.Add(currentID, savedNode);
-                Debug.Log($"Done converting for node:" + savedNode.blueprint.Name);
+                DeveloperLogger.Log($"Done converting for node:" + blueprints2[i]);
             }
-            Debug.Log("Done with baisic stuff!");
+            DeveloperLogger.Log("Done with baisic stuff!");
             // connections
             for (int i = 0; i < Positions.Count; i++)
             {
                 SavedNode savedNode = conversion[Positions[i]];
-                Debug.Log("Starting Connection converting for:" + savedNode?.blueprint?.Name);
+                DeveloperLogger.Log("Starting Connection converting for:" + blueprints2[i]);
                 List<Node.Connection> connections = new List<Node.Connection>();
-                Debug.Log($"Converting connections for {savedNode?.blueprint?.Name}");
-                Debug.Log($"Safety Check! {connections2[i].connectionsTypes.Count == connections2[i].otherIDs.Count}");
+                DeveloperLogger.Log($"Converting connections for {blueprints2[i]}");
+                DeveloperLogger.Log($"Safety Check! {connections2[i].connectionsTypes.Count == connections2[i].otherIDs.Count}");
                 for (int i2 = 0; i2 < connections2[i].connectionsTypes.Count; i2++)
                 {
                     if (connections2[i].otherIDs[i2] == 999)
@@ -154,7 +154,7 @@ namespace IDK
                 }
 
                 savedNode.connections = connections;
-                Debug.Log($"Converted connections for {savedNode.blueprint.Name}");
+                DeveloperLogger.Log($"Converted connections for {blueprints2[i]}");
             }
             scene.everyNode = conversion.Values.ToArray();
             scene.id = id;
@@ -162,8 +162,8 @@ namespace IDK
             scene.sceneImage = sceneImage;
             scene.sceneName = sceneName;
             scene.zoom = zoom;
-            Debug.Log($"Converted extra info");
-            Debug.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
+            DeveloperLogger.Log($"Converted extra info");
+            DeveloperLogger.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
             return scene;
 
         }

@@ -29,6 +29,8 @@ namespace IDK
             GiveAnything,
             ReciveObjectVariable,
             GiveObjectVariable,
+            ReciveLeftRight,
+            GiveLeftRight,
         }
         public enum Type
         {
@@ -73,11 +75,10 @@ namespace IDK
         public List<Field> fields = new List<Field>();
         public List<ConnectionType> connections;
         public Type type;
-
         public Node Spawn()
         {
 
-            var node = Instantiate(Bundle_Manager.Node);
+            var node = Instantiate(BundleManager.node);
 
             node.AddComponent<NodeWindow>().dragRectTransform = node.GetComponent<RectTransform>();
 
@@ -170,7 +171,7 @@ namespace IDK
             }
 
             Node nodeComp = node.AddComponent<Node>();
-            nodeComp.blueprint = this;
+            nodeComp.nodeBlueprint = this;
             node.transform.position = new Vector3(500, 195, 0);
             Destroy(node.transform.Find("Fields").Find("Field").gameObject);
             Transform reciver = node.transform.Find("Recives");
@@ -179,59 +180,67 @@ namespace IDK
             {
                 if (connector == ConnectionType.Triggered)
                 {
-                    Instantiate(Bundle_Manager.ConnecterTrig, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.Triggered;
+                    Instantiate(BundleManager.connecterTrig, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveUnit)
                 {
-                    Instantiate(Bundle_Manager.ConnecterUnit, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.ReciveUnit;
+                    Instantiate(BundleManager.connecterUnit, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveGameObject)
                 {
-                    Instantiate(Bundle_Manager.ConnecterGameObject, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.ReciveGameObject;
+                    Instantiate(BundleManager.connecterGameObject, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveVariable)
                 {
-                    Instantiate(Bundle_Manager.ConnecterVar, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.ReciveVariable;
+                    Instantiate(BundleManager.connecterVar, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveComponent)
                 {
-                    Instantiate(Bundle_Manager.ConnectorComponent, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.ReciveComponent;
+                    Instantiate(BundleManager.connectorComponent, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveObjectVariable)
                 {
-                    Instantiate(Bundle_Manager.ConnecterObjectVariable, reciver).GetComponent<NodeConnector>().connectionType = connector;
+                    Instantiate(BundleManager.connecterObjectVariable, reciver).GetComponent<NodeConnector>().connectionType = connector;
+                }
+                if (connector == ConnectionType.ReciveLeftRight)
+                {
+                    Instantiate(BundleManager.connecterLeftRight, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.ReciveAnything)
                 {
-                    Instantiate(Bundle_Manager.ConnecterAnything, reciver).GetComponent<NodeConnector>().connectionType = ConnectionType.ReciveAnything;
+                    Instantiate(BundleManager.connecterAnything, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.Trigger)
                 {
-                    Instantiate(Bundle_Manager.ConnecterTrig, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.Trigger;
+                    Instantiate(BundleManager.connecterTrig, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveGameObject)
                 {
-                    Instantiate(Bundle_Manager.ConnecterGameObject, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.GiveGameObject;
+                    Instantiate(BundleManager.connecterGameObject, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveUnit)
                 {
-                    Instantiate(Bundle_Manager.ConnecterUnit, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.GiveUnit;
+                    Instantiate(BundleManager.connecterUnit, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveVariable)
                 {
-                    Instantiate(Bundle_Manager.ConnecterVar, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.GiveVariable;
+                    Instantiate(BundleManager.connecterVar, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveComponent)
                 {
-                    Instantiate(Bundle_Manager.ConnectorComponent, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.GiveComponent;
+                    Instantiate(BundleManager.connectorComponent, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveObjectVariable)
                 {
-                    Instantiate(Bundle_Manager.ConnecterObjectVariable, outer).GetComponent<NodeConnector>().connectionType = connector;
+                    Instantiate(BundleManager.connecterObjectVariable, outer).GetComponent<NodeConnector>().connectionType = connector;
+                }
+                if (connector == ConnectionType.GiveLeftRight)
+                {
+                    Instantiate(BundleManager.connecterLeftRight, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
                 if (connector == ConnectionType.GiveAnything)
                 {
-                    Instantiate(Bundle_Manager.ConnecterAnything, outer).GetComponent<NodeConnector>().connectionType = ConnectionType.GiveAnything;
+                    Instantiate(BundleManager.connecterAnything, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
             }
             int reciverHeight = (int)(reciver.childCount * 1.3) * 12 + 8;

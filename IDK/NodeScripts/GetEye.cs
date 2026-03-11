@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace IDK.NodeScripts
 {
@@ -15,9 +16,8 @@ namespace IDK.NodeScripts
             Debug.Log("Units Length: " + units.Length);
             foreach (var unitIndex in units)
             {
-                Debug.Log($"Getting bodypart! (its {fields[0]}!)");
                 EyeSpawner eyeSpawner = unitIndex.gameObject.GetComponentInChildren<EyeSpawner>();
-                valuePool.AddRange(eyeSpawner.spawnedEyes.ToArray());
+                valuePool.AddRange(eyeSpawner.spawnedEyes.Select(n => n.gameObject).ToArray());
             }
             return valuePool;
         }

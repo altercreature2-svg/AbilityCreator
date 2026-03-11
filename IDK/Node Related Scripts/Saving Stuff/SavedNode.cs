@@ -21,14 +21,18 @@ namespace IDK
             return valuePools[unit];
         }
         public Node corispondingNode;
-        public NodeBlueprint blueprint;
+        public string blueprintName;
+        public NodeBlueprint Blueprint { get 
+            {
+                return Main.nodeDatabase[blueprintName];
+            } }
         public object m_instance;
         public object InstanceFunction
         {
             get
             {
                 if (m_instance == null)
-                    m_instance = Activator.CreateInstance(blueprint.nodeFunction); ;
+                    m_instance = Activator.CreateInstance(Blueprint.nodeFunction); ;
                 return m_instance;
             }
         }
@@ -37,7 +41,7 @@ namespace IDK
         public Vector3 position;
         public override string ToString()
         {
-            return $"{blueprint.Name} ({GetNodeInstanceID()})";
+            return $"{Blueprint.Name} ({GetNodeInstanceID()})";
         }
         public int GetNodeInstanceID() 
         {

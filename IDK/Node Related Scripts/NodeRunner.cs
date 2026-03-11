@@ -35,15 +35,15 @@ namespace IDK
             foreach (SavedNode savedNode in savedNodes)
             {
                 savedNode.nodeRunners.Add(unit, this);
-                if (savedNode.blueprint.nodeFunction != null)
+                if (savedNode.Blueprint.nodeFunction != null)
                 {
-                    if (savedNode.blueprint.nodeFunction.BaseType == typeof(ITriggerNode))
+                    if (savedNode.Blueprint.nodeFunction.BaseType == typeof(ITriggerNode))
                     {
                         var triggerNode = (ITriggerNode)savedNode.InstanceFunction;
                         triggerNode.StartFrame(savedNode, unit, savedNode.connections, savedNode.fields.ToArray(), this);
                         triggerNodes.Add(triggerNode);
                     }
-                    if (savedNode.blueprint.nodeFunction == typeof(ReDie))
+                    if (savedNode.Blueprint.nodeFunction == typeof(ReDie))
                     {
                         Unit[] units = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
                         for (int i = 0; i < units.Length; i++)
@@ -67,7 +67,7 @@ namespace IDK
         public IEnumerator RunNode(SavedNode node)
         {
             yield return null;
-            Debug.Log("Running node " + node?.blueprint?.Name + "...");
+            Debug.Log("Running node " + node?.Blueprint?.Name + "...");
             if (node == null)
             {
                 Debug.Log("nvm this node is null 😣");
@@ -89,9 +89,9 @@ namespace IDK
             {
                 try
                 {
-                    if (node?.savedNode?.blueprint?.nodeFunction == null)
+                    if (node?.savedNode?.Blueprint?.nodeFunction == null)
                         continue;
-                    if (node.savedNode.blueprint.nodeFunction.BaseType != typeof(IValueNode))
+                    if (node.savedNode.Blueprint.nodeFunction.BaseType != typeof(IValueNode))
                         continue;
                     IValueNode valueNode = (IValueNode)node.savedNode.InstanceFunction;
                     valueNode.GetValuePool(node.savedNode, transform.root.GetComponent<Unit>(), node.savedNode.connections, node.savedNode.fields.ToArray());

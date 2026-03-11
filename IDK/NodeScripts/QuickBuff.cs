@@ -1,5 +1,4 @@
-﻿using ExitGames.Client.Photon.StructWrapping;
-using Landfall.TABS;
+﻿using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,17 +32,27 @@ namespace IDK.NodeScripts
             }
             catch { }
             Weapon[] weapons = unit.GetComponentsInChildren<Weapon>();
-            for (int i = 0; i < weapons.Length; i++)
+            if (mode == "Increase damage" || mode == "All")
             {
-                if (mode == "Increase damage" || mode == "All")
+                for (int i = 0; i < weapons.Length; i++)
                 {
+
+                    float oldLevelMultiplier = weapons[i].levelMultiplier;
                     weapons[i].levelMultiplier += (weapons[i].levelMultiplier * buff) / 10;
+                    if (weapons[i] is MeleeWeapon meleeWeapon)
+                    {
+                        CollisionWeapon collisionWeapon = (CollisionWeapon)meleeWeapon.GetField("collision");
+                        if (!collisionWeapon)
+                            continue;
+                        collisionWeapon.damage /= oldLevelMultiplier;
+                        collisionWeapon.damage *= meleeWeapon.levelMultiplier;
+                    }
                 }
             }
             if (mode == "Speed up attacks" || mode == "All")
             {
                 unit.gameObject.AddComponent<AttackSpeedOverTimeEffect>().attackSpeedToAdd = buff;
-                unit.gameObject.GetComponent<AttackSpeedOverTimeEffect>().decaySpeed = buff/length;
+                unit.gameObject.GetComponent<AttackSpeedOverTimeEffect>().decaySpeed = buff / length;
                 unit.gameObject.GetComponent<AttackSpeedOverTimeEffect>().procEvent = new UnityEngine.Events.UnityEvent();
                 unit.gameObject.GetComponent<AttackSpeedOverTimeEffect>().DoEffect();
             }

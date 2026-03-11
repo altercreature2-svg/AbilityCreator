@@ -16,7 +16,7 @@ namespace IDK.NodeScripts
             Debug.Log("Units Length: " + units.Length);
             foreach (var unitIndex in units)
             {
-                Debug.Log($"Getting bodypart! (its {fields[0]}!)");
+                
                 if (fields[0] == "Root")
                 {
                     valuePool.AddValue(unitIndex.gameObject);

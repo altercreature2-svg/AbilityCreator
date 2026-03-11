@@ -30,22 +30,22 @@ public class AbilityCreatorSavePatch : ISaveUnit
     public void Pre(ExtraSerializedUnit extraSerializedUnit)
     {
         List<NodeScene> allNodeScenes = Main.nodeScenes;
-        Debug.Log($"Extra serialized unit detected! {extraSerializedUnit.m_name}");
+        DeveloperLogger.Log($"Extra serialized unit detected! {extraSerializedUnit.m_name}");
         for (int i = 0; i < extraSerializedUnit.extraFieldNames.Count; i++)
         {
-            Debug.Log($"Field's name: {extraSerializedUnit.extraFieldNames[i]}");
+            DeveloperLogger.Log($"Field's name: {extraSerializedUnit.extraFieldNames[i]}");
             string encodedString = extraSerializedUnit.extraFieldValues[i];
             byte[] decodedBytes = System.Convert.FromBase64String(encodedString);
             string decodedText = System.Text.Encoding.UTF8.GetString(decodedBytes);
             var nodeScene = Main.DeserializeAbility(decodedText);
-            Debug.Log("Deserialized ability!");
+            DeveloperLogger.Log("Deserialized ability!");
             if (Main.IsAbilityWritten(nodeScene))
                 continue;
             if (BundledAbilitesManager.bundledAbilities.Exists(n => n.abilityData == decodedText))
                 continue;
             BundledAbilitesManager.BundledAbility bundledAbility = BundledAbilitesManager.BundleAbility(extraSerializedUnit, nodeScene, decodedText);
-            Debug.Log($"Bundled ability!");
-            Debug.Log($"Adding ability {bundledAbility}");
+            DeveloperLogger.Log($"Bundled ability!");
+            DeveloperLogger.Log($"Adding ability {bundledAbility}");
             BundledAbilitesManager.bundledAbilities.Add(bundledAbility);
             StartCoroutine(Main.ForceShowModal(bundledAbility));
         }
@@ -55,20 +55,20 @@ public class AbilityCreatorSavePatch : ISaveUnit
         List<NodeScene> nodeScenes = new List<NodeScene>();
         for (int i = 0; i < unitBlueprint.objectsToSpawnAsChildren.Length; i++)
         {
-            Debug.Log("Checking if abiltiy is custom :" + unitBlueprint.objectsToSpawnAsChildren[i]);
+            DeveloperLogger.Log("Checking if abiltiy is custom :" + unitBlueprint.objectsToSpawnAsChildren[i]);
             if (unitBlueprint.objectsToSpawnAsChildren[i].GetComponent<NodeRunner>())
             {
-                Debug.Log("It is custom!");
+                DeveloperLogger.Log("It is custom!");
                 NodeRunner nodeRunner = unitBlueprint.objectsToSpawnAsChildren[i].GetComponent<NodeRunner>();
                 if (nodeScenes.Contains(nodeRunner.nodeScene))
                     continue;
                 nodeScenes.Add(nodeRunner.nodeScene);
-                Debug.Log("Added field name:" + nodeRunner.nodeScene.sceneName);
+                DeveloperLogger.Log("Added field name:" + nodeRunner.nodeScene.sceneName);
                 string txt = nodeRunner.nodeScene.Jsonify(Newtonsoft.Json.Formatting.Indented);
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(txt);
                 string base64 = System.Convert.ToBase64String(bytes);
                 serializedUnitBlueprint.AddData(nodeRunner.nodeScene.sceneName, base64);
-                Debug.Log("Added Json!");
+                DeveloperLogger.Log("Added Json!");
             }
         }
         return serializedUnitBlueprint;

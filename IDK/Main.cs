@@ -105,7 +105,7 @@ namespace IDK
 
             GameObject sliceObj = ContentDatabase.Instance().LandfallContentDatabase.GetCombatMove(new DatabaseID(-1, 1998224969));
             sliceEffect = sliceObj.GetComponent<BlockMove>().sliceEffect;
-            Bundle_Manager.Setup();
+            BundleManager.Setup();
             sceneManager = new GameObject("Scene Manager").AddComponent<StreamedSceneManager>();
             DontDestroyOnLoad(sceneManager);
             var code = new GameObject("Code").AddComponent<Code>();

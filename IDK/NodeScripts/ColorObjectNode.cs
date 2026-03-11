@@ -17,89 +17,73 @@ namespace IDK.NodeScripts
             float b = fields[2].QuickParse();
             float a = fields[3].QuickParse();
             int index = (int)fields[4].QuickParse();
+            bool change = fields[6] != "Set";
+            bool reuse = fields[7] == "Reuse Material";
             Color color = new Color(r, g, b, a);
             GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            
+
             foreach (var gameObj in gameObjects)
             {
                 if (gameObj.GetComponent<Renderer>())
                 {
-                    
-                    ColorObject(gameObj,color, index, fields[1] != "Set");
+                    ColorObject(gameObj, color, index, change, reuse);
                 }
                 if (fields[5] == "Color children")
                 {
                     Renderer[] renderers = gameObj.GetComponentsInChildren<Renderer>();
                     for (int i = 0; i < renderers.Length; i++)
                     {
-                        ColorObject(renderers[i].gameObject, color, index, fields[1] != "Set");
+                        ColorObject(renderers[i].gameObject, color, index, change, reuse);
                     }
                 }
             }
             yield return savedNode.TriggerConnection(nodeRunner);
         }
-        public void ColorObject(GameObject gameObject, Color color, int index, bool Change)
+        public Material ColorMaterial(Material material, Color color, bool Change)
         {
-            try
-            {
-                if (index == -1)
-                {
-                    
-                    Material[] materials = new Material[gameObject.GetComponent<Renderer>().materials.Length];
-                    for (int i = 0; i < gameObject.GetComponent<Renderer>().materials.Length; i++)
-                    {
-                        
-                        Material material = Object.Instantiate(gameObject.GetComponent<Renderer>().materials[i]);
-                        Color color1 = color;
-                        if (Change)
-                            color1 = material.color + color;
-                        
-                        if (material.shader.name == "TFBG/SimpleVertexColor")
-                        {
-                            material.shader = Shader.Find("Standard");
-                        }
-                        material.color = color1;
-                        if (material.HasProperty("_EmissionColor"))
-                        {
-                            if (material.IsKeywordEnabled("_EMISSION"))
-                            {
-                                material.SetColor("_EmissionColor", color1);
-                            }
-                        }
-                        
-                        materials[i] = material;
-                        
-                    }
-                    gameObject.GetComponent<Renderer>().materials = materials;
-                }
-                else
-                {
-                    Material material = Object.Instantiate(gameObject.GetComponent<Renderer>().materials[index]);
-                    Color color1 = color;
-                    if (Change)
-                        color1 = material.color + color;
-                    if (material.shader.name == "TFBG/SimpleVertexColor" || material.shader.name == "SimpleVertColorUnit")
-                    {
-                        
-                    }
-                    material.color = color1;
+            Color color1 = color;
+            if (Change)
+                color1 = material.color + color;
 
-                    if (material.HasProperty("_EmissionColor"))
-                    {
-                        if (material.IsKeywordEnabled("_EMISSION"))
-                        {
-                            material.SetColor("_EmissionColor", color1);
-                        }
-                    }
-                    
-                    Material[] materials = gameObject.GetComponent<Renderer>().materials;
-                    materials[index] = material;
-                    gameObject.GetComponent<Renderer>().materials = materials;
+            if (material.shader.name == "TFBG/SimpleVertexColor")
+            {
+                material.shader = Shader.Find("Standard");
+            }
+            material.color = color1;
+            if (material.HasProperty("_EmissionColor"))
+            {
+                if (material.IsKeywordEnabled("_EMISSION"))
+                {
+                    material.SetColor("_EmissionColor", color1);
                 }
             }
-            catch
+            return material;
+        }
+        public void ColorObject(GameObject gameObject, Color color, int index, bool change, bool reuse)
+        {
+            Renderer renderer = gameObject.GetComponent<Renderer>();
+            if (index == -1)
             {
+                Material[] materials = new Material[renderer.materials.Length];
+                for (int i = 0; i < renderer.materials.Length; i++)
+                {
 
+                    Material material = renderer.materials[i];
+                    if (!reuse)
+                        material = Object.Instantiate(renderer.materials[i]);
+                    materials[i] = ColorMaterial(material, color, change);
+
+                }
+                renderer.materials = materials;
+            }
+            else
+            {
+                Material material = renderer.materials[index];
+                if (!reuse)
+                    material = Object.Instantiate(renderer.materials[index]);
+                Material[] materials = renderer.materials;
+                materials[index] = ColorMaterial(material, color, change);
+                renderer.materials = materials;
             }
         }
     }

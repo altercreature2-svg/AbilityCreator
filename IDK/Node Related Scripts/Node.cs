@@ -1,7 +1,4 @@
-﻿
-using HarmonyLib;
-using IDK.Node_Related_Scripts.connection_stuff;
-using Mono.Security.X509.Extensions;
+﻿using IDK.Node_Related_Scripts.connection_stuff;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,16 +15,17 @@ namespace IDK
             public SavedNode savedNode;
             public override string ToString()
             {
-                return $"{connectionsType} > {savedNode?.blueprint?.Name}";
+                return $"{connectionsType} > {savedNode?.Blueprint?.Name}";
             }
         }
         public LineRenderer line;
         public GameObject background;
         public bool GetValueAtRuntime;
-        public NodeBlueprint blueprint;
+        public NodeBlueprint nodeBlueprint;
         public Button button;
         public SavedNode corispondingNode;
-       
+        public NodeManager NodeManager { get { return FindObjectOfType<NodeManager>(); } }
+
         public Dictionary<NodeBlueprint.ConnectionType, NodeConnector> Connections
         {
             get
@@ -61,7 +59,25 @@ namespace IDK
                     transform.localScale = Vector3.one;
                 }
             }
-            FindObjectOfType<NodeManager>()?.nodes.Add(this);   
+            FindObjectOfType<NodeManager>()?.nodes.Add(this);
+        }
+        public void Remove()
+        {
+            this.NodeManager.PushEditorAction(new DeleteNodeAction(this));
+            NodeConnector[] nodeConnectors = GetComponentsInChildren<NodeConnector>();
+            for (int i2 = 0; i2 < nodeConnectors.Length; i2++)
+            {
+                nodeConnectors[i2].RemoveAllConnections();
+            }
+            Destroy(gameObject);
+        }
+        public void SetFields(string[] fields)
+        {
+            NodeField[] nodeFields = GetComponentsInChildren<NodeField>();
+            for (int i = 0; i < Mathf.Min(nodeFields.Length, fields.Length); i++)
+            {
+                nodeFields[i].Value = fields[i];
+            }
         }
         private void Update()
         {
@@ -151,7 +167,7 @@ namespace IDK
                 {
                     if (!manager.SelectedNodes.Contains(this))
                     {
-                        
+
                         if (manager.SelectedNodes != null && manager.SelectedNodes.Length != 0)
                         {
                             for (int i = 0; i < manager.SelectedNodes.Length; i++)
@@ -163,7 +179,7 @@ namespace IDK
                     }
                     else
                     {
-                        RemoveOutline();               
+                        RemoveOutline();
                     }
                     transform.SetAsLastSibling();
                     transform.SetSiblingIndex(transform.GetSiblingIndex() - 1);
@@ -177,7 +193,7 @@ namespace IDK
                     else
                     {
                         AddOutline();
-                       
+
                     }
                 }
             }

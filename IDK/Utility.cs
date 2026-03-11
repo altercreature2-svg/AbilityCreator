@@ -55,17 +55,17 @@ namespace IDK
         {
             try
             {
-                Debug.Log($"Accsessing value of node {savedNode?.blueprint?.Name} with function of {savedNode.blueprint?.nodeFunction} ...");
+                Debug.Log($"Accsessing value of node {savedNode?.Blueprint?.Name} with function of {savedNode.Blueprint?.nodeFunction} ...");
                 if (savedNode == null)
                 {
                     Debug.Log("NULL ALERT");
                     return null;
                 }
-                if (savedNode.blueprint.nodeFunction == null)
+                if (savedNode.Blueprint.nodeFunction == null)
                 {
                     Debug.Log("No nodeFunction :(");
                 }
-                if (savedNode.blueprint.nodeFunction.BaseType == typeof(IValueNode))
+                if (savedNode.Blueprint.nodeFunction.BaseType == typeof(IValueNode))
                 {
                     IValueNode valueNode = (IValueNode)savedNode.InstanceFunction;
                     if (valueNode.IsDynamic())
@@ -91,12 +91,12 @@ namespace IDK
                         }
                     }
                 }
-                else if (savedNode.blueprint.nodeFunction.BaseType == typeof(IBehaviorNode))
+                else if (savedNode.Blueprint.nodeFunction.BaseType == typeof(IBehaviorNode))
                 {
                     IBehaviorNode behaviorNode = (IBehaviorNode)savedNode.InstanceFunction;
                     return behaviorNode.GetValuePool(savedNode, unit, savedNode.connections, savedNode.fields.ToArray());
                 }
-                else if (savedNode.blueprint.nodeFunction.BaseType == typeof(ITriggerNode))
+                else if (savedNode.Blueprint.nodeFunction.BaseType == typeof(ITriggerNode))
                 {
                     ITriggerNode behaviorNode = (ITriggerNode)savedNode.InstanceFunction; ;
                     return behaviorNode.GetValuePool(savedNode, unit, savedNode.connections, savedNode.fields.ToArray());
@@ -106,7 +106,7 @@ namespace IDK
             catch (Exception e) 
             {
                 e.LogDetailed();
-                Debug.Log("(Utility GetValuePoolSmart) Something went wrong!" + "\n" + $" Extra info: saved node:{savedNode.blueprint.Name} ({savedNode.GetNodeInstanceID()}) , unit: {unit}"); return null; 
+                Debug.Log("(Utility GetValuePoolSmart) Something went wrong!" + "\n" + $" Extra info: saved node:{savedNode.Blueprint.Name} ({savedNode.GetNodeInstanceID()}) , unit: {unit}"); return null; 
             }
             return null;
         }

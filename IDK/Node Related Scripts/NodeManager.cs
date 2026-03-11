@@ -1,5 +1,4 @@
-﻿using BitCode.Debug.Commands;
-using DM;
+﻿using DM;
 using HarmonyLib;
 using IDK.Node_Related_Scripts.connection_stuff;
 using Landfall.TABC;
@@ -32,6 +31,7 @@ namespace IDK
                 return array;
             }
         }
+        public Stack<EditorAction> editorActions = new Stack<EditorAction>();
         public bool CanMove = true;
         public int NodesceneIndex = 0;
         public int nodeid = 0;
@@ -53,6 +53,8 @@ namespace IDK
         private GameObject m_ability;
         private GameObject tutorial;
         private float zoom;
+        private string[] items;
+        private UnityAction<string> lastAction;
         public GameObject Ability
         {
             get
@@ -62,45 +64,45 @@ namespace IDK
                 return m_ability;
             }
         }
-        public void RefreshAbility()
+        public void PushEditorAction(EditorAction editorAction)
         {
-            m_ability = Main.CreateAbility(BuildNodeScene(), false);
+            editorActions.Push(editorAction);
         }
-        private string[] items;
-        private UnityAction<string> lastAction;
+        public void UndoLastEditorAction()
+        {
+            editorActions.Peek().Undo();
+            editorActions.Pop();
+        }
         private void Awake()
         {
             if (FindObjectsOfType<NodeManager>().Where(n => n != this).Count() != 0)
                 Destroy(this);
             StartCoroutine(Awakeinternal());
         }
+        public void RefreshAbility()
+        {
+            m_ability = Main.CreateAbility(BuildNodeScene(), false);
+        }
+        public void DuplicateSelectedNode(Node node)
+        {
+            Node duplicate = Main.nodeDatabase[node.nodeBlueprint.key].Spawn();
+            NodeField[] fields = node.GetComponentsInChildren<NodeField>();
+            duplicate.SetFields(fields.Select(n => n.Value).ToArray());
+            duplicate.transform.position = node.transform.position + new Vector3(200, -200);
+        }
         private void Update()
         {
 
             if (Input.GetKeyDown(KeyCode.Escape))
-            {
                 itemsList.SetActive(false);
-            }
+            
             if (Input.GetKey(KeyCode.LeftControl))
             {
                 if (Input.GetKeyDown(KeyCode.D))
-                {
-                    if (SelectedNodes != null)
-                    {
-                        for (int i = 0; i < SelectedNodes.Length; i++)
-                        {
-                            GameObject duplicate = Main.nodeDatabase[SelectedNodes[i].blueprint.key].Spawn().gameObject;
-                            NodeField[] fields = SelectedNodes[i].GetComponentsInChildren<NodeField>();
-                            NodeField[] fields1 = duplicate.GetComponentsInChildren<NodeField>();
-                            for (int i2 = 0; i2 < fields.Length; i2++)
-                            {
-                                fields1[i2].Value = fields[i2].Value;
-                            }
-                            duplicate.transform.position = SelectedNodes[i].transform.position + new Vector3(200, -200);
-                        }
-
-                    }
-                }
+                    for (int i = 0; i < SelectedNodes?.Length; i++)
+                        DuplicateSelectedNode(SelectedNodes[i]);
+                if (Input.GetKeyDown(KeyCode.W))
+                    UndoLastEditorAction();
             }
             if (Input.GetKeyDown(KeyCode.Tab))
             {
@@ -116,27 +118,9 @@ namespace IDK
             }
 
             if (Input.GetKeyDown(KeyCode.Delete))
-            {
-                if (SelectedNodes != null)
-                {
-                    for (int i = 0; i < SelectedNodes.Length; i++)
-                    {
-                        NodeConnector[] nodeConnectors = SelectedNodes[i].GetComponentsInChildren<NodeConnector>();
-                        for (int i2 = 0; i2 < nodeConnectors.Length; i2++)
-                        {
-                            nodeConnectors[i2].RemoveAllConnections();
-                        }
-                    }
-
-
-
-                    for (int i = 0; i < SelectedNodes.Length; i++)
-                    {
-                        Destroy(SelectedNodes[i].gameObject);
-                    }
-
-                }
-            }
+                for (int i = 0; i < SelectedNodes?.Length; i++)
+                    SelectedNodes[i].Remove();
+            
 
             if (Input.mouseScrollDelta[1] != 0)
             {
@@ -181,7 +165,6 @@ namespace IDK
             this.zoom = zoom;
         }
 
-
         private void GenerateTabMenu()
         {
             GameObject buttonPrefab = RightClickMenu.transform.Find("TABSContent").Find("TAB1").Find("NodeButton").gameObject;
@@ -223,7 +206,8 @@ namespace IDK
                         button.GetComponentInChildren<TextMeshProUGUI>(true).text = nodeBlueprints[referenceDestroyer2].Name;
                         button.GetComponentInChildren<Button>(true).onClick.AddListener(() =>
                         {
-                            nodeBlueprints[referenceDestroyer2].Spawn();
+                            Node node = nodeBlueprints[referenceDestroyer2].Spawn();
+                            editorActions.Push(new CreateNodeAction(node));
                             RightClickMenu.SetActive(false);
                         });
                     }
@@ -243,13 +227,13 @@ namespace IDK
                     {
                         tabsObjects[i2].SetActive(false);
                     }
-                    Debug.Log("Name:" + tabsButtons[referenceDestroyer].name);
+                    DeveloperLogger.Log("Name:" + tabsButtons[referenceDestroyer].name);
                     GameObject gameObject = tabsObjects.Find(n => n.name == tabsButtons[referenceDestroyer].name);
-                    Debug.Log(gameObject);
+                    DeveloperLogger.Log(gameObject);
                     gameObject.SetActive(true);
                 });
             }
-            Debug.Log("done");
+            DeveloperLogger.Log("done");
             //Generate Tabs
 
             for (int i = 0; i < tabsObjects.Count; i++)
@@ -333,6 +317,7 @@ namespace IDK
             itemsList.AddComponent<SetSiblingIndex>().Ind = 100;
             yield return new WaitUntil(() => FindObjectOfType<Node>());
             yield return null;
+
             /*var allText = FindObjectsOfType<TextMeshProUGUI>();
             for (int i2 = 0; i2 < allText.Length; i2++)
             {
@@ -569,7 +554,7 @@ namespace IDK
                 }
                 if (unitName.ToLower() == s.ToLower())
                 {
-                    dropdown.options = new List<TMP_Dropdown.OptionData>() { new TMP_Dropdown.OptionData(unitName)};
+                    dropdown.options = new List<TMP_Dropdown.OptionData>() { new TMP_Dropdown.OptionData(unitName) };
                     dropdown.value = 0;
                     dropdown.onValueChanged.Invoke(0);
                     dropdown.itemText.text = unitName;
@@ -580,8 +565,8 @@ namespace IDK
                     break;
             }
 
-            
-            
+
+
         }
         private void UnTestUnit()
         {
@@ -614,7 +599,7 @@ namespace IDK
                 Instantiate(healthBar).GetComponent<TABCUnitUI>().Init(gameObjects[0].GetComponent<Unit>());
                 Instantiate(healthBar).GetComponent<TABCUnitUI>().Init(gameObjects2[0].GetComponent<Unit>());
             }
-            Debug.Log("Healthbar stuff : " + m_healthBarOption?.currentValue);
+            DeveloperLogger.Log("Healthbar stuff : " + m_healthBarOption?.currentValue);
             ServiceLocator.GetService<GameStateManager>().EnterBattleState();
         }
         private void RemoveAllUnits()
@@ -652,72 +637,72 @@ namespace IDK
         }
         public NodeScene BuildNodeScene()
         {
-            Debug.Log("Building node scene...");
+            DeveloperLogger.Log("Building node scene...");
 
             GameObject nodeobj = new GameObject($"Node Scene");
             var nodeScene = nodeobj.AddComponent<NodeScene>();
 
             Node[] nodes = FindObjectsOfType<Node>();
-            Debug.Log($"{nodes.Length} nodes to build!");
+            DeveloperLogger.Log($"{nodes.Length} nodes to build!");
             List<SavedNode> savedNodes = new List<SavedNode>();
             for (int savedNodeIndex = 0; savedNodeIndex < nodes.Length; savedNodeIndex++)
             {
                 Node currentNode = nodes[savedNodeIndex];
-                GameObject obj = new GameObject($"SavedNode ({currentNode.blueprint.Name}) ({currentNode.GetNodeInstanceID()})");
+                GameObject obj = new GameObject($"SavedNode ({currentNode.nodeBlueprint.Name}) ({currentNode.GetNodeInstanceID()})");
                 DontDestroyOnLoad(obj);
                 SavedNode savedNode = obj.AddComponent<SavedNode>();
                 savedNode.corispondingNode = currentNode;
                 currentNode.corispondingNode = savedNode;
-                savedNode.blueprint = currentNode.blueprint;
+                savedNode.blueprintName = currentNode.nodeBlueprint.key;
                 savedNodes.Add(savedNode);
-                Debug.Log($"Created saved node ({savedNode.blueprint.Name})...");
+                DeveloperLogger.Log($"Created saved node ({savedNode.Blueprint.Name})...");
             }
-            Debug.Log("Created all saved nodes!");
+            DeveloperLogger.Log("Created all saved nodes!");
             for (int nodeIndex = 0; nodeIndex < nodes.Length; nodeIndex++)
             {
-                Debug.Log("Node index:" + nodeIndex);
+                DeveloperLogger.Log("Node index:" + nodeIndex);
                 Node currentNode = nodes[nodeIndex];
                 SavedNode savedNode = savedNodes[nodeIndex];
                 //field stuff
-                if (currentNode.blueprint.fields.Count == 0)
+                if (currentNode.nodeBlueprint.fields.Count == 0)
                 {
-                    Debug.Log($"Current node ({currentNode.blueprint.Name}) has no fields! skipping");
+                    DeveloperLogger.Log($"Current node ({currentNode.nodeBlueprint.Name}) has no fields! skipping");
                     savedNode.fields.Add("");
                 }
                 else
                 {
-                    for (int l = 0; l < currentNode.blueprint.fields.Count; l++)
+                    for (int l = 0; l < currentNode.nodeBlueprint.fields.Count; l++)
                     {
-                        string txt = currentNode.transform.Find("Fields").Find(nodes[nodeIndex].blueprint.fields[l].name).GetComponentInChildren<NodeField>().Value;
+                        string txt = currentNode.transform.Find("Fields").Find(nodes[nodeIndex].nodeBlueprint.fields[l].name).GetComponentInChildren<NodeField>().Value;
                         if (txt == "")
                             txt = "_";
                         savedNode.fields.Add(txt);
-                        Debug.Log($"Added field for node ({currentNode.blueprint.Name})!");
+                        DeveloperLogger.Log($"Added field for node ({currentNode.nodeBlueprint.Name})!");
                     }
                 }
                 // position stuff
                 Vector3 position = currentNode.transform.position;
                 savedNode.position = position;
-                Debug.Log($"Saved position for node ({currentNode.blueprint.Name})!");
+                DeveloperLogger.Log($"Saved position for node ({currentNode.nodeBlueprint.Name})!");
                 // connection stuff
                 List<Node.Connection> connections = new List<Node.Connection>();
                 KeyValuePair<NodeBlueprint.ConnectionType, NodeConnector>[] connectionsArray = currentNode.Connections.ToArray();
                 for (int i = 0; i < currentNode.Connections.Count; i++)
                 {
-                    Debug.Log($"Adding connection for ({currentNode.blueprint.Name})! other: {connectionsArray[i].Value?.other}");
+                    DeveloperLogger.Log($"Adding connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.other}");
                     connections.Add(new Node.Connection()
                     {
                         connectionsType = connectionsArray[i].Key,
                         savedNode = connectionsArray[i].Value?.other?.transform?.parent?.parent?.GetComponent<Node>()?.corispondingNode
                     });
-                    Debug.Log($"Added connection for ({currentNode.blueprint.Name})! other: {connectionsArray[i].Value?.other}");
+                    DeveloperLogger.Log($"Added connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.other}");
                 }
-                Debug.Log("Finishing up connections...");
+                DeveloperLogger.Log("Finishing up connections...");
                 savedNode.connections = connections;
-                Debug.Log("Done with connections!");
+                DeveloperLogger.Log("Done with connections!");
 
             }
-            Debug.Log("Adding extra data!");
+            DeveloperLogger.Log("Adding extra data!");
             try
             {
                 nodeScene.sceneName = GameObject.Find("AbName").GetComponent<TMP_InputField>().text;
@@ -726,7 +711,7 @@ namespace IDK
             }
             catch
             {
-                Debug.Log("Faild to add extra data... its ok though!");
+                DeveloperLogger.Log("Faild to add extra data... its ok though!");
             }
             nodeScene.everyNode = savedNodes.ToArray();
             return nodeScene;
@@ -762,7 +747,7 @@ namespace IDK
 
             }
             nodeScene.zoom = zoom;
-            Debug.Log("Zoom: " + zoom);
+            DeveloperLogger.Log("Zoom: " + zoom);
             SavedNodeScene savedNodeScene = SavedNodeScene.Instance(nodeScene);
 
             //Saves to files 
@@ -785,7 +770,7 @@ namespace IDK
 
 
             TABSSceneManager.LoadMainMenu(true);
-            Debug.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
+            DeveloperLogger.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
         }
         public static void WriteAbility(SavedNodeScene nodeScene, string json, bool forceOverwrite = false, bool addToGame = false)
         {

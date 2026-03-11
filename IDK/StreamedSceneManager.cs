@@ -324,7 +324,7 @@ namespace IDK
         public IEnumerator EnterNodeSceneEnumerator()
         {
             Time.timeScale = 1;
-            //THIS IS NEEDED!!! ok (thx me btw) np man
+            //THIS IS NEEDED!!! ok (thx me btw) np man we should really make a better system for this ngl
             CampaignPlayerDataHolder.SetToNone();
 
             yield return new WaitUntil(() => GameObject.Find("nodesScaler") != null);
@@ -338,12 +338,13 @@ namespace IDK
                 yield break;
             }
             // Objectefize nodescenes
+            // nigga what???
             Dictionary<SavedNode, Node> nodes = new Dictionary<SavedNode, Node>();
             for (int i = 0; i < currentscene.everyNode.Length; i++)
             {
                 try
                 {
-                    NodeBlueprint nodeBlueprint = currentscene.everyNode[i].blueprint;
+                    NodeBlueprint nodeBlueprint = currentscene.everyNode[i].Blueprint;
                     List<string> fields = currentscene.everyNode[i].fields;
                     Node node = nodeBlueprint.Spawn();
                     node.corispondingNode = currentscene.everyNode[i];
@@ -400,9 +401,9 @@ namespace IDK
 
             bool found = false;
 
-            for (int i = 0; i < Bundle_Manager.scenes.GetAllScenePaths().Length; i++)
+            for (int i = 0; i < BundleManager.scenes.GetAllScenePaths().Length; i++)
             {
-                if (scene.path == Bundle_Manager.scenes.GetAllScenePaths()[i])
+                if (scene.path == BundleManager.scenes.GetAllScenePaths()[i])
                 {
                     found = true;
                     Time.timeScale = 1;

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Landfall.TABS;
+using System.Collections;
 using UnityEngine;
 
 namespace IDK
@@ -8,7 +9,8 @@ namespace IDK
         
         private void Awake()
         {
-            StartCoroutine(AwakeInternal());
+            if (transform.root.GetComponent<Unit>())
+                StartCoroutine(AwakeInternal());
         }
         private IEnumerator AwakeInternal()
         {

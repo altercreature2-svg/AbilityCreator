@@ -9,18 +9,23 @@ using UnityEngine;
 
 namespace IDK
 {
-    public static class Bundle_Manager
-        
+    public static class BundleManager
     {
-        public static GameObject Node;
-        public static GameObject Empty;
-        public static GameObject ConnecterTrig;
-        public static GameObject ConnecterUnit;
-        public static GameObject ConnecterGameObject;
-        public static GameObject ConnectorComponent;
-        public static GameObject ConnecterVar;
-        public static GameObject ConnecterAnything;
-        public static GameObject ConnecterObjectVariable;
+        public enum LeftRight
+        {
+            Left,
+            Right,
+        }
+        public static GameObject node;
+        public static GameObject empty;
+        public static GameObject connecterTrig;
+        public static GameObject connecterUnit;
+        public static GameObject connecterGameObject;
+        public static GameObject connectorComponent;
+        public static GameObject connecterVar;
+        public static GameObject connecterAnything;
+        public static GameObject connecterObjectVariable;
+        public static GameObject connecterLeftRight;
         public static GameObject Popup;
         public static AssetBundle scenes;
         public static AssetBundle AbilityPrefabs;
@@ -30,23 +35,25 @@ namespace IDK
             scenes = LoadBundle("IDK.Bundle__butt__Stuff.scenes");
             //AbilityPrefabs = AssetBundle.LoadFromFile("D:/games/Tabs Moded/TABS Moded/BepInEx/plugins/Assetbundles/ability"); ;
             AbilityPrefabs = LoadBundle("IDK.Bundle__butt__Stuff.ability");
-            Node = AbilityPrefabs.LoadAsset<GameObject>("Node");
-            Empty = AbilityPrefabs.LoadAsset<GameObject>("Empty");
-            ConnecterTrig = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connecter_Trig.prefab");
-            ConnecterUnit = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Unit.prefab");
-            ConnecterGameObject = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_GameObject.prefab");
-            ConnecterVar = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Variable.prefab");
-            ConnectorComponent = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Component.prefab");
-            ConnecterAnything = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Anything.prefab");
-            ConnecterObjectVariable = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connecter_ObjectVariable.prefab");
+            node = AbilityPrefabs.LoadAsset<GameObject>("Node");
+            empty = AbilityPrefabs.LoadAsset<GameObject>("Empty");
+            connecterTrig = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connecter_Trig.prefab");
+            connecterUnit = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Unit.prefab");
+            connecterGameObject = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_GameObject.prefab");
+            connecterVar = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Variable.prefab");
+            connectorComponent = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Component.prefab");
+            connecterAnything = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connector_Anything.prefab");
+            connecterObjectVariable = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connecter_ObjectVariable.prefab");
+            connecterLeftRight = AbilityPrefabs.LoadAsset<GameObject>("Assets/Connecter_LeftRight.prefab");
             Popup = AbilityPrefabs.LoadAsset<GameObject>("Assets/CANSAVE.prefab");
-            ConnecterTrig.AddComponent<NodeConnector>();
-            ConnecterUnit.AddComponent<NodeConnector>();
-            ConnecterGameObject.AddComponent<NodeConnector>();
-            ConnecterVar.AddComponent<NodeConnector>();
-            ConnectorComponent.AddComponent<NodeConnector>();
-            ConnecterAnything.AddComponent<NodeConnector>();
-            ConnecterObjectVariable.AddComponent<NodeConnector>();
+            connecterTrig.AddComponent<NodeConnector>();
+            connecterUnit.AddComponent<NodeConnector>();
+            connecterGameObject.AddComponent<NodeConnector>();
+            connecterVar.AddComponent<NodeConnector>();
+            connectorComponent.AddComponent<NodeConnector>();
+            connecterAnything.AddComponent<NodeConnector>();
+            connecterObjectVariable.AddComponent<NodeConnector>();
+            connecterLeftRight.AddComponent<NodeConnector>();
         }
         public static AssetBundle LoadBundle(string assetBundleName)
         {

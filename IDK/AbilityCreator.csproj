@@ -43,6 +43,7 @@
     <Compile Include="DestroySelfWhenObjectDestroyed.cs" />
     <Compile Include="DontDestroyOnLoad.cs" />
     <Compile Include="DontGetDestroyed.cs" />
+    <Compile Include="EditorAction.cs" />
     <Compile Include="ExampleAbilites\UpdateSaveManager.cs" />
     <Compile Include="ExampleManager.cs" />
     <Compile Include="FixNodeSystem.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Help Componets\MakeUnitStealth.cs" />
     <Compile Include="IgnoreProjectileForTeam.cs" />
     <Compile Include="MyModalPanel.cs" />
+    <Compile Include="Node Related Scripts\NodeUtility.cs" />
     <Compile Include="Node Related Scripts\RunNodeAttackEffect.cs" />
     <Compile Include="NodeScripts\AddOnCollisionAction.cs" />
     <Compile Include="NodeScripts\GetUnitFromGameobject.cs" />
@@ -99,15 +101,19 @@
     <Compile Include="NodeScripts\AddProps.cs" />
     <Compile Include="NodeScripts\TransformPositionNodeAnim.cs" />
     <Compile Include="NodeScripts\TransfromScaleAnimated.cs" />
+    <Compile Include="NodeScripts\LeftOrRight.cs" />
+    <Compile Include="NodeScripts\WhenUnitShootsProjectile.cs" />
     <Compile Include="NodeScripts\WhenUnitDamaged.cs" />
     <Compile Include="NodeScripts\WhenUnitSpawned.cs" />
     <Compile Include="NodeScripts\WhenProjectileEntersRange.cs" />
     <Compile Include="EnumerableHelper.cs" />
     <Compile Include="objectStorer.cs" />
     <Compile Include="ProjectileHitHarmonyPatch.cs" />
+    <Compile Include="RangeWeaponProjectileStorer.cs" />
+    <Compile Include="RangeWeaponProjectileStorerHarmonyPatch.cs" />
     <Compile Include="RemoveAfterSecondsObject.cs" />
     <Compile Include="KillYourself.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="DeveloperLogger.cs" />
     <Compile Include="Node Related Scripts\connection stuff\NodeConnections.cs" />
     <Compile Include="Node Related Scripts\connection stuff\NodeConnector.cs" />
     <Compile Include="Node Related Scripts\NodeRunner.cs" />
@@ -238,6 +244,10 @@
     <Reference Include="bolt.user">
       <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\bolt.user.dll</HintPath>
     </Reference>
+    <Reference Include="CASA, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\CASA\CASA.dll</HintPath>
+    </Reference>
     <Reference Include="Cinemachine">
       <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Cinemachine.dll</HintPath>
     </Reference>
@@ -364,7 +374,7 @@
     </Reference>
     <Reference Include="UMTL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\plugins\UMTL.dll</HintPath>
+      <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\BepInEx\UMTL\UMTL.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.DataPrivacy">
       <HintPath>..\..\..\..\games\Tabs Moded\TABS Moded\TotallyAccurateBattleSimulator_Data\Managed\Unity.Analytics.DataPrivacy.dll</HintPath>
@@ -650,6 +660,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ExampleAbilites\Cat lives.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="AbilityCreator.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

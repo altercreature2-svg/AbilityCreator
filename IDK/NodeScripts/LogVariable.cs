@@ -13,7 +13,7 @@ namespace IDK.NodeScripts
             Variable[] variables = connections.GetNode(NodeBlueprint.ConnectionType.ReciveVariable).GetValuePoolSmart(unit).GetValues<Variable>();
             for (int i = 0; i < variables.Length; i++)
             {
-                AbilityCreator.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ variables[i].value);
+                DeveloperLogger.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ variables[i].value, true);
             }
             yield return savedNode.TriggerConnection(nodeRunner);
 

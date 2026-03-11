@@ -13,7 +13,6 @@ namespace IDK.NodeScripts
         {
             SavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.Trigger);
             Unit[] units = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            var service = ServiceLocator.GetService<GameStateManager>();
             for (int i = 0; i < units.Length; i++)
             {
                 if (units[i].dead)

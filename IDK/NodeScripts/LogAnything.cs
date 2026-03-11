@@ -13,7 +13,7 @@ namespace IDK.NodeScripts
             object[] everything = connections.GetNode(NodeBlueprint.ConnectionType.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
             for (int i = 0; i < everything.Length; i++)
             {
-                AbilityCreator.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ everything[i]);
+                DeveloperLogger.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ everything[i], true);
             }
             yield return savedNode.TriggerConnection(nodeRunner);
 

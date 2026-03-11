@@ -21,6 +21,8 @@ namespace IDK.NodeScripts
             Weapon[] weapons = unit.GetComponentsInChildren<Weapon>();
             for (int i = 0; i < weapons.Length; i++)
             {
+                float oldLevelMultiplier = weapons[i].levelMultiplier;
+                
                 if (field == "Set")
                     weapons[i].levelMultiplier = value;
                 if (field == "Add")
@@ -31,6 +33,15 @@ namespace IDK.NodeScripts
                     weapons[i].levelMultiplier = (weapons[i].levelMultiplier / 100) * value;
                 if (field == "Add (%)")
                     weapons[i].levelMultiplier += (weapons[i].levelMultiplier / 100) * value;
+
+                if (weapons[i] is MeleeWeapon meleeWeapon)
+                {
+                    CollisionWeapon collisionWeapon = (CollisionWeapon)meleeWeapon.GetField("collision");
+                    if (!collisionWeapon)
+                        continue;
+                    collisionWeapon.damage /= oldLevelMultiplier;
+                    collisionWeapon.damage *= meleeWeapon.levelMultiplier;
+                }
             }
         }
     }
