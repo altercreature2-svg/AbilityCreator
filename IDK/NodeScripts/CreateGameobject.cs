@@ -7,7 +7,7 @@ namespace IDK.NodeScripts
 {
     public class CreateGameobject : IValueNode
     {
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
         }
@@ -15,7 +15,7 @@ namespace IDK.NodeScripts
         {
             return false;
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
 
             ValuePool valuePool = new ValuePool();

@@ -12,9 +12,9 @@ namespace IDK
         public Vector3 position;
         public NodeConnector[] connections;
         public string[] fields;
-        public StoredNode(Node node)
+        public StoredNode(NodeComponent node)
         {
-            connections = node.Connections.Values.Select(n => n.other).ToArray();
+            connections = node.Connections.Values.Select(n => n.connected).ToArray();
             key = node.nodeBlueprint.key;
             position = node.transform.position;
             fields = node.GetComponentsInChildren<NodeField>().Select(n => n.Value).ToArray();
@@ -22,7 +22,7 @@ namespace IDK
     }
     public abstract class EditorAction
     {
-        public Node relatedNode;
+        public NodeComponent relatedNode;
         public StoredNode storedNode;
         public List<string> extraInfo;
         public abstract void Undo();
@@ -33,7 +33,7 @@ namespace IDK
         {
             relatedNode.Remove();
         }
-        public CreateNodeAction(Node node)
+        public CreateNodeAction(NodeComponent node)
         {
             this.relatedNode = node;
         }
@@ -42,7 +42,7 @@ namespace IDK
     {
         public override void Undo()
         {
-            Node node = Main.nodeDatabase[storedNode.key].Spawn();
+            NodeComponent node = AbilityCreator.nodeDatabase[storedNode.key].Spawn();
             node.transform.position = storedNode.position;
             NodeConnector[] nodeConnectors = node.GetComponentsInChildren<NodeConnector>();
             for (int i = 0; i < nodeConnectors.Length; i++)
@@ -54,7 +54,7 @@ namespace IDK
             }
             node.SetFields(storedNode.fields);
         }
-        public DeleteNodeAction(Node node)
+        public DeleteNodeAction(NodeComponent node)
         {
             storedNode = new StoredNode(node);
         }

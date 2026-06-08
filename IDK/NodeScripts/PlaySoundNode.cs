@@ -8,10 +8,10 @@ namespace IDK.NodeScripts
 {
     public class PlaySoundNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             Debug.Log("Spawning unit...");
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             Debug.Log("Length of Gameobjects :" + gameObjs.Length);
             foreach (var gameObj in gameObjs)
             {

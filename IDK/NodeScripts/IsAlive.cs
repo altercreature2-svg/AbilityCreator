@@ -9,10 +9,10 @@ namespace IDK.NodeScripts
 {
     public class IsAlive : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            SavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.Trigger);
-            Unit[] units = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
+            LegacySavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.Trigger);
+            Unit[] units = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
             var service = ServiceLocator.GetService<GameStateManager>();
             for (int i = 0; i < units.Length; i++)
             {

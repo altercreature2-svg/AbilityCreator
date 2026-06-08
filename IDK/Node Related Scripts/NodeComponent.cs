@@ -7,12 +7,12 @@ using UnityEngine.UI;
 
 namespace IDK
 {
-    public class Node : MonoBehaviour
+    public class NodeComponent : MonoBehaviour
     {
-        public class Connection
+        public class LegacyConnection
         {
-            public NodeBlueprint.ConnectionType connectionsType;
-            public SavedNode savedNode;
+            public NodeBlueprint.ConnectionClass connectionsType;
+            public LegacySavedNode savedNode;
             public override string ToString()
             {
                 return $"{connectionsType} > {savedNode?.Blueprint?.Name}";
@@ -23,10 +23,10 @@ namespace IDK
         public bool GetValueAtRuntime;
         public NodeBlueprint nodeBlueprint;
         public Button button;
-        public SavedNode corispondingNode;
+        public LegacySavedNode corispondingNode;
         public NodeManager NodeManager { get { return FindObjectOfType<NodeManager>(); } }
 
-        public Dictionary<NodeBlueprint.ConnectionType, NodeConnector> Connections
+        public Dictionary<NodeBlueprint.ConnectionClass, NodeConnector> Connections
         {
             get
             {
@@ -49,7 +49,7 @@ namespace IDK
             }
             if (FindObjectOfType<NodeManager>())
             {
-                Node[] nodes = FindObjectsOfType<Node>()?.Where(n => n != this).ToArray();
+                NodeComponent[] nodes = FindObjectsOfType<NodeComponent>()?.Where(n => n != this).ToArray();
                 if (nodes.Length != 0)
                 {
                     transform.localScale = nodes[0].transform.localScale;
@@ -148,15 +148,9 @@ namespace IDK
 
         public int GetNodeInstanceID()
         {
-            var objects = FindObjectsOfType<Node>();
-            for (int i = 0; i < objects.Length; i++)
-            {
-                if (objects[i] == this)
-                {
-                    return i + 1;
-                }
-            }
-            return 0;
+            var objects = FindObjectsOfType<NodeComponent>().Where(n => n != this);
+            int instanceID = objects.Count();
+            return instanceID;
         }
         public void OnPointerClick()
         {
@@ -215,7 +209,7 @@ namespace IDK
         }
         private void OnDestroy()
         {
-            FindObjectOfType<NodeManager>().nodes.Remove(this);
+            FindObjectOfType<NodeManager>()?.nodes?.Remove(this);
             Destroy(line);
         }
     }

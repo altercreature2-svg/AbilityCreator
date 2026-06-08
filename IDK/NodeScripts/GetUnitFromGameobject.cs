@@ -14,14 +14,14 @@ namespace IDK.NodeScripts
         {
             return true;
         }
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             ValuePool valuePool = new ValuePool();
-            GameObject[] units = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             valuePool.AddRange(units.Select(n => n.transform.root.GetComponent<Unit>()).ToArray());
             return valuePool;
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
         }

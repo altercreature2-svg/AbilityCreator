@@ -22,7 +22,7 @@ public class NodeSceneMovement : MonoBehaviour, IDragHandler, IEventSystemHandle
         }
         if (eventData.button == PointerEventData.InputButton.Middle)
         {
-            var node = FindObjectsOfType<Node>();
+            var node = FindObjectsOfType<NodeComponent>();
             for (int i = 0; i < node.Length; i++)
             {
                 node[i].GetComponent<RectTransform>().anchoredPosition += eventData.delta/2;

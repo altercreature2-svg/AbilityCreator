@@ -9,7 +9,7 @@ namespace IDK.NodeScripts
 {
     public class EndBattle : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             Debug.Log("Ending battle!");
             if (fields[0] == "Win")

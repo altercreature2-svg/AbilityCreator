@@ -18,11 +18,11 @@ namespace IDK
                         StreamReader streamWriter = new StreamReader(stream);
                         string encodedJson = streamWriter.ReadToEnd();
                         string json = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(encodedJson));
-                        SavedNodeScene savedNodeScene = Main.DeserializeAbility(json);
-                        if (Directory.Exists(Main.abilitespath + "/" + Main.CleanNodeName(savedNodeScene.sceneName)))
+                        LegacySavedNodeScene savedNodeScene = AbilityCreator.DeserializeAbility(json);
+                        if (Directory.Exists(AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(savedNodeScene.sceneName)))
                             continue;
-                        Directory.CreateDirectory(Main.abilitespath + "/" + Main.CleanNodeName(savedNodeScene.sceneName));
-                        File.WriteAllText(Main.GetPath(savedNodeScene), json);
+                        Directory.CreateDirectory(AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(savedNodeScene.sceneName));
+                        File.WriteAllText(AbilityCreator.GetPath(savedNodeScene), json);
                     }
                 }
             }
@@ -32,7 +32,7 @@ namespace IDK
                 {
                     using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(files[i]))
                     {
-                        string path = Main.abilitespath + "/size=8Examplesize=13#00AAFFCat Lives/icon.png";
+                        string path = AbilityCreator.abilitespath + "/size=8Examplesize=13#00AAFFCat Lives/icon.png";
                         if (File.Exists(path))
                             continue;
                         using (FileStream fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write))
@@ -47,19 +47,19 @@ namespace IDK
         public static void WriteExample(string json)
         {
 
-            NodeManager.WriteAbility(Main.DeserializeAbility(json), json);
+            NodeManager.WriteAbility(AbilityCreator.DeserializeAbility(json), json);
         }
         public static void TurnIntoExample(string json, string name)
         {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
             string base64 = System.Convert.ToBase64String(bytes);
-            File.WriteAllText(Main.abilitespath + "/" + Main.CleanNodeName(name) + ".abilityEncoded", base64);
+            File.WriteAllText(AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(name) + ".abilityEncoded", base64);
         }
         public static void TurnAllIntoExample()
         {
-            for (int i = 0; i < Main.nodeScenes.Count; i++)
+            for (int i = 0; i < AbilityCreator.nodeScenes.Count; i++)
             {
-                TurnIntoExample(Main.nodeScenes[i].Jsonify(), Main.nodeScenes[i].sceneName);
+                TurnIntoExample(AbilityCreator.nodeScenes[i].Jsonify(), AbilityCreator.nodeScenes[i].sceneName);
             }
         }
     }

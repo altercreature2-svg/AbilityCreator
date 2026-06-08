@@ -7,16 +7,16 @@ namespace IDK.NodeScripts
 {
     public class WhenBattleBegins : ITriggerNode
     {
-        public override void StartFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             nodeRunner.StartCoroutine(WaitABit(savedNode, unit, connections, fields, nodeRunner));
         }
-        public IEnumerator WaitABit(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator WaitABit(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             yield return new WaitUntil(() => unit.data.targetData);
             yield return savedNode.TriggerConnection(nodeRunner);
         }
-        public override void EveryFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
         }
         

@@ -38,7 +38,7 @@ namespace IDK
             GameObject.Destroy(button.GetComponentInChildren<LocalizeText>());
             button.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = "Ability Creator";
             button.transform.SetSiblingIndex(4);
-            button.GetComponent<Button>().onClick.AddListener(() => Main.sceneManager.EnterNodeChanger());
+            button.GetComponent<Button>().onClick.AddListener(() => AbilityCreator.sceneManager.EnterNodeChanger());
             
         }
 

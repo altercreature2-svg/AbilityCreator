@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace IDK
 {
-    public class SavedNode : MonoBehaviour
+    public class LegacySavedNode : MonoBehaviour
     {
         public Dictionary<Unit, ValuePool> valuePools = new Dictionary<Unit, ValuePool>();
         public Dictionary<Unit, NodeRunner> nodeRunners = new Dictionary<Unit, NodeRunner>();
@@ -20,11 +20,11 @@ namespace IDK
                 valuePools.Add(unit, new ValuePool());
             return valuePools[unit];
         }
-        public Node corispondingNode;
+        public NodeComponent corispondingNode;
         public string blueprintName;
         public NodeBlueprint Blueprint { get 
             {
-                return Main.nodeDatabase[blueprintName];
+                return AbilityCreator.nodeDatabase[blueprintName];
             } }
         public object m_instance;
         public object InstanceFunction
@@ -36,7 +36,7 @@ namespace IDK
                 return m_instance;
             }
         }
-        public List<Node.Connection> connections = new List<Node.Connection>();
+        public List<NodeComponent.LegacyConnection> connections = new List<NodeComponent.LegacyConnection>();
         public List<string> fields = new List<string>();
         public Vector3 position;
         public override string ToString()
@@ -45,7 +45,7 @@ namespace IDK
         }
         public int GetNodeInstanceID() 
         {
-            var objects = FindObjectsOfType<SavedNode>();
+            var objects = FindObjectsOfType<LegacySavedNode>();
             for (int i = 0; i < objects.Length; i++)
             {
                 if (objects[i] == this)
@@ -55,11 +55,11 @@ namespace IDK
             }
             return 0;
         }
-        public static SavedNode Instance()
+        public static LegacySavedNode Instance()
         {
             var gameobj = new GameObject("Saved");
             DontDestroyOnLoad(gameobj);
-            var result = gameobj.AddComponent<SavedNode>();
+            var result = gameobj.AddComponent<LegacySavedNode>();
             return result;
         }
         

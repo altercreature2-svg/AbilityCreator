@@ -14,10 +14,10 @@ namespace IDK.NodeScripts
         {
             return true;
         }
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
+            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
             Debug.Log("Units Length:" + units.Length);
             for (int i = 0; i < units.Length; i++)
             {
@@ -53,7 +53,7 @@ namespace IDK.NodeScripts
             Debug.Log($"Found closest meUnit! ({closestUnit.unitBlueprint.Entity.Name})");
             return closestUnit;
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
         }

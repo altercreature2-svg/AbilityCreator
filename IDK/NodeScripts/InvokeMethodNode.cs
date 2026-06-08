@@ -11,9 +11,9 @@ namespace IDK.NodeScripts
 {
     public class InvokeMethodNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            object[] components = connections.GetNode(NodeBlueprint.ConnectionType.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
+            object[] components = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
             foreach (var component in components)
             {
                 try
@@ -29,7 +29,7 @@ namespace IDK.NodeScripts
             }
             yield return savedNode.TriggerConnection(nodeRunner);
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }

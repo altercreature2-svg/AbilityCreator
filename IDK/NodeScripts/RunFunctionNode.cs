@@ -11,7 +11,7 @@ namespace IDK.NodeScripts
 {
     public class RunFunctionNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             FunctionStorer functionStorer;
             if (!unit.GetComponent<FunctionStorer>())

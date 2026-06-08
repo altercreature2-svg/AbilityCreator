@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Pdb;
+﻿using IDK.Node_Related_Scripts.ConnectionStuff;
+using Mono.Cecil.Pdb;
 using ProGrids;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,75 +17,49 @@ namespace IDK.Node_Related_Scripts.connection_stuff
         public int segmentCount = 32;
         public bool isDragging;
         private Transform m_copy;
-        public static Dictionary<NodeBlueprint.ConnectionType, Dictionary<NodeBlueprint.ConnectionType, string>> convertTable = new Dictionary<NodeBlueprint.ConnectionType, Dictionary<NodeBlueprint.ConnectionType, string>>()
+        public static Dictionary<NodeBlueprint.ConnectionClass, Dictionary<NodeBlueprint.ConnectionClass, string>> convertTable = new Dictionary<NodeBlueprint.ConnectionClass, Dictionary<NodeBlueprint.ConnectionClass, string>>()
         {
-            {NodeBlueprint.ConnectionType.GiveUnit, new Dictionary<NodeBlueprint.ConnectionType, string>
+            {NodeBlueprint.ConnectionClass.GiveUnit, new Dictionary<NodeBlueprint.ConnectionClass, string>
                 {
-                    {NodeBlueprint.ConnectionType.ReciveAnything, "CONVERTUNIT" },
-                    {NodeBlueprint.ConnectionType.ReciveGameObject, "GAMEOBJ" },
+                    {NodeBlueprint.ConnectionClass.ReciveAnything, "CONVERTUNIT" },
+                    {NodeBlueprint.ConnectionClass.ReciveGameObject, "GAMEOBJ" },
                 }
             },
-            {NodeBlueprint.ConnectionType.GiveGameObject, new Dictionary<NodeBlueprint.ConnectionType, string>
+            {NodeBlueprint.ConnectionClass.GiveGameObject, new Dictionary<NodeBlueprint.ConnectionClass, string>
                 {
-                    {NodeBlueprint.ConnectionType.ReciveAnything, "CONVERTOBJ" },
-                    {NodeBlueprint.ConnectionType.ReciveUnit, "GETUNIT" },
-                    {NodeBlueprint.ConnectionType.ReciveComponent, "GETCOMP" },
+                    {NodeBlueprint.ConnectionClass.ReciveAnything, "CONVERTOBJ" },
+                    {NodeBlueprint.ConnectionClass.ReciveUnit, "GETUNIT" },
+                    {NodeBlueprint.ConnectionClass.ReciveComponent, "GETCOMP" },
                 }
             },
-            {NodeBlueprint.ConnectionType.GiveComponent, new Dictionary<NodeBlueprint.ConnectionType, string>
+            {NodeBlueprint.ConnectionClass.GiveComponent, new Dictionary<NodeBlueprint.ConnectionClass, string>
                 {
-                    {NodeBlueprint.ConnectionType.ReciveAnything, "CONVERTCOMP" },
+                    {NodeBlueprint.ConnectionClass.ReciveAnything, "CONVERTCOMP" },
                 }
             },
-            {NodeBlueprint.ConnectionType.GiveObjectVariable, new Dictionary<NodeBlueprint.ConnectionType, string>
+            {NodeBlueprint.ConnectionClass.GiveObjectVariable, new Dictionary<NodeBlueprint.ConnectionClass, string>
                 {
-                    {NodeBlueprint.ConnectionType.ReciveAnything, "OBJECTVARIABLEVALUE" },
+                    {NodeBlueprint.ConnectionClass.ReciveAnything, "OBJECTVARIABLEVALUE" },
                 }
             },
-            {NodeBlueprint.ConnectionType.GiveAnything, new Dictionary<NodeBlueprint.ConnectionType, string>
+            {NodeBlueprint.ConnectionClass.GiveAnything, new Dictionary<NodeBlueprint.ConnectionClass, string>
                 {
-                    {NodeBlueprint.ConnectionType.ReciveUnit, "CONVERTUNIT2" },
-                    {NodeBlueprint.ConnectionType.ReciveGameObject, "CONVERTOBJ2" },
-                    {NodeBlueprint.ConnectionType.ReciveComponent, "CONVERTCOMP2" },
+                    {NodeBlueprint.ConnectionClass.ReciveUnit, "CONVERTUNIT2" },
+                    {NodeBlueprint.ConnectionClass.ReciveGameObject, "CONVERTOBJ2" },
+                    {NodeBlueprint.ConnectionClass.ReciveComponent, "CONVERTCOMP2" },
                 }
             },
         };
-        public static NodeBlueprint.ConnectionType FlipConnection(NodeBlueprint.ConnectionType connectionType)
+        public static NodeBlueprint.ConnectionClass FlipConnection(NodeBlueprint.ConnectionClass connectionType)
         {
-            if (connectionType is NodeBlueprint.ConnectionType.ReciveAnything)
-                return NodeBlueprint.ConnectionType.GiveAnything;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveAnything)
-                return NodeBlueprint.ConnectionType.ReciveAnything;
-
-            else if (connectionType is NodeBlueprint.ConnectionType.ReciveComponent)
-                return NodeBlueprint.ConnectionType.GiveComponent;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveComponent)
-                return NodeBlueprint.ConnectionType.ReciveComponent;
-
-            else if (connectionType is NodeBlueprint.ConnectionType.ReciveGameObject)
-                return NodeBlueprint.ConnectionType.GiveGameObject;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveGameObject)
-                return NodeBlueprint.ConnectionType.ReciveGameObject;
-
-            else if (connectionType is NodeBlueprint.ConnectionType.ReciveUnit)
-                return NodeBlueprint.ConnectionType.GiveUnit;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveUnit)
-                return NodeBlueprint.ConnectionType.ReciveUnit;
-
-            else if (connectionType is NodeBlueprint.ConnectionType.ReciveVariable)
-                return NodeBlueprint.ConnectionType.GiveVariable;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveVariable)
-                return NodeBlueprint.ConnectionType.ReciveVariable;
-            else if (connectionType is NodeBlueprint.ConnectionType.ReciveObjectVariable)
-                return NodeBlueprint.ConnectionType.GiveObjectVariable;
-            else if (connectionType is NodeBlueprint.ConnectionType.GiveObjectVariable)
-                return NodeBlueprint.ConnectionType.ReciveObjectVariable;
-            else if (connectionType is NodeBlueprint.ConnectionType.Trigger)
-                return NodeBlueprint.ConnectionType.Triggered;
-            else if (connectionType is NodeBlueprint.ConnectionType.Triggered)
-                return NodeBlueprint.ConnectionType.Trigger;
-
-            return NodeBlueprint.ConnectionType.Triggered;
+            int difference = IsReciver(connectionType) ? 1 : -1;
+            return connectionType + difference;
+        }
+        public static bool IsReciver(NodeBlueprint.ConnectionClass connectionType)
+        {
+            float i = (float)connectionType;
+            if (i % 2 == 0) return true;
+            return false;
         }
         public Transform Copy
         {
@@ -99,7 +74,7 @@ namespace IDK.Node_Related_Scripts.connection_stuff
                 return m_copy;
             }
         }
-        public NodeConnector other;
+        public NodeConnector connected;
         public LineRenderer m_lineRenderer;
         public LineRenderer LineRenderer
         {
@@ -120,7 +95,7 @@ namespace IDK.Node_Related_Scripts.connection_stuff
                 return m_lineRenderer;
             }
         }
-        public NodeBlueprint.ConnectionType connectionType;
+        public ConnectionType connectionType;
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
 
@@ -131,8 +106,8 @@ namespace IDK.Node_Related_Scripts.connection_stuff
             DrawCubicBezier(WorldPosition(transform.position), WorldPosition(mousePositon));
 
             //GetComponent<RectTransform>().anchoredPosition = (Vector2)Camera.current.ScreenToWorldPoint(mousePositon, Camera.MonoOrStereoscopicEye.Mono);
-            if (other != null)
-                other.other = null;
+            if (connected != null)
+                connected.connected = null;
 
         }
         void IBeginDragHandler.OnBeginDrag(UnityEngine.EventSystems.PointerEventData eventData)
@@ -172,57 +147,61 @@ namespace IDK.Node_Related_Scripts.connection_stuff
             }
             if (!found)
             {
-                if (other != null)
+                if (connected != null)
                 {
-                    other.other = null;
-                    other = null;
+                    connected.connected = null;
+                    connected = null;
                 }
             }
 
         }
         public void RemoveAllConnections()
         {
-            if (other != null)
+            if (connected != null)
             {
-                other.other = null;
-                other = null;
+                connected.connected = null;
+                connected = null;
             }
+        }
+        public static bool CanConnect(NodeBlueprint.ConnectionClass connectionType, NodeBlueprint.ConnectionClass other)
+        {
+            return connectionType == FlipConnection(other);
         }
         public bool CanConnect(NodeConnector other)
         {
-            return connectionType == FlipConnection(other.connectionType);
+            return connectionType.connectionType == FlipConnection(other.connectionType.connectionType);
         }
         public void Connect(NodeConnector nodeConnector, out bool createdNewNodes)
         {
             bool canConnect = CanConnect(nodeConnector);
             if (canConnect)
             {
-                other = nodeConnector;
-                nodeConnector.other = this;
+                connected = nodeConnector;
+                nodeConnector.connected = this;
                 createdNewNodes = false;
             }
             else
             {
-                if (convertTable.ContainsKey(connectionType))
+                if (convertTable.ContainsKey(connectionType.connectionType))
                 {
-                    if (convertTable[connectionType].ContainsKey(nodeConnector.connectionType))
+                    if (convertTable[connectionType.connectionType].ContainsKey(nodeConnector.connectionType.connectionType))
                     {
-                        Node node = Main.nodeDatabase[convertTable[connectionType][nodeConnector.connectionType]].Spawn();
+                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[connectionType.connectionType][nodeConnector.connectionType.connectionType]].Spawn();
                         node.transform.position = (transform.position + nodeConnector.transform.position) / 2;
-                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType == FlipConnection(connectionType)), out _);
-                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType == FlipConnection(nodeConnector.connectionType)), out _);
+                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(connectionType.connectionType)), out _);
+                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(nodeConnector.connectionType.connectionType)), out _);
                         createdNewNodes = true;
                         Debug.Log("Created new node!");
                     }
                 }
-                else if (convertTable.ContainsKey(nodeConnector.connectionType))
+                else if (convertTable.ContainsKey(nodeConnector.connectionType.connectionType))
                 {
-                    if (convertTable[nodeConnector.connectionType].ContainsKey(connectionType))
+                    if (convertTable[nodeConnector.connectionType.connectionType].ContainsKey(connectionType.connectionType))
                     {
-                        Node node = Main.nodeDatabase[convertTable[nodeConnector.connectionType][connectionType]].Spawn();
+                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[nodeConnector.connectionType.connectionType][connectionType.connectionType]].Spawn();
                         node.transform.position = (transform.position + nodeConnector.transform.position) / 2;
-                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType == FlipConnection(connectionType)), out _);
-                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType == FlipConnection(nodeConnector.connectionType)), out _);
+                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(connectionType.connectionType)), out _);
+                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(nodeConnector.connectionType.connectionType)), out _);
                         createdNewNodes = true;
                         Debug.Log("Created new node!");
                     }
@@ -238,13 +217,13 @@ namespace IDK.Node_Related_Scripts.connection_stuff
             {
                 return;
             }
-            if (other == null)
+            if (connected == null)
             {
                 DrawCubicBezier(Vector3.zero, Vector3.zero);
             }
             else
             {
-                DrawCubicBezier(WorldPosition(transform.position), WorldPosition(other.transform.position));
+                DrawCubicBezier(WorldPosition(transform.position), WorldPosition(connected.transform.position));
             }
         }
         void DrawCubicBezier(Vector3 startPoint, Vector3 endPoint)

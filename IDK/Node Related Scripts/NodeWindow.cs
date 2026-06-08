@@ -28,7 +28,7 @@ public class NodeWindow : MonoBehaviour, IDragHandler, IEventSystemHandler
         }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
-            if (NodeManager.SelectedNodes.Contains(GetComponent<Node>()))
+            if (NodeManager.SelectedNodes.Contains(GetComponent<NodeComponent>()))
             {
                 for (int i = 0; i < NodeManager.SelectedNodes.Length; i++)
                 {

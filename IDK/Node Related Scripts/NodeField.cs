@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using IDK.Node_Related_Scripts.Field_stuff;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ namespace IDK
 {
     public class NodeField : MonoBehaviour
     {
-        public NodeBlueprint.Field.FieldType fieldType;
+        public VirtualNodeField field;
         public string Value
         {
             get

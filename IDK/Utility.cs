@@ -34,7 +34,7 @@ namespace IDK
 
         }
         
-        public static SavedNode GetNode(this List<Node.Connection> ts, NodeBlueprint.ConnectionType connectionType)
+        public static LegacySavedNode GetNode(this List<NodeComponent.LegacyConnection> ts, NodeBlueprint.ConnectionClass connectionType)
         {
             for (int i = 0; i < ts.Count; i++)
             {
@@ -51,7 +51,7 @@ namespace IDK
             else
                 return 0;
         }
-        public static ValuePool GetValuePoolSmart (this SavedNode savedNode, Unit unit)
+        public static ValuePool GetValuePoolSmart (this LegacySavedNode savedNode, Unit unit)
         {
             try
             {
@@ -110,13 +110,13 @@ namespace IDK
             }
             return null;
         }
-        public static IEnumerator TriggerConnection(this SavedNode savedNode, NodeRunner nodeRunner, int pause = 0)
+        public static IEnumerator TriggerConnection(this LegacySavedNode savedNode, NodeRunner nodeRunner, int pause = 0)
         {
             for (int i = 0; i < pause; i++)
             {
                 yield return null;
             }
-            SavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionType.Trigger);
+            LegacySavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.Trigger);
             if (nodeToTrigger == null)
                 yield break;
             yield return nodeRunner.RunNode(nodeToTrigger);

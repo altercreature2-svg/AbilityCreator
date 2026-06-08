@@ -3,9 +3,9 @@
 namespace IDK
 {
     [System.Serializable]
-    public class NodeScene : MonoBehaviour
+    public class LegacyNodeScene : MonoBehaviour
     {
-        public SavedNode[] everyNode;
+        public LegacySavedNode[] everyNode;
         public string sceneName = "";
         public string sceneDescription = "";
         public string sceneImage = "";
@@ -18,20 +18,20 @@ namespace IDK
             {
                 try
                 {
-                    if (Main.nodeScenes.FindIndex(n => n == this) != -1)
-                        return Main.nodeScenes.FindIndex(n => n == this);
+                    if (AbilityCreator.nodeScenes.FindIndex(n => n == this) != -1)
+                        return AbilityCreator.nodeScenes.FindIndex(n => n == this);
                     throw new System.Exception();
                 }
                 catch (System.Exception)
                 {
-                    return Main.nodeScenes.Count;
+                    return AbilityCreator.nodeScenes.Count;
                 }
 
             }
         }
         public string Jsonify(Newtonsoft.Json.Formatting formatting = Newtonsoft.Json.Formatting.Indented)
         {
-            SavedNodeScene savedNodeScene = SavedNodeScene.Instance(this);
+            LegacySavedNodeScene savedNodeScene = LegacySavedNodeScene.Instance(this);
             var settings = new Newtonsoft.Json.JsonSerializerSettings()
             {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
@@ -39,10 +39,10 @@ namespace IDK
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(savedNodeScene, formatting, settings);
             return json;
         }
-        public NodeScene CreateCopy()
+        public LegacyNodeScene CreateCopy()
         {
             GameObject nodeobj = new GameObject($"Node Scene ({sceneName})");
-            var node = nodeobj.AddComponent<NodeScene>();
+            var node = nodeobj.AddComponent<LegacyNodeScene>();
             node.everyNode = everyNode;
             node.id = id;
             node.sceneDescription = sceneDescription;
@@ -53,8 +53,8 @@ namespace IDK
         }
         void OnDestroy()
         {
-            if (Main.nodeScenes.Contains(this))
-                Main.nodeScenes.Remove(this);
+            if (AbilityCreator.nodeScenes.Contains(this))
+                AbilityCreator.nodeScenes.Remove(this);
             if (gameObject)
                 Destroy(gameObject);
         }
@@ -66,8 +66,8 @@ namespace IDK
         }
         public void Start()
         {
-            if (!Main.nodeScenes.Contains(this) && isFinal)
-                Main.nodeScenes.Add(this);
+            if (!AbilityCreator.nodeScenes.Contains(this) && isFinal)
+                AbilityCreator.nodeScenes.Add(this);
         }
         
     }

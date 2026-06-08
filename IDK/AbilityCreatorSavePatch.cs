@@ -16,10 +16,11 @@ public class AbilityCreatorSavePatch : ISaveUnit
     }
     public void Post(UnitBlueprint unitBlueprint, ExtraSerializedUnit extraSerializedUnit)
     {
-        if (!Main.units.ContainsKey(unitBlueprint.Name))
-            Main.units.Add(unitBlueprint.Name, null);
-        Main.units[unitBlueprint.Name] = unitBlueprint;
-        GameObject[] nodeScenes = Main.abilites.Values.ToArray();
+        if (!AbilityCreator.units.ContainsKey(unitBlueprint.Name))
+            AbilityCreator.units.Add(unitBlueprint.Name, null);
+        AbilityCreator.units[unitBlueprint.Name] = unitBlueprint;
+       
+        GameObject[] nodeScenes =  AbilityCreator.assetManager.GetAllAssets<GameObject>("move");
         for (int i = 0; i < extraSerializedUnit.m_combatMoves.Length; i++)
         {
             GameObject @object = System.Array.Find(nodeScenes, n => n.GetComponent<SpecialAbility>().Entity.GUID == extraSerializedUnit.m_combatMoves[i]);
@@ -29,7 +30,7 @@ public class AbilityCreatorSavePatch : ISaveUnit
     }
     public void Pre(ExtraSerializedUnit extraSerializedUnit)
     {
-        List<NodeScene> allNodeScenes = Main.nodeScenes;
+        List<LegacyNodeScene> allNodeScenes = AbilityCreator.nodeScenes;
         DeveloperLogger.Log($"Extra serialized unit detected! {extraSerializedUnit.m_name}");
         for (int i = 0; i < extraSerializedUnit.extraFieldNames.Count; i++)
         {
@@ -37,9 +38,9 @@ public class AbilityCreatorSavePatch : ISaveUnit
             string encodedString = extraSerializedUnit.extraFieldValues[i];
             byte[] decodedBytes = System.Convert.FromBase64String(encodedString);
             string decodedText = System.Text.Encoding.UTF8.GetString(decodedBytes);
-            var nodeScene = Main.DeserializeAbility(decodedText);
+            var nodeScene = AbilityCreator.DeserializeAbility(decodedText);
             DeveloperLogger.Log("Deserialized ability!");
-            if (Main.IsAbilityWritten(nodeScene))
+            if (AbilityCreator.IsAbilityWritten(nodeScene))
                 continue;
             if (BundledAbilitesManager.bundledAbilities.Exists(n => n.abilityData == decodedText))
                 continue;
@@ -47,12 +48,12 @@ public class AbilityCreatorSavePatch : ISaveUnit
             DeveloperLogger.Log($"Bundled ability!");
             DeveloperLogger.Log($"Adding ability {bundledAbility}");
             BundledAbilitesManager.bundledAbilities.Add(bundledAbility);
-            StartCoroutine(Main.ForceShowModal(bundledAbility));
+            StartCoroutine(AbilityCreator.ForceShowModal(bundledAbility));
         }
     }
     public override ExtraSerializedUnit AddData(ExtraSerializedUnit serializedUnitBlueprint, UnitBlueprint unitBlueprint)
     {
-        List<NodeScene> nodeScenes = new List<NodeScene>();
+        List<LegacyNodeScene> nodeScenes = new List<LegacyNodeScene>();
         for (int i = 0; i < unitBlueprint.objectsToSpawnAsChildren.Length; i++)
         {
             DeveloperLogger.Log("Checking if abiltiy is custom :" + unitBlueprint.objectsToSpawnAsChildren[i]);

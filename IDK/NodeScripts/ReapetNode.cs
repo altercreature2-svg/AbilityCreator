@@ -7,19 +7,12 @@ namespace IDK.NodeScripts
 {
     public class ReapetNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            for (int i = 0; i < (int)fields[0].QuickParse(); i++)
-            {
-                if (savedNode.fields[1].QuickParse() == 0)
-                    yield return null;
-                else if (savedNode.fields[1].QuickParse() < 0) { }
-                else
-                    yield return new WaitForSeconds(savedNode.fields[1].QuickParse());
-                yield return savedNode.TriggerConnection(nodeRunner);
-            }
-            
-            
+            int times = (int)fields[0].QuickParse();
+            float interval = fields[1].QuickParse();
+            AbilityCreator.reapeter.AddTask(times, interval, () => nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode)));
+            yield break;   
         }
     }
 }

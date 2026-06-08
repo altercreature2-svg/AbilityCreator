@@ -7,15 +7,15 @@ namespace IDK.NodeScripts
 {
     public class ParryProjectile : IBehaviorNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             ValuePool valuePool = savedNode.GetValuePool(unit);
             valuePool.ClearValues();
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             for (int o = 0; o < gameObjs.Length; o++)
             {
 
@@ -92,7 +92,7 @@ namespace IDK.NodeScripts
         }
         private void PlaySlice(Vector3 pos, Quaternion rot)
         {
-            GameObject obj = UnityEngine.Object.Instantiate(Main.sliceEffect, null);
+            GameObject obj = UnityEngine.Object.Instantiate(AbilityCreator.sliceEffect, null);
             obj.transform.position = pos;
             obj.transform.rotation = rot;
             obj.GetComponent<CodeAnimation>()?.PlayIn();

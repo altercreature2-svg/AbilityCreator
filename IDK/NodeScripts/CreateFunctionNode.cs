@@ -11,11 +11,11 @@ namespace IDK.NodeScripts
 {
     public class CreateFunctionNode : ITriggerNode
     {
-        public override void EveryFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             
         }
-        public override void StartFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             FunctionStorer functionStorer;
             if (!unit.GetComponent<FunctionStorer>())
@@ -41,7 +41,7 @@ namespace IDK.NodeScripts
                 nodeAction.@event.AddListener(() => Run(savedNode, nodeRunner));
             }
         }
-        public void Run(SavedNode savedNode, NodeRunner nodeRunner)
+        public void Run(LegacySavedNode savedNode, NodeRunner nodeRunner)
         {
             nodeRunner.StartCoroutine(savedNode.TriggerConnection(nodeRunner));
         }

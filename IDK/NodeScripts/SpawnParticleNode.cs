@@ -10,18 +10,18 @@ namespace IDK.NodeScripts
 {
     public class SpawnParticleNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             ValuePool valuePool = savedNode.GetValuePool(unit);
             valuePool.ClearValues();
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>(); 
+            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>(); 
             for (int o = 0; o < gameObjs.Length; o++)
             {
-                var particle = Object.Instantiate(Main.particles[fields[0]]);
+                var particle = Object.Instantiate(AbilityCreator.particles[fields[0]]);
                 particle.transform.position = gameObjs[o].transform.position;
                 if (fields[1].QuickParse() != 0)
                     particle.transform.localScale *= fields[1].QuickParse();

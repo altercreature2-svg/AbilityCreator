@@ -11,9 +11,9 @@ namespace IDK
     {
         public System.Type nodeFunction;
 
-
+        public bool obselete;
         public string tab;
-        public enum ConnectionType
+        public enum ConnectionClass
         {
             Triggered,
             Trigger,
@@ -65,7 +65,8 @@ namespace IDK
                 Unit,
                 Weapon,
                 Particle,
-                Field,
+                Ability,
+                Clothing,
             }
         }
         public string Name;
@@ -73,9 +74,9 @@ namespace IDK
         public string key;
         public Color color;
         public List<Field> fields = new List<Field>();
-        public List<ConnectionType> connections;
+        public List<ConnectionClass> connections;
         public Type type;
-        public Node Spawn()
+        public NodeComponent Spawn()
         {
 
             var node = Instantiate(BundleManager.node);
@@ -87,7 +88,7 @@ namespace IDK
             node.transform.SetParent(GameObject.Find("AbilitySaveButton").transform.parent.transform.Find("nodesScaler").transform);
 
             node.transform.localPosition = Vector3.zero;
-            if (color == Color.white)
+            if (color == Color.white | color == Color.yellow)
             {
                 node.GetComponentInChildren<TextMeshProUGUI>().color = Color.black;
             }
@@ -156,8 +157,10 @@ namespace IDK
                         button.onClick.AddListener(() => nodeManager.ShowParticles(n => txt.text = n));
                     else if (fields[i].fieldType is Field.FieldType.Component)
                         button.onClick.AddListener(() => nodeManager.ShowComponents(n => txt.text = n));
-                    else if (fields[i].fieldType is Field.FieldType.Field)
-                        button.onClick.AddListener(() => nodeManager.ShowFields(n => txt.text = n, node.GetComponent<Node>()));
+                    else if (fields[i].fieldType is Field.FieldType.Ability)
+                        button.onClick.AddListener(() => nodeManager.ShowAbilities(n => txt.text = n));
+                    else if (fields[i].fieldType is Field.FieldType.Clothing)
+                        button.onClick.AddListener(() => nodeManager.ShowClothing(n => txt.text = n));
                 }
 
 
@@ -170,7 +173,7 @@ namespace IDK
                 field.AddComponent<NodeField>().fieldType = fields[i].fieldType;
             }
 
-            Node nodeComp = node.AddComponent<Node>();
+            NodeComponent nodeComp = node.AddComponent<NodeComponent>();
             nodeComp.nodeBlueprint = this;
             node.transform.position = new Vector3(500, 195, 0);
             Destroy(node.transform.Find("Fields").Find("Field").gameObject);
@@ -178,67 +181,67 @@ namespace IDK
             Transform outer = node.transform.Find("Out");
             foreach (var connector in connections)
             {
-                if (connector == ConnectionType.Triggered)
+                if (connector == ConnectionClass.Triggered)
                 {
                     Instantiate(BundleManager.connecterTrig, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveUnit)
+                if (connector == ConnectionClass.ReciveUnit)
                 {
                     Instantiate(BundleManager.connecterUnit, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveGameObject)
+                if (connector == ConnectionClass.ReciveGameObject)
                 {
                     Instantiate(BundleManager.connecterGameObject, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveVariable)
+                if (connector == ConnectionClass.ReciveVariable)
                 {
                     Instantiate(BundleManager.connecterVar, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveComponent)
+                if (connector == ConnectionClass.ReciveComponent)
                 {
                     Instantiate(BundleManager.connectorComponent, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveObjectVariable)
+                if (connector == ConnectionClass.ReciveObjectVariable)
                 {
                     Instantiate(BundleManager.connecterObjectVariable, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveLeftRight)
+                if (connector == ConnectionClass.ReciveLeftRight)
                 {
                     Instantiate(BundleManager.connecterLeftRight, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.ReciveAnything)
+                if (connector == ConnectionClass.ReciveAnything)
                 {
                     Instantiate(BundleManager.connecterAnything, reciver).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.Trigger)
+                if (connector == ConnectionClass.Trigger)
                 {
                     Instantiate(BundleManager.connecterTrig, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveGameObject)
+                if (connector == ConnectionClass.GiveGameObject)
                 {
                     Instantiate(BundleManager.connecterGameObject, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveUnit)
+                if (connector == ConnectionClass.GiveUnit)
                 {
                     Instantiate(BundleManager.connecterUnit, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveVariable)
+                if (connector == ConnectionClass.GiveVariable)
                 {
                     Instantiate(BundleManager.connecterVar, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveComponent)
+                if (connector == ConnectionClass.GiveComponent)
                 {
                     Instantiate(BundleManager.connectorComponent, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveObjectVariable)
+                if (connector == ConnectionClass.GiveObjectVariable)
                 {
                     Instantiate(BundleManager.connecterObjectVariable, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveLeftRight)
+                if (connector == ConnectionClass.GiveLeftRight)
                 {
                     Instantiate(BundleManager.connecterLeftRight, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }
-                if (connector == ConnectionType.GiveAnything)
+                if (connector == ConnectionClass.GiveAnything)
                 {
                     Instantiate(BundleManager.connecterAnything, outer).GetComponent<NodeConnector>().connectionType = connector;
                 }

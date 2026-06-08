@@ -10,29 +10,29 @@ namespace IDK.NodeScripts
         {
             return false;
         }
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             ValuePool valuePool = savedNode.GetValuePool(unit);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             foreach (var gameObj in gameObjects)
             {
                 if (fields[0] == "First")
                 {
                     if (fields[1] == "Don't")
-                        valuePool.AddValue(gameObj.GetComponent(Main.components[fields[0]]));
+                        valuePool.AddValue(gameObj.GetComponent(AbilityCreator.components[fields[0]]));
                     else
-                        valuePool.AddValue(gameObj.GetComponentInChildren(Main.components[fields[0]]));
+                        valuePool.AddValue(gameObj.GetComponentInChildren(AbilityCreator.components[fields[0]]));
 
                 }
                 else
                 {
                     if (fields[1] == "Don't")
                     {
-                        Component[] array = gameObj.GetComponents(Main.components[fields[0]]);
+                        Component[] array = gameObj.GetComponents(AbilityCreator.components[fields[0]]);
                         foreach (Component item in array)
                         {
                             valuePool.AddValue(item);
@@ -41,7 +41,7 @@ namespace IDK.NodeScripts
                     }
                     else
                     {
-                        Component[] array = gameObj.GetComponentsInChildren(Main.components[fields[0]]);
+                        Component[] array = gameObj.GetComponentsInChildren(AbilityCreator.components[fields[0]]);
                         foreach (Component item in array)
                         {
                             valuePool.AddValue(item);

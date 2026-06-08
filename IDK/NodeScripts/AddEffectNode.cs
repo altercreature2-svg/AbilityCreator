@@ -8,13 +8,13 @@ namespace IDK.NodeScripts
 {
     public class AddEffectNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
+            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
             for (int i = 0; i < units.Length; i++)
             {
-                var effectt = Object.Instantiate(Main.Effects[fields[0]], units[i].transform);
+                var effectt = UnitEffectBase.AddEffectToTarget(units[i].gameObject, AbilityCreator.effects[fields[0]].GetComponent<UnitEffectBase>());
                 effectt.transform.position = units[i].transform.position;
                 if (effectt.GetComponent<UnitEffectBase>())
                 {

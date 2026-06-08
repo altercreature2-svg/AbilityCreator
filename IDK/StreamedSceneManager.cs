@@ -17,7 +17,7 @@ namespace IDK
 {
     public class StreamedSceneManager : MonoBehaviour
     {
-        public static NodeScene currentscene;
+        public static LegacyNodeScene currentscene;
         private int CurrentEditMenuState = 0;
         private GameObject butto;
         private void Awake()
@@ -26,7 +26,7 @@ namespace IDK
         }
         public static void ShowAllObjects(Transform transform)
         {
-            if (transform.GetComponent<Node>())
+            if (transform.GetComponent<NodeComponent>())
                 return;
             if (transform.gameObject.scene != SceneManager.GetActiveScene())
                 return;
@@ -47,7 +47,7 @@ namespace IDK
             TABSSceneManager.LoadScene("Assets/Scenes/AbilityCreator.unity");
             //ShowAllObjects(FindObjectOfType<Canvas>().transform);
             Debug.Log("NodeSceneIndex:" + nodesceneIndex);
-            currentscene = Main.nodeScenes[nodesceneIndex];
+            currentscene = AbilityCreator.nodeScenes[nodesceneIndex];
             StartCoroutine(EnterNodeSceneEnumerator());
         }
         public void EnterNewNodeScene()
@@ -57,7 +57,7 @@ namespace IDK
         }
         public void EnterNodeChanger()
         {
-            NodeScene[] nodeScenes = FindObjectsOfType<NodeScene>();
+            LegacyNodeScene[] nodeScenes = FindObjectsOfType<LegacyNodeScene>();
 
             for (int i = 0; i < nodeScenes.Length; i++)
             {
@@ -77,7 +77,7 @@ namespace IDK
             yield return new WaitUntil(() => GameObject.Find("New Ability") != null);
             GameObject.Find("New Ability").GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => EnterNewNodeScene());
 
-            foreach (NodeScene nodeScene in Main.nodeScenes)
+            foreach (LegacyNodeScene nodeScene in AbilityCreator.nodeScenes)
             {
                 if (!nodeScene)
                 {
@@ -98,7 +98,7 @@ namespace IDK
 
                     button.GetComponentInChildren<TextMeshProUGUI>().text = nodeScene.sceneName;
 
-                    button.transform.Find("Icon").GetComponent<Image>().sprite = Main.GetSprite(nodeScene);
+                    button.transform.Find("Icon").GetComponent<Image>().sprite = AbilityCreator.GetSprite(nodeScene);
                 }
                 catch { }
 
@@ -127,24 +127,15 @@ namespace IDK
             yield return new WaitUntil(() => GameObject.Find("TABS2"));
             GameObject tabs2 = GameObject.Find("TABS2");
             TMP_InputField txt = GameObject.Find("txt").GetComponent<TMP_InputField>();
-            Button Ubutton = GameObject.Find("Units").GetComponent<Button>();
-            Button Exbutton = GameObject.Find("explosions").GetComponent<Button>();
-            Button Efbutton = GameObject.Find("effects").GetComponent<Button>();
-            Button SFbutton = GameObject.Find("sounds").GetComponent<Button>();
-            Button Pbutton = GameObject.Find("Projectiles").GetComponent<Button>();
-            Button Cbutton = GameObject.Find("Components").GetComponent<Button>();
-            Button SPbutton = GameObject.Find("Sprites").GetComponent<Button>();
-            Button PAbutton = GameObject.Find("Particles").GetComponent<Button>();
-            Button SAbutton = GameObject.Find("Weapons").GetComponent<Button>();
-            Ubutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Units.txt"));
-            Exbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Explosions.txt"));
-            Efbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Effects.txt"));
-            SFbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Sounds.txt"));
-            Pbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Projectiles.txt"));
-            Cbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Components.txt"));
-            SPbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Sprites.txt"));
-            PAbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Particles.txt"));
-            SAbutton.onClick.AddListener(() => txt.text = File.ReadAllText(Main.path + "/Weapons.txt"));
+            Button BaseButton = GameObject.Find("Base").GetComponent<Button>();
+            for (int i = 0; i < AbilityCreator.assetManager.assets.Count; i++)
+            {
+                GameObject button = Instantiate(BaseButton.gameObject, BaseButton.transform.parent);
+                string buttonName = AbilityCreator.assetManager.assets.Keys.ElementAt(i).GetName();
+                button.GetComponentInChildren<TextMeshProUGUI>().text = buttonName;
+                button.GetComponent<Button>().onClick.AddListener(() => txt.text = File.ReadAllText(Path.Combine(AbilityCreator.path, buttonName + ".txt")));
+            }
+            Destroy(BaseButton.gameObject);
             GameObject.Find("GoMainMenu").GetComponent<Button>().onClick.AddListener(() => EnterNodeChanger());
             tabs2.SetActive(false);
             Button spawnButton = GameObject.Find("SpawnButton").GetComponent<Button>();
@@ -169,25 +160,25 @@ namespace IDK
                 {
                     if (dropdownValue == "Unit")
                     {
-                        UnitBlueprint unitBlueprint = Main.units[spawnID.text];
+                        UnitBlueprint unitBlueprint = AbilityCreator.units[spawnID.text];
                         GameObject unit = unitBlueprint.Spawn(spawnPos.position, Quaternion.Euler(0, 180, 0), Team.Red)[0].transform.root.gameObject;
                         unit.transform.position = spawnPos.position;
                         lastSpawnedObject = unit;
                     }
                     if (dropdownValue == "Explosion")
                     {
-                        GameObject gameObject = Instantiate(Main.explosions[spawnID.text]);
+                        GameObject gameObject = Instantiate(AbilityCreator.explosions[spawnID.text]);
                         gameObject.transform.position = spawnPos.position;
                         lastSpawnedObject = gameObject;
                     }
                     if (dropdownValue == "Effect")
                     {
-                        UnitBlueprint unitBlueprint = Main.units["Squire"];
+                        UnitBlueprint unitBlueprint = AbilityCreator.units["Squire"];
                         GameObject unit = unitBlueprint.Spawn(spawnPos.position, Quaternion.Euler(0, 180, 0), Team.Red)[0].transform.root.gameObject;
                         unit.transform.position = spawnPos.position;
                         lastSpawnedObject = unit;
 
-                        GameObject effect = Object.Instantiate(Main.Effects[spawnID.text], unit.transform);
+                        GameObject effect = Object.Instantiate(AbilityCreator.effects[spawnID.text], unit.transform);
                         if (effect.GetComponent<UnitEffectBase>())
                         {
                             effect.GetComponent<UnitEffectBase>().DoEffect();
@@ -205,8 +196,9 @@ namespace IDK
                     }
                     if (dropdownValue == "Projectile")
                     {
-                        GameObject projectilePrefab = Main.Projectiles[spawnID.text];
-                        lastSpawnedObject = SpawnProjectileNode.SpawnProjectile(projectilePrefab, spawnPos.transform.position, null, spawnPos, spawnPos, 0);
+                           
+                        GameObject projectilePrefab = AbilityCreator.projectiles[spawnID.text];
+                        lastSpawnedObject = SmartProjectileSpawner.SpawnProjectile(projectilePrefab, spawnPos.gameObject, null, spawnPos, spawnPos, 0);
                     }
                     if (dropdownValue == "Sprite")
                     {
@@ -216,21 +208,36 @@ namespace IDK
                             image.AddComponent<RectTransform>();
                         image.transform.SetParent(spawnButton.transform.parent);
                         image.GetComponent<RectTransform>().SetWidthAndHeight(.7f, .7f);
-                        image.AddComponent<Image>().sprite = Main.pepsis[spawnID.text];
+                        image.AddComponent<Image>().sprite = AbilityCreator.sprites[spawnID.text];
                         lastSpawnedObject = image;
                     }
                     if (dropdownValue == "Particle")
                     {
-                        GameObject prefab = Main.particles[spawnID.text];
+                        GameObject prefab = AbilityCreator.particles[spawnID.text];
                         GameObject particle = Instantiate(prefab);
                         particle.GetComponent<ParticleSystem>().Play();
                         lastSpawnedObject = particle;
                     }
                     if (dropdownValue == "Weapon")
                     {
-                        GameObject prefab = Main.weapons[spawnID.text];
-                        GameObject particle = Instantiate(prefab);
-                        lastSpawnedObject = particle;
+                        GameObject prefab = AbilityCreator.weapons[spawnID.text];
+                        UnitBlueprint unitBlueprint = Instantiate(AbilityCreator.units["Squire"]);
+                        unitBlueprint.m_props = new GameObject[0];
+                        unitBlueprint.RightWeapon = prefab;
+                        GameObject unit = unitBlueprint.Spawn(spawnPos.position, Quaternion.Euler(0, 180, 0), Team.Red)[0].transform.root.gameObject;
+                        unit.transform.position = spawnPos.position;
+                        lastSpawnedObject = unit;
+                        
+                    }
+                    if (dropdownValue == "Prop")
+                    {
+                        GameObject prefab = AbilityCreator.assetManager.GetAsset<GameObject>("prop", spawnID.text);
+                        UnitBlueprint unitBlueprint = Instantiate(AbilityCreator.units["Squire"]);
+                        unitBlueprint.m_props = new GameObject[] { prefab};
+                        unitBlueprint.RightWeapon = null;
+                        GameObject unit = unitBlueprint.Spawn(spawnPos.position, Quaternion.Euler(0, 180, 0), Team.Red)[0].transform.root.gameObject;
+                        unit.transform.position = spawnPos.position;
+                        lastSpawnedObject = unit;
                     }
                 }
                 catch
@@ -248,7 +255,7 @@ namespace IDK
         }
         public static void AddBundledAbility(BundledAbilitesManager.BundledAbility bundledAbility)
         {
-            SavedNodeScene savedNodeScene = Main.DeserializeAbility(bundledAbility.abilityData);
+            VirtualNodeScene savedNodeScene = AbilityCreator.DeserializeAbility(bundledAbility.abilityData);
             NodeManager.WriteAbility(savedNodeScene, bundledAbility.abilityData, true, true);
             BundledAbilitesManager.bundledAbilities.Remove(bundledAbility);
             MyModalPanel.queue.Remove(bundledAbility);
@@ -276,7 +283,7 @@ namespace IDK
             contentButton.SetActive(false);
         }
 
-        private void MoveMenu(NodeScene scene)
+        private void MoveMenu(LegacyNodeScene scene)
         {
             Time.timeScale = 1;
             if (CurrentEditMenuState == 0)
@@ -305,19 +312,19 @@ namespace IDK
 
 
         }
-        public void DeleteScene(NodeScene scene)
+        public void DeleteScene(LegacyNodeScene scene)
         {
-            string path = Directory.GetParent(Main.GetPath(scene)).FullName;
+            string path = Directory.GetParent(AbilityCreator.GetPath(scene)).FullName;
             Directory.Delete(path, true);
             GameObject buttonToDestroy = GameObject.Find(scene.id.ToString());
-            if (Main.nodeScenes.Contains(scene))
-                Main.nodeScenes.Remove(scene);
-            if (Main.abilites.ContainsKey(scene.sceneName))
-                Main.abilites.Remove(scene.sceneName);
+            if (AbilityCreator.nodeScenes.Contains(scene))
+                AbilityCreator.nodeScenes.Remove(scene);
+            if (AbilityCreator.abilites.ContainsKey(scene.sceneName))
+                AbilityCreator.abilites.Remove(scene.sceneName);
             Destroy(buttonToDestroy);
             MoveMenu(scene);
             Destroy(scene);
-            Main.Reload();
+            AbilityCreator.Reload();
 
         }
 
@@ -338,15 +345,16 @@ namespace IDK
                 yield break;
             }
             // Objectefize nodescenes
-            // nigga what???
-            Dictionary<SavedNode, Node> nodes = new Dictionary<SavedNode, Node>();
+            // what???
+            
+            Dictionary<LegacySavedNode, NodeComponent> nodes = new Dictionary<LegacySavedNode, NodeComponent>();
             for (int i = 0; i < currentscene.everyNode.Length; i++)
             {
                 try
                 {
                     NodeBlueprint nodeBlueprint = currentscene.everyNode[i].Blueprint;
                     List<string> fields = currentscene.everyNode[i].fields;
-                    Node node = nodeBlueprint.Spawn();
+                    NodeComponent node = nodeBlueprint.Spawn();
                     node.corispondingNode = currentscene.everyNode[i];
                     currentscene.everyNode[i].corispondingNode = node;
                     node.transform.position = currentscene.everyNode[i].position;
@@ -370,13 +378,13 @@ namespace IDK
             }
             for (int i = 0; i < currentscene.everyNode.Length; i++)
             {
-                Node node = nodes[currentscene.everyNode[i]];
-                foreach (Node.Connection connection in currentscene.everyNode[i].connections)
+                NodeComponent node = nodes[currentscene.everyNode[i]];
+                foreach (NodeComponent.LegacyConnection connection in currentscene.everyNode[i].connections)
                 {
                     try
                     {
                         int index = node.Connections.Keys.ToList().FindIndex(n => n == connection.connectionsType);
-                        node.Connections.Values.ElementAt(index).other = nodes[connection.savedNode].GetComponentsInChildren<NodeConnector>().ToList().Find(n => n.CanConnect(node.Connections.Values.ToArray()[index]));
+                        node.Connections.Values.ElementAt(index).connected = nodes[connection.savedNode].GetComponentsInChildren<NodeConnector>().ToList().Find(n => n.CanConnect(node.Connections.Values.ToArray()[index]));
                     }
                     catch 
                     {

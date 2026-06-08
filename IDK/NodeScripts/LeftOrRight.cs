@@ -5,7 +5,7 @@ namespace IDK.NodeScripts
 {
     public class LeftOrRight : IValueNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             ValuePool valuePool = savedNode.GetValuePool(unit);
             BundleManager.LeftRight leftRight = BundleManager.LeftRight.Right;
@@ -19,7 +19,7 @@ namespace IDK.NodeScripts
         {
             return false;
         }
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
         }

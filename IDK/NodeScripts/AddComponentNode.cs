@@ -9,17 +9,17 @@ namespace IDK.NodeScripts
 {
     public class AddComponentNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             ValuePool valuePool = savedNode.GetValuePool(unit);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             foreach (var gameObj in gameObjects)
             {
-                valuePool.AddValue(gameObj.AddComponent(Main.components[fields[0]])); 
+                valuePool.AddValue(gameObj.AddComponent(AbilityCreator.components[fields[0]])); 
             }
             savedNode.valuePools[unit] = valuePool;
             yield return savedNode.TriggerConnection(nodeRunner);

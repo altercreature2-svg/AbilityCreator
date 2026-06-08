@@ -27,13 +27,13 @@ namespace IDK
             }
         }
         public static List<BundledAbility> bundledAbilities = new List<BundledAbility>();
-        public static BundledAbility BundleAbility(ExtraSerializedUnit unit, SavedNodeScene savedNodeScene, string data)
+        public static BundledAbility BundleAbility(ExtraSerializedUnit unit, LegacySavedNodeScene savedNodeScene, string data)
         {
             BundledAbility bundledAbility = new GameObject("Bundledability").AddComponent<BundledAbility>();
             bundledAbility.abilityData = data;
             bundledAbility.abilityName = savedNodeScene.sceneName;
             bundledAbility.unitName = unit.m_name;
-            bundledAbility.sprite = Main.GetSprite(savedNodeScene);
+            bundledAbility.sprite = AbilityCreator.GetSprite(savedNodeScene);
             return bundledAbility;
             
         }

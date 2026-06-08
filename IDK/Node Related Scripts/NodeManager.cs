@@ -1,18 +1,23 @@
 ﻿using DM;
 using HarmonyLib;
+using IDK.Node_Related_Scripts;
 using IDK.Node_Related_Scripts.connection_stuff;
+using IDK.Node_Related_Scripts.ConnectionStuff;
+using IDK.Node_Related_Scripts.Field_stuff;
+using IDK.Node_Related_Scripts.SavingStuff;
 using Landfall.TABC;
 using Landfall.TABS;
 using Landfall.TABS.GameState;
+using Landfall.TABS.RuntimeCleanup;
 using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking.Types;
 using UnityEngine.UI;
 
 
@@ -23,11 +28,11 @@ namespace IDK
     public class NodeManager : MonoBehaviour
     {
 
-        public Node[] SelectedNodes
+        public NodeComponent[] SelectedNodes
         {
             get
             {
-                Node[] array = FindObjectsOfType<UnityEngine.UI.Outline>().Where(n => n.transform.parent.GetComponent<Node>()).Select(n => n.transform.parent.GetComponent<Node>()).ToArray();
+                NodeComponent[] array = FindObjectsOfType<UnityEngine.UI.Outline>().Where(n => n.transform.parent.GetComponent<NodeComponent>()).Select(n => n.transform.parent.GetComponent<NodeComponent>()).ToArray();
                 return array;
             }
         }
@@ -39,28 +44,26 @@ namespace IDK
         private GameObject SaveMenu;
         private GameObject QuitMenu;
         private GameObject nodeScaler;
-        private GameObject itemsList;
         public UnitBlueprint unitBlueprint1;
         public UnitBlueprint unitBlueprint2;
         public GameObject baseButton;
         public Vector3 scale = Vector3.one;
         private bool buttonState;
         public bool canScroll = true;
-        public List<Node> nodes = new List<Node>();
-        public Coroutine showItemsCoroutine;
-        public Coroutine searchCoroutine;
+        public List<NodeComponent> nodes = new List<NodeComponent>();
         public Coroutine unitSearchCoroutine;
         private GameObject m_ability;
         private GameObject tutorial;
         private float zoom;
-        private string[] items;
-        private UnityAction<string> lastAction;
+        public GameObject[] buttonPool;
+        public int poolSize = 50;
+        public ItemList itemList;
         public GameObject Ability
         {
             get
             {
                 if (!m_ability)
-                    m_ability = Main.CreateAbility(BuildNodeScene(), false);
+                    RefreshAbility();
                 return m_ability;
             }
         }
@@ -81,11 +84,11 @@ namespace IDK
         }
         public void RefreshAbility()
         {
-            m_ability = Main.CreateAbility(BuildNodeScene(), false);
+            m_ability = AbilityCreator.CreateAbility(BuildNodeScene());
         }
-        public void DuplicateSelectedNode(Node node)
+        public void DuplicateSelectedNode(NodeComponent node)
         {
-            Node duplicate = Main.nodeDatabase[node.nodeBlueprint.key].Spawn();
+            NodeComponent duplicate = AbilityCreator.nodeDatabase[node.nodeBlueprint.key].Spawn();
             NodeField[] fields = node.GetComponentsInChildren<NodeField>();
             duplicate.SetFields(fields.Select(n => n.Value).ToArray());
             duplicate.transform.position = node.transform.position + new Vector3(200, -200);
@@ -94,8 +97,8 @@ namespace IDK
         {
 
             if (Input.GetKeyDown(KeyCode.Escape))
-                itemsList.SetActive(false);
-            
+                itemList.itemsList.SetActive(false);
+
             if (Input.GetKey(KeyCode.LeftControl))
             {
                 if (Input.GetKeyDown(KeyCode.D))
@@ -120,7 +123,7 @@ namespace IDK
             if (Input.GetKeyDown(KeyCode.Delete))
                 for (int i = 0; i < SelectedNodes?.Length; i++)
                     SelectedNodes[i].Remove();
-            
+
 
             if (Input.mouseScrollDelta[1] != 0)
             {
@@ -158,7 +161,7 @@ namespace IDK
         }
         void Zoom(float zoom)
         {
-            foreach (Node item in FindObjectsOfType<Node>())
+            foreach (NodeComponent item in FindObjectsOfType<NodeComponent>())
             {
                 item.transform.localScale = Vector3.one * zoom;
             }
@@ -171,7 +174,7 @@ namespace IDK
             GameObject tabButtonPrefab = RightClickMenu.transform.Find("TABS").Find("TAB1").gameObject;
             GameObject tabPrefab = RightClickMenu.transform.Find("TABSContent").Find("TAB1").gameObject;
             List<string> tabs = new List<string>();
-            NodeBlueprint[] allBlueprints = Main.nodeDatabase.Values.ToArray();
+            NodeBlueprint[] allBlueprints = AbilityCreator.nodeDatabase.Values.ToArray();
             List<GameObject> tabsButtons = new List<GameObject>();
             List<GameObject> tabsObjects = new List<GameObject>();
             for (int i = 0; i < allBlueprints.Length; i++)
@@ -200,13 +203,15 @@ namespace IDK
                 {
                     int referenceDestroyer2;
                     referenceDestroyer2 = 0 + i2;
-                    if (i2 <= nodeBlueprints.Length - 1)
+                    if (i2 <= nodeBlueprints.Where(n => !n.obselete).Count() - 1)
                     {
+                        if (nodeBlueprints[i2].obselete)
+                            continue;
                         GameObject button = Instantiate(buttonPrefab, tab.transform);
                         button.GetComponentInChildren<TextMeshProUGUI>(true).text = nodeBlueprints[referenceDestroyer2].Name;
                         button.GetComponentInChildren<Button>(true).onClick.AddListener(() =>
                         {
-                            Node node = nodeBlueprints[referenceDestroyer2].Spawn();
+                            NodeComponent node = nodeBlueprints[referenceDestroyer2].Spawn();
                             editorActions.Push(new CreateNodeAction(node));
                             RightClickMenu.SetActive(false);
                         });
@@ -247,7 +252,7 @@ namespace IDK
         }
         NodeBlueprint[] GetAllNodeblueprintsWithTAB(string tab)
         {
-            return Main.nodeDatabase.Values.Where(n => n.tab == tab).ToArray();
+            return AbilityCreator.nodeDatabase.Values.Where(n => n.tab == tab).ToArray();
         }
         private IEnumerator Awakeinternal()
         {
@@ -256,10 +261,10 @@ namespace IDK
             yield return new WaitUntil(() => GameObject.Find("Hitbox Movement") != null);
             for (int i = 0; i < 3; i++)
                 yield return null;
-            unitBlueprint1 = Instantiate(Main.units["Clubber"]);
+            unitBlueprint1 = Instantiate(AbilityCreator.units["Clubber"]);
             unitBlueprint1.m_props = new GameObject[0];
             unitBlueprint1.RightWeapon = null;
-            unitBlueprint2 = Instantiate(Main.units["Clubber"]);
+            unitBlueprint2 = Instantiate(AbilityCreator.units["Clubber"]);
             unitBlueprint2.m_props = new GameObject[0];
             unitBlueprint2.RightWeapon = null;
             GameObject drawingBoard = GameObject.Find("Drawing Board");
@@ -271,7 +276,7 @@ namespace IDK
             SaveMenu = GameObject.Find("FuckingSaveButton");
             SaveMenu.GetComponent<Button>().onClick.AddListener(() => SaveNodeScene());
             QuitMenu = GameObject.Find("FuckingQuitButton");
-            QuitMenu.GetComponent<Button>().onClick.AddListener(() => Main.sceneManager.EnterNodeChanger());
+            QuitMenu.GetComponent<Button>().onClick.AddListener(() => AbilityCreator.sceneManager.EnterNodeChanger());
             RightClickMenu = GameObject.Find("RightClickMenu");
             GameObject Nodes = GameObject.Find("nodesScaler").gameObject;
             tutorial = GameObject.Find("TabInfo");
@@ -309,140 +314,59 @@ namespace IDK
             dropdown2.onValueChanged.AddListener(n => GetUnitBlueprint2(n, dropdown2));
             searchBar1.onValueChanged.AddListener(n => SearchForUnitBlueprint(n, dropdown));
             searchBar2.onValueChanged.AddListener(n => SearchForUnitBlueprint(n, dropdown2));
-            itemsList = GameObject.Find("ListItems");
-            Transform child = itemsList.transform.Find("Scroll").Find("Viewport").Find("Content");
-            baseButton = child.transform.Find("ContentButton").gameObject;
-            baseButton.SetActive(false);
-            itemsList.SetActive(false);
-            itemsList.AddComponent<SetSiblingIndex>().Ind = 100;
-            yield return new WaitUntil(() => FindObjectOfType<Node>());
-            yield return null;
 
-            /*var allText = FindObjectsOfType<TextMeshProUGUI>();
-            for (int i2 = 0; i2 < allText.Length; i2++)
-            {
-                allText[i2].extraPadding = true;
-            }*/
-            /*if (GooglyEyes.instance == null)
-            {
-                GameObject gameObject = new GameObject("Temp googly eyes");
-                GooglyEyes.instance = gameObject.AddComponent<GooglyEyes>();
-                DontDestroyOnLoad(gameObject);
-            }*/
-        }
-        public void ShowFields(UnityAction<string> unityAction, Node node)
-        {
-            ShowListItems(Main.components[node.GetComponentsInChildren<NodeField>().First(n => n.fieldType is NodeBlueprint.Field.FieldType.Component).Value].GetRuntimeFields().Select(n => n.Name).ToArray(), unityAction);
-        }
-        public void ShowExplosions(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.explosions.Keys.ToArray(), unityAction);
-        }
-        public void ShowProjectiles(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.Projectiles.Keys.ToArray(), unityAction);
-        }
-        public void ShowParticles(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.particles.Keys.ToArray(), unityAction);
-        }
-        public void ShowComponents(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.components.Keys.ToArray(), unityAction);
-        }
-        public void ShowWeapons(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.weapons.Keys.ToArray(), unityAction);
-        }
-        public void ShowEffects(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.Effects.Keys.ToArray(), unityAction);
-        }
-        public void ShowSounds(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.sounds.ToArray(), unityAction);
-        }
-        public void ShowUnit(UnityAction<string> unityAction)
-        {
-            ShowListItems(Main.units.Keys.ToArray(), unityAction);
-        }
-        public void ShowListItems(string[] content, UnityAction<string> unityAction, bool changeContent = true)
-        {
-            if (showItemsCoroutine != null)
-            {
-                StopCoroutine(showItemsCoroutine);
-                showItemsCoroutine = null;
-            }
-            showItemsCoroutine = StartCoroutine(ShowItemsList(content, unityAction, changeContent));
-        }
-        public IEnumerator SearchEnum(string txt)
-        {
-            yield return null;
-            yield return null;
-            yield return null;
-            yield return null;
-            yield return null;
-            string[] strings = items;
-            strings = strings.Where(n => n.ToLower().Contains(txt)).ToArray();
-            ShowListItems(strings, lastAction, false);
+            itemList = gameObject.AddComponent<ItemList>();
 
+
+            yield return new WaitUntil(() => FindObjectOfType<NodeComponent>());
+            yield return null;
         }
-        public void Search(string txt)
+        public void ShowAbilities(UnityAction<string> callBack)
         {
-            if (searchCoroutine != null)
-            {
-                StopCoroutine(searchCoroutine);
-                searchCoroutine = null;
-            }
-            searchCoroutine = StartCoroutine(SearchEnum(txt));
+            ShowItemList(AbilityCreator.abilites.Keys.ToArray(), callBack);
         }
-        public IEnumerator ShowItemsList(string[] content, UnityAction<string> unityAction, bool changeContent = true)
+        public void ShowClothing(UnityAction<string> callBack)
         {
-
-            if (changeContent)
-                items = content;
-            itemsList.SetActive(true);
-
-            Transform child = itemsList.transform.Find("Scroll").Find("Viewport").Find("Content");
-            Transform search = itemsList.transform.Find("SearchBarListItems");
-            search.GetComponent<TMP_InputField>().onValueChanged.AddListener(Search);
-            for (int i = 0; i < child.childCount; i++)
-            {
-                Transform item = child.GetChild(i);
-                if (i % 100 == 0)
-                    yield return null;
-                try
-                {
-                    if (item == baseButton.transform)
-                        continue;
-                    Image img = baseButton.GetComponentInChildren<Image>();
-                    if (img)
-                        Destroy(img);
-                    Destroy(item.gameObject);
-                }
-                catch { }
-            }
-            for (int i = 0; i < content.Length; i++)
-            {
-                string current = content[i];
-                if (i % 100 == 0)
-                    yield return null;
-                try
-                {
-                    GameObject button = Instantiate(baseButton, baseButton.transform.parent);
-                    button.SetActive(true);
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = content[i];
-                    if (unityAction != null)
-                        button.GetComponent<Button>().onClick.AddListener(() => unityAction(current));
-                    button.GetComponent<Button>().onClick.AddListener(() => itemsList.SetActive(false));
-                    if (i > 500)
-                        break;
-                }
-                catch { }
-            }
-
-            lastAction = unityAction;
+            ShowItemList(AbilityCreator.props.Keys.ToArray(), callBack);
         }
+        public void ShowExplosions(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.explosions.Keys.ToArray(), callBack);
+        }
+        public void ShowProjectiles(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.projectiles.Keys.ToArray(), callBack);
+        }
+        public void ShowParticles(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.particles.Keys.ToArray(), callBack);
+        }
+        public void ShowComponents(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.components.Keys.ToArray(), callBack);
+        }
+        public void ShowWeapons(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.weapons.Keys.ToArray(), callBack);
+        }
+        public void ShowEffects(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.effects.Keys.ToArray(), callBack);
+        }
+        public void ShowSounds(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.sounds.ToArray(), callBack);
+        }
+        public void ShowUnit(UnityAction<string> callBack)
+        {
+            ShowItemList(AbilityCreator.units.Keys.ToArray(), callBack);
+        }
+        public void ShowItemList(string[] content, UnityAction<string> callBack, bool changeContent = true)
+        {
+            itemList.ShowItemsList(content, callBack, changeContent);
+        }
+
+
         public string GetNiceName(string s)
         {
             try
@@ -489,7 +413,7 @@ namespace IDK
                 squareImage.SetActive(false);
                 trigImage.SetActive(true);
                 buttonState = true;
-                TestUnit(GameObject.Find("SpawnUnitPos").transform.localPosition, GameObject.Find("SpawnEnemyPos").transform.localPosition);
+                StartCoroutine(TestUnit(GameObject.Find("SpawnUnitPos").transform.localPosition, GameObject.Find("SpawnEnemyPos").transform.localPosition));
             }
             else
             {
@@ -502,13 +426,13 @@ namespace IDK
         }
         private void GetUnitBlueprint1(int optionIndex, TMP_Dropdown me)
         {
-            List<UnitBlueprint> unitBlueprints = Main.units.Values.ToList();
+            List<UnitBlueprint> unitBlueprints = AbilityCreator.units.Values.ToList();
             string name = me.options[optionIndex].text;
             unitBlueprint1 = unitBlueprints.Find(n => GetNiceName(n.Entity.Name) == name);
         }
         private void GetUnitBlueprint2(int optionIndex, TMP_Dropdown me)
         {
-            List<UnitBlueprint> unitBlueprints = Main.units.Values.ToList();
+            List<UnitBlueprint> unitBlueprints = AbilityCreator.units.Values.ToList();
             string name = me.options[optionIndex].text;
             unitBlueprint2 = unitBlueprints.Find(n => GetNiceName(n.Entity.Name) == name);
         }
@@ -531,7 +455,7 @@ namespace IDK
             yield return null;
             yield return null;
             dropdown.options = new List<TMP_Dropdown.OptionData>();
-            var unitBlueprints = Main.units.GetEnumerator();
+            var unitBlueprints = AbilityCreator.units.GetEnumerator();
             int index = 0;
             int i = 0;
             while (unitBlueprints.MoveNext())
@@ -539,7 +463,7 @@ namespace IDK
                 var unitBlueprint = unitBlueprints.Current.Value;
                 if (unitBlueprint == null)
                 {
-                    Main.units.Remove(unitBlueprints.Current.Key);
+                    AbilityCreator.units.Remove(unitBlueprints.Current.Key);
                     unitBlueprint = unitBlueprints.Current.Value;
                 }
                 string unitName = GetNiceName(unitBlueprint.Entity.Name);
@@ -570,13 +494,13 @@ namespace IDK
         }
         private void UnTestUnit()
         {
-            RemoveAllUnits();
-        }
-        private void TestUnit(Vector3 position, Vector3 position2)
-        {
-            Time.timeScale = 1;
-            RemoveAllUnits();
+            ServiceLocator.GetService<RuntimeGarbageCollector>().ForceFlushGC();
 
+        }
+        private IEnumerator TestUnit(Vector3 position, Vector3 position2)
+        {
+            ServiceLocator.GetService<RuntimeGarbageCollector>().ForceFlushGC();
+            yield return null;
             // Unit 1
             UnitBlueprint unitBlueprint = Instantiate(unitBlueprint1);
             unitBlueprint.objectsToSpawnAsChildren = unitBlueprint.objectsToSpawnAsChildren.AddItem(Ability).ToArray();
@@ -602,16 +526,7 @@ namespace IDK
             DeveloperLogger.Log("Healthbar stuff : " + m_healthBarOption?.currentValue);
             ServiceLocator.GetService<GameStateManager>().EnterBattleState();
         }
-        private void RemoveAllUnits()
-        {
-            Unit[] units = FindObjectsOfType<Unit>();
-            for (int i = 0; i < units.Length; i++)
-            {
-                Destroy(units[i].gameObject);
-            }
 
-
-        }
         private void ToggleCanMove(int i = 2)
         {
             if (i == 2)
@@ -635,22 +550,45 @@ namespace IDK
             }
 
         }
-        public NodeScene BuildNodeScene()
+        public VirtualNode VirtualizeNode(NodeComponent nodeComponent)
+        {
+            VirtualNode virtualNode = new VirtualNode(nodeComponent.GetNodeInstanceID());
+            virtualNode.nodeBlueprint = AbilityCreator.nodeDatabase.First(n => n.Value == nodeComponent.nodeBlueprint).Key;
+            virtualNode.editorPositon = nodeComponent.transform.position;
+            List<VirtualNodeField> virtualNodeFields = new List<VirtualNodeField>();
+            foreach (NodeField item in nodeComponent.GetComponentsInChildren<NodeField>())
+            {
+                virtualNodeFields.Add(item.field);
+            }
+            List<ConnectionType> connectionTypes = new List<ConnectionType>();
+            foreach (var connection in nodeComponent.Connections)
+            {
+                connectionTypes.Add(new ConnectionType()
+                {
+                    connectedNode = connection.Value.connected.transform.root.GetComponent<NodeComponent>().GetNodeInstanceID(),
+                    connectedNodePortName = connection.Value.connected.connectionType.portName,
+                    portName = connection.Value.connectionType.portName,
+                    connectionType = connection.Value.connectionType.connectionType, 
+                });
+            }
+            return virtualNode;
+        }
+        public VirtualNodeScene BuildNodeScene()
         {
             DeveloperLogger.Log("Building node scene...");
 
-            GameObject nodeobj = new GameObject($"Node Scene");
-            var nodeScene = nodeobj.AddComponent<NodeScene>();
+            VirtualNodeScene virtualNodeScene = new VirtualNodeScene();
+            NodeComponent[] nodes = FindObjectsOfType<NodeComponent>();
 
-            Node[] nodes = FindObjectsOfType<Node>();
             DeveloperLogger.Log($"{nodes.Length} nodes to build!");
-            List<SavedNode> savedNodes = new List<SavedNode>();
+
+            List<LegacySavedNode> savedNodes = new List<LegacySavedNode>();
             for (int savedNodeIndex = 0; savedNodeIndex < nodes.Length; savedNodeIndex++)
             {
-                Node currentNode = nodes[savedNodeIndex];
+                NodeComponent currentNode = nodes[savedNodeIndex];
                 GameObject obj = new GameObject($"SavedNode ({currentNode.nodeBlueprint.Name}) ({currentNode.GetNodeInstanceID()})");
                 DontDestroyOnLoad(obj);
-                SavedNode savedNode = obj.AddComponent<SavedNode>();
+                LegacySavedNode savedNode = obj.AddComponent<LegacySavedNode>();
                 savedNode.corispondingNode = currentNode;
                 currentNode.corispondingNode = savedNode;
                 savedNode.blueprintName = currentNode.nodeBlueprint.key;
@@ -661,8 +599,8 @@ namespace IDK
             for (int nodeIndex = 0; nodeIndex < nodes.Length; nodeIndex++)
             {
                 DeveloperLogger.Log("Node index:" + nodeIndex);
-                Node currentNode = nodes[nodeIndex];
-                SavedNode savedNode = savedNodes[nodeIndex];
+                NodeComponent currentNode = nodes[nodeIndex];
+                LegacySavedNode savedNode = savedNodes[nodeIndex];
                 //field stuff
                 if (currentNode.nodeBlueprint.fields.Count == 0)
                 {
@@ -685,17 +623,17 @@ namespace IDK
                 savedNode.position = position;
                 DeveloperLogger.Log($"Saved position for node ({currentNode.nodeBlueprint.Name})!");
                 // connection stuff
-                List<Node.Connection> connections = new List<Node.Connection>();
-                KeyValuePair<NodeBlueprint.ConnectionType, NodeConnector>[] connectionsArray = currentNode.Connections.ToArray();
+                List<NodeComponent.LegacyConnection> connections = new List<NodeComponent.LegacyConnection>();
+                KeyValuePair<NodeBlueprint.ConnectionClass, NodeConnector>[] connectionsArray = currentNode.Connections.ToArray();
                 for (int i = 0; i < currentNode.Connections.Count; i++)
                 {
-                    DeveloperLogger.Log($"Adding connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.other}");
-                    connections.Add(new Node.Connection()
+                    DeveloperLogger.Log($"Adding connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.connected}");
+                    connections.Add(new NodeComponent.LegacyConnection()
                     {
                         connectionsType = connectionsArray[i].Key,
-                        savedNode = connectionsArray[i].Value?.other?.transform?.parent?.parent?.GetComponent<Node>()?.corispondingNode
+                        savedNode = connectionsArray[i].Value?.connected?.transform?.parent?.parent?.GetComponent<NodeComponent>()?.corispondingNode
                     });
-                    DeveloperLogger.Log($"Added connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.other}");
+                    DeveloperLogger.Log($"Added connection for ({currentNode.nodeBlueprint.Name})! other: {connectionsArray[i].Value?.connected}");
                 }
                 DeveloperLogger.Log("Finishing up connections...");
                 savedNode.connections = connections;
@@ -705,98 +643,75 @@ namespace IDK
             DeveloperLogger.Log("Adding extra data!");
             try
             {
-                nodeScene.sceneName = GameObject.Find("AbName").GetComponent<TMP_InputField>().text;
-                nodeScene.sceneDescription = GameObject.Find("Description").GetComponent<TMP_InputField>().text;
-                nodeScene.sceneImage = GameObject.Find("Imagename").GetComponent<TMP_InputField>().text;
+                virtualNodeScene.abilityName = GameObject.Find("AbName").GetComponent<TMP_InputField>().text;
+                virtualNodeScene.abilityDescription = GameObject.Find("Description").GetComponent<TMP_InputField>().text;
+                virtualNodeScene.abilityIcon = GameObject.Find("Imagename").GetComponent<TMP_InputField>().text;
             }
             catch
             {
                 DeveloperLogger.Log("Faild to add extra data... its ok though!");
             }
-            nodeScene.everyNode = savedNodes.ToArray();
-            return nodeScene;
+            return virtualNodeScene;
         }
         public void SaveNodeScene()
         {
             System.DateTime dateTime = System.DateTime.Now;
-            NodeScene nodeScene = BuildNodeScene();
-            if (Main.nodeScenes.Find(n => n.sceneName == nodeScene.sceneName) == null)
-                NodesceneIndex = Main.nodeScenes.Count;
+            VirtualNodeScene nodeScene = BuildNodeScene();
+            if (AbilityCreator.nodeScenes.Find(n => n.abilityName == nodeScene.abilityName) == null)
+                NodesceneIndex = AbilityCreator.nodeScenes.Count;
             else
             {
-                NodesceneIndex = Main.nodeScenes.FindIndex(n => n.sceneName == nodeScene.sceneName);
+                NodesceneIndex = AbilityCreator.nodeScenes.FindIndex(n => n.abilityName == nodeScene.abilityName);
             }
 
-            if (nodeScene.id == 0)
+            if (nodeScene.abilityID == 0)
             {
                 int id = Random.Range(int.MinValue, int.MaxValue);
                 while (ContentDatabase.Instance().AssetLoader.Exists(new DatabaseID(-2, id)))
                 {
                     id = Random.Range(int.MinValue, int.MaxValue);
                 }
-                nodeScene.id = id;
+                nodeScene.abilityID = id;
 
                 try
                 {
-                    Main.nodeScenes[NodesceneIndex] = nodeScene;
+                    AbilityCreator.nodeScenes[NodesceneIndex] = nodeScene;
                 }
                 catch
                 {
-                    Main.nodeScenes.Add(nodeScene);
+                    AbilityCreator.nodeScenes.Add(nodeScene);
                 }
 
             }
-            nodeScene.zoom = zoom;
             DeveloperLogger.Log("Zoom: " + zoom);
-            SavedNodeScene savedNodeScene = SavedNodeScene.Instance(nodeScene);
 
             //Saves to files 
-            var settings = new Newtonsoft.Json.JsonSerializerSettings()
+            if (File.Exists(AbilityCreator.GetPath(nodeScene)))
             {
-                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-            };
-
-            if (File.Exists(Main.GetPath(nodeScene)))
-            {
-                savedNodeScene.id = JsonConvert.DeserializeObject<SavedNodeScene>(File.ReadAllText(Main.GetPath(nodeScene)), settings).id;
-                File.Delete(Main.GetPath(nodeScene));
-                File.Create(Main.GetPath(nodeScene)).Close();
+                nodeScene.abilityID = Serialize.LoadJson<VirtualNodeScene>(File.ReadAllText(AbilityCreator.GetPath(nodeScene))).abilityID;
+                File.Delete(AbilityCreator.GetPath(nodeScene));
+                File.Create(AbilityCreator.GetPath(nodeScene)).Close();
             }
 
 
-            string json = Newtonsoft.Json.JsonConvert.SerializeObject(savedNodeScene, Newtonsoft.Json.Formatting.Indented, settings);
-            WriteAbility(savedNodeScene, json, true);
-            Main.Reload();
+            WriteAbility(nodeScene, Serialize.SaveJson(nodeScene));
+            AbilityCreator.Reload();
 
 
             TABSSceneManager.LoadMainMenu(true);
             DeveloperLogger.Log($"Done building nodescene! that took {System.DateTime.Now - dateTime}");
         }
-        public static void WriteAbility(SavedNodeScene nodeScene, string json, bool forceOverwrite = false, bool addToGame = false)
+        public static void WriteAbility(VirtualNodeScene nodeScene, string json)
         {
+            string dirPath = AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(nodeScene.abilityName);
+            string abilityPath = Path.Combine(dirPath, nodeScene.abilityID + ".abilityx");
             //Check if it exists
-            if (Directory.Exists(Main.abilitespath + "/" + Main.CleanNodeName(nodeScene.sceneName)))
-            {
-                if (forceOverwrite)
-                {
-                    string[] files = Directory.GetFiles(Main.abilitespath + "/" + Main.CleanNodeName(nodeScene.sceneName));
-                    for (int i = 0; i < files.Length; i++)
-                    {
-                        if (Path.GetExtension(files[i]) == ".ability")
-                            File.Delete(files[i]);
-                    }
-                    File.WriteAllText(Main.abilitespath + "/" + Main.CleanNodeName(nodeScene.sceneName) + "/" + nodeScene.id + ".ability", json);
-                }
-            }
-            else
-            {
-                Directory.CreateDirectory(Main.abilitespath + "/" + Main.CleanNodeName(nodeScene.sceneName));
-                File.WriteAllText(Main.abilitespath + "/" + Main.CleanNodeName(nodeScene.sceneName) + "/" + nodeScene.id + ".ability", json);
-            }
-            if (addToGame)
-            {
-                Main.AddAbility(nodeScene.SavedNodeSceneToNodeScene());
-            }
+            //say wallahi bro
+            if (!Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+            
+            File.WriteAllText(abilityPath, json);
+
 
         }
     }

@@ -8,9 +8,9 @@ namespace IDK.NodeScripts
 {
     public class LogAnything : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            object[] everything = connections.GetNode(NodeBlueprint.ConnectionType.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
+            object[] everything = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
             for (int i = 0; i < everything.Length; i++)
             {
                 DeveloperLogger.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ everything[i], true);

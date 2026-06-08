@@ -9,28 +9,28 @@ namespace IDK.NodeScripts
 {
     public class SpawnUnitNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             Debug.Log("Spawning unit...");
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             Debug.Log("Length of Gameobjects :" + gameObjs.Length);
             ValuePool valuePool = savedNode.GetValuePool(unit);
             valuePool.ClearValues();
             foreach (var gameObj in gameObjs)
             {
                 GameObject[] spawnedUnit;
-                UnitBlueprint unitBlueprint = Main.units[fields[0]];
+                UnitBlueprint unitBlueprint = AbilityCreator.units[fields[0]];
                 if (fields[1] == "My Team")
                 {
-                    spawnedUnit = Main.units[fields[0]].Spawn(gameObj.transform.position, Quaternion.identity, unit.Team);
+                    spawnedUnit = AbilityCreator.units[fields[0]].Spawn(gameObj.transform.position, Quaternion.identity, unit.Team);
                 }
                 else
                 {
-                    spawnedUnit = Main.units[fields[0]].Spawn(gameObj.transform.position, Quaternion.identity,unit.Team.Reverse()) ;
+                    spawnedUnit = AbilityCreator.units[fields[0]].Spawn(gameObj.transform.position, Quaternion.identity,unit.Team.Reverse()) ;
                 }
                 Debug.Log("Spawned unit! unit:" + spawnedUnit[0].transform.root.GetComponent<Unit>().unitBlueprint.Entity.Name);
 

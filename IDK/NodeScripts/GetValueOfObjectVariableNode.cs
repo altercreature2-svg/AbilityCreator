@@ -13,9 +13,9 @@ namespace IDK.NodeScripts
         {
             return true;
         }
-        public override ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
-            ObjectVariable[] objectVariables = connections.GetNode(NodeBlueprint.ConnectionType.ReciveObjectVariable).GetValuePoolSmart(unit).GetValues<ObjectVariable>();
+            ObjectVariable[] objectVariables = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveObjectVariable).GetValuePoolSmart(unit).GetValues<ObjectVariable>();
             ValuePool valuePool = new ValuePool();
             for (int i = 0; i < objectVariables.Length; i++)
             {
@@ -27,7 +27,7 @@ namespace IDK.NodeScripts
             return valuePool;
         }
 
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return null;
             

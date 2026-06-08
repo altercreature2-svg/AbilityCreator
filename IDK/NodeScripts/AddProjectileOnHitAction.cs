@@ -16,10 +16,10 @@ namespace IDK.NodeScripts
     public class AddProjectileOnHitAction : IBehaviorNode
     {
        
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             for (int i = 0; i < gameObjects.Length; i++)
             {
                 if (gameObjects[i].GetComponent<ProjectileHit>())
@@ -37,11 +37,11 @@ namespace IDK.NodeScripts
             
             yield return null;
         }
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public void RunAction(Unit unit, NodeRunner nodeRunner, SavedNode savedNode, ProjectileHit projectileHit)
+        public void RunAction(Unit unit, NodeRunner nodeRunner, LegacySavedNode savedNode, ProjectileHit projectileHit)
         {
             Debug.Log("RUNNING ACTION!!!!");
             ValuePool valuePool = savedNode.GetValuePool(unit);

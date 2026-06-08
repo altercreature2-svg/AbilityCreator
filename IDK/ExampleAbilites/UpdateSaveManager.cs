@@ -8,24 +8,24 @@ namespace IDK.ExampleAbilites
     {
         public static void Handle()
         {
-            if (!File.Exists(Main.path + "/SAVE"))
+            if (!File.Exists(AbilityCreator.path + "/SAVE"))
             {
-                FileStream fileStream = File.Create(Main.path + "/SAVE");
+                FileStream fileStream = File.Create(AbilityCreator.path + "/SAVE");
                 fileStream.Close();
-                File.WriteAllText(Main.path + "/SAVE", "2.6.0");
+                File.WriteAllText(AbilityCreator.path + "/SAVE", "2.6.0");
                 ExampleManager.WriteAll();
                 return;
             }
             else
             {
-                if (File.ReadAllText(Main.path + "/SAVE").Contains("2.6.0"))
+                if (File.ReadAllText(AbilityCreator.path + "/SAVE").Contains("2.6.0"))
                 {
                     return;
                 }
                 else
                 {
                     ExampleManager.WriteAll();
-                    File.WriteAllText(Main.path + "/SAVE", "2.6.0");
+                    File.WriteAllText(AbilityCreator.path + "/SAVE", "2.6.0");
                 }
             }
         }

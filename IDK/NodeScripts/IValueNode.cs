@@ -78,10 +78,7 @@ namespace IDK.NodeScripts
         }
 
     }
-    public abstract class IValueNode
+    public interface IValueNode : INode
     {
-        public abstract bool IsDynamic();
-        public abstract ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields);
-        public abstract ValuePool GetDynamicValue(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields);
     }
 }

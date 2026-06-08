@@ -7,7 +7,7 @@ using UnityEngine;
 namespace IDK
 {
     [System.Serializable]
-    public class SavedNodeScene
+    public class LegacySavedNodeScene : IRegisterable
     {
 
         public List<int> connections = new List<int>();
@@ -24,12 +24,11 @@ namespace IDK
         public string sceneDescription = "";
         public string sceneImage = "";
         public int id = 0;
-        public static SavedNodeScene Instance(NodeScene nodescene)
+        public static LegacySavedNodeScene Instance(LegacyNodeScene nodescene)
         {
             System.DateTime dateTime = System.DateTime.Now;
-            SavedNodeScene savedNodeScene = new SavedNodeScene();
-            SavedNodeSceneStorer.savedNodeScenes.Add(savedNodeScene);
-            SavedNode[] EveryNode = nodescene.everyNode;
+            LegacySavedNodeScene savedNodeScene = new LegacySavedNodeScene();
+            LegacySavedNode[] EveryNode = nodescene.everyNode;
             int[] EveryID = new int[0];
             DeveloperLogger.Log($"Starting to Save {nodescene.sceneName}");
             // Convert every SavedNode into an id 
@@ -50,11 +49,11 @@ namespace IDK
                 {
                     NodeConnections savedConnections = new NodeConnections()
                     {
-                        connectionsTypes = new List<NodeBlueprint.ConnectionType>(),
+                        connectionsTypes = new List<NodeBlueprint.ConnectionClass>(),
                         otherIDs = new List<int>(),
                     };
                     DeveloperLogger.Log("Begining adding connections, connection count is" + EveryNode[i].connections.Count);
-                    List<Node.Connection> fixedConnections = EveryNode[i].connections.ToList().Where(n => n.savedNode != null).ToList();
+                    List<NodeComponent.LegacyConnection> fixedConnections = EveryNode[i].connections.ToList().Where(n => n.savedNode != null).ToList();
                     if (fixedConnections.Count != 0)
                     {
                         for (int connectionsIndex = 0; connectionsIndex < fixedConnections.Count; connectionsIndex++)
@@ -104,13 +103,13 @@ namespace IDK
             return savedNodeScene;
 
         }
-        public NodeScene SavedNodeSceneToNodeScene()
+        public LegacyNodeScene SavedNodeSceneToNodeScene()
         {
             System.DateTime dateTime = System.DateTime.Now;
             GameObject nodeobj = new GameObject($"Node Scene ({sceneName})");
-            var scene = nodeobj.AddComponent<NodeScene>();
+            var scene = nodeobj.AddComponent<LegacyNodeScene>();
 
-            Dictionary<int, SavedNode> conversion = new Dictionary<int, SavedNode>();
+            Dictionary<int, LegacySavedNode> conversion = new Dictionary<int, LegacySavedNode>();
             for (int i = 0; i < Positions.Count; i++)
             {
                 int currentID = Positions[i];
@@ -118,8 +117,7 @@ namespace IDK
                 GameObject node = new GameObject("Saved Node");
                 DeveloperLogger.Log("Node:" + node);
                 Object.DontDestroyOnLoad(node);
-                SavedNode savedNode = node.AddComponent<SavedNode>();
-                SavedNodeSceneStorer.SavedNodes.Add(savedNode);
+                LegacySavedNode savedNode = node.AddComponent<LegacySavedNode>();
                 //blueprint
                 savedNode.blueprintName = blueprints2[i];
                 DeveloperLogger.Log($"Converted blueprint for {blueprints2[i]}");
@@ -137,16 +135,16 @@ namespace IDK
             // connections
             for (int i = 0; i < Positions.Count; i++)
             {
-                SavedNode savedNode = conversion[Positions[i]];
+                LegacySavedNode savedNode = conversion[Positions[i]];
                 DeveloperLogger.Log("Starting Connection converting for:" + blueprints2[i]);
-                List<Node.Connection> connections = new List<Node.Connection>();
+                List<NodeComponent.LegacyConnection> connections = new List<NodeComponent.LegacyConnection>();
                 DeveloperLogger.Log($"Converting connections for {blueprints2[i]}");
                 DeveloperLogger.Log($"Safety Check! {connections2[i].connectionsTypes.Count == connections2[i].otherIDs.Count}");
                 for (int i2 = 0; i2 < connections2[i].connectionsTypes.Count; i2++)
                 {
                     if (connections2[i].otherIDs[i2] == 999)
                         continue;
-                    connections.Add(new Node.Connection()
+                    connections.Add(new NodeComponent.LegacyConnection()
                     {
                         connectionsType = connections2[i].connectionsTypes[i2],
                         savedNode = conversion[connections2[i].otherIDs[i2]],

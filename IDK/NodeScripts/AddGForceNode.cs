@@ -11,9 +11,9 @@ namespace IDK.NodeScripts
 {
     public class AddGlobalForceNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            ValuePool valuePool = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit);
+            ValuePool valuePool = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit);
 
             Rigidbody[] rbs = valuePool.GetValues<Rigidbody>();
             foreach (var rigidbody in rbs)

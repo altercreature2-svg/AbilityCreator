@@ -10,18 +10,18 @@ namespace IDK.NodeScripts
 {
     public class SpawnExplosionNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionType.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
             ValuePool valuePool = savedNode.GetValuePool(unit);
             valuePool.ClearValues();
             for (int o = 0; o < gameObjs.Length; o++)
             {
-                var explosion = Object.Instantiate(Main.explosions[fields[0]]);
+                var explosion = Object.Instantiate(AbilityCreator.explosions[fields[0]]);
                 explosion.transform.position = gameObjs[o].transform.position;
                 Debug.Log("Summoned explosion: " + explosion.name);
 

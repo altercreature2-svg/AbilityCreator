@@ -8,18 +8,18 @@ namespace IDK.NodeScripts
 {
     public class WhenUnitShootsProjectile : ITriggerNode
     {
-        public override ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
+        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
         {
             return savedNode.GetValuePool(unit);
         }
-        public override void EveryFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
         }
-        public override void StartFrame(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             nodeRunner.StartCoroutine(DelayStart(unit, nodeRunner, savedNode));
         }
-        public IEnumerator DelayStart(Unit unit, NodeRunner nodeRunner, SavedNode savedNode)
+        public IEnumerator DelayStart(Unit unit, NodeRunner nodeRunner, LegacySavedNode savedNode)
         {
             yield return new WaitUntil(() => unit.data);
             yield return new WaitUntil(() => unit.data.weaponHandler);
@@ -34,7 +34,7 @@ namespace IDK.NodeScripts
                 leftRangeWeapon.shootEndEvent.AddListener(() => AttackEnded(nodeRunner, savedNode, unit, 1));
             }
         }
-        void AttackStarted(NodeRunner nodeRunner, SavedNode savedNode,Unit self, int forceWeapon)
+        void AttackStarted(NodeRunner nodeRunner, LegacySavedNode savedNode,Unit self, int forceWeapon)
         {
             switch (forceWeapon)
             {
@@ -57,7 +57,7 @@ namespace IDK.NodeScripts
             }
             
         }
-        void AttackEnded(NodeRunner nodeRunner, SavedNode savedNode, Unit self, int forceWeapon)
+        void AttackEnded(NodeRunner nodeRunner, LegacySavedNode savedNode, Unit self, int forceWeapon)
         {
             switch (forceWeapon)
             {

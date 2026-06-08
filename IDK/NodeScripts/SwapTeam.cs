@@ -12,18 +12,17 @@ namespace IDK.NodeScripts
 {
     public class SwapTeam : IBehaviorNode
     {
-        public override IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner)
+        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
         {
             yield return null;
             yield return null;
             yield return null;
             yield return null;
             yield return null;
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionType.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
+            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
             foreach (var unitIndex in units)
             {
                 FlipTeam(unitIndex);
-                
             }
             yield return savedNode.TriggerConnection(nodeRunner);
             

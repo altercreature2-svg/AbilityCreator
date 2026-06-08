@@ -5,16 +5,16 @@ namespace IDK
 {
     public class FixNodeSystem : MonoBehaviour
     {
-        public static bool IsValid(SavedNodeScene nodeScene)
+        public static bool IsValid(LegacySavedNodeScene nodeScene)
         {
             for (int i = 0; i < nodeScene.blueprints2.Count; i++)
             {
-                if (!Main.nodeDatabase.ContainsKey(nodeScene.blueprints2[i]))
+                if (!AbilityCreator.nodeDatabase.ContainsKey(nodeScene.blueprints2[i]))
                 {
                     return false;
                 }
                 string[] fields = nodeScene.fields2[i].Split(separator: new string[] { "###" }, System.StringSplitOptions.RemoveEmptyEntries);
-                if (Main.nodeDatabase[nodeScene.blueprints2[i]].fields.Count != fields.Length)
+                if (AbilityCreator.nodeDatabase[nodeScene.blueprints2[i]].fields.Count != fields.Length)
                 {
                     return false;
                 } 

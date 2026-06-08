@@ -1,16 +1,13 @@
-﻿using Landfall.TABS;
+﻿using IDK.Node_Related_Scripts.NodeRunning;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace IDK.NodeScripts
 {
-    public abstract class IBehaviorNode
+    public interface IBehaviorNode : INode
     {
-        public abstract IEnumerator RunNode(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields, NodeRunner nodeRunner);
-        public virtual ValuePool GetValuePool(SavedNode savedNode, Unit unit, List<Node.Connection> connections, string[] fields)
-        {
-            return null;
-        }
     }
 }
