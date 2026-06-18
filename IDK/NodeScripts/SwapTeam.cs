@@ -1,31 +1,35 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.AI.Components.Tags;
 using Landfall.TABS.AI.Systems;
+using Landfall.TABS.GameMode;
 using Landfall.TABS.WinConditions;
+using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SwapTeam : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            yield return null;
-            yield return null;
-            yield return null;
-            yield return null;
-            yield return null;
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in units)
             {
-                FlipTeam(unitIndex);
+                if (!(item.value is Unit u))
+                    continue;
+                FlipTeam(u);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
         public static void FlipTeam(Unit unitIndex)
         {
@@ -33,13 +37,16 @@ namespace IDK.NodeScripts
             unitIndex.Team = TeamUtlity.GetOtherTeam(team);
             unitIndex.data.team = TeamUtlity.GetOtherTeam(team);
             var entity = unitIndex.transform.root.GetComponent<GameObjectEntity>();
-            entity.EntityManager.RemoveComponent<Landfall.TABS.AI.Components.Team>(entity.Entity);
-            entity.EntityManager.AddSharedComponentData(entity.Entity, new Landfall.TABS.AI.Components.Team()
+
+            entity.EntityManager.SetSharedComponentData(entity.Entity, new Landfall.TABS.AI.Components.Team()
             {
                 Value = (int)TeamUtlity.GetOtherTeam(team)
             });
-            World.Active.GetOrCreateManager<TeamSystem>().RemoveEntity(entity.Entity, team, unitIndex);
-            World.Active.GetOrCreateManager<TeamSystem>().AddUnit(entity.Entity, unitIndex.transform.root.gameObject, unitIndex.transform.root, unitIndex.data.mainRig, unitIndex.data, TeamUtlity.GetOtherTeam(team), unitIndex, true);
+
+            TeamSystem teamSystem = World.Active.GetOrCreateManager<TeamSystem>();
+            ServiceLocator.GetService<GameModeService>().CurrentGameMode.OnUnitDied(unitIndex);
+            teamSystem.RemoveEntity(entity.Entity, team, unitIndex);
+            teamSystem.AddUnit(entity.Entity, unitIndex.transform.root.gameObject, unitIndex.transform.root, unitIndex.data.mainRig, unitIndex.data, TeamUtlity.GetOtherTeam(team), unitIndex, true);
 
         }
     }

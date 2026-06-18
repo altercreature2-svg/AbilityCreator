@@ -1,48 +1,44 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetWeapon : IValueNode
     {
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env) 
         {
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            Debug.Log("Units node:" + connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit));
-            Debug.Log("Units Length: " + units.Length);
-            foreach (var unitIndex in units)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                
-                if (fields[0] == "Both")
+                if (!(item.value is Unit u))
+                    continue;
+                switch (env.GetField(0))
                 {
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.rightWeapon?.gameObject);
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.leftWeapon?.gameObject);
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.rightWeapon?.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.leftWeapon?.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Left Weapon")
-                {
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.leftWeapon?.gameObject);
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.leftWeapon?.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Right Weapon")
-                {
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.rightWeapon?.gameObject);
-                    valuePool.AddValue(unitIndex.data?.weaponHandler?.rightWeapon?.GetComponent<Rigidbody>());
+                    case "Left Weapon":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject,
+                            u.data?.weaponHandler?.leftWeapon?.gameObject);
+                        break;
+                    case "Right Weapon":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject,
+                            u.data?.weaponHandler?.rightWeapon?.gameObject);
+                        break;
+                    default:
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject,
+                            u.data?.weaponHandler?.rightWeapon?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject,
+                            u.data?.weaponHandler?.leftWeapon?.gameObject);
+                        break;
                 }
             }
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
-        }
+        } 
     }
 }

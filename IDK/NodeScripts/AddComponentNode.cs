@@ -1,29 +1,30 @@
 ﻿
 
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddComponentNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
             foreach (var gameObj in gameObjects)
             {
-                valuePool.AddValue(gameObj.AddComponent(AbilityCreator.components[fields[0]])); 
+                if (!(gameObj.value is GameObject obj))
+                    continue;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, obj.AddComponent(AbilityCreator.components[env.GetField(0)]));    
             }
-            savedNode.valuePools[unit] = valuePool;
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            yield break;
         }
     }
 }

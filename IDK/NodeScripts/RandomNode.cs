@@ -1,45 +1,34 @@
-﻿using IDK.Node_Related_Scripts;
-using InControl.UnityDeviceProfiles;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class RandomNode : IValueNode
     {
-        
-        public Dictionary<Unit, int> values = new Dictionary<Unit, int>();
-        public Dictionary<Unit, bool> hasChosens = new Dictionary<Unit, bool>();
-        public override bool IsDynamic()
+        int value, min, max;
+        bool hasChosen, isStatic;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            if (!hasChosens.ContainsKey(unit))
-                hasChosens.Add(unit, false);
-            if (!values.ContainsKey(unit))
-                values.Add(unit, 0);
-            if (fields[2] == "Static")
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveVariable);
+            if (isStatic && !hasChosen)
             {
-                if (!hasChosens[unit])
-                {
-                    values[unit] = Random.Range(int.Parse(fields[0]), int.Parse(fields[1]) + 1);
-                    hasChosens[unit] = true;
-                }
-            } 
+                value = Random.Range(min, max + 1);
+                hasChosen = true;
+            }
             else
-                 values[unit] = Random.Range(int.Parse(fields[0]), int.Parse(fields[1]) + 1);
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            Debug.Log("Random value:" + values[unit]);
-            valuePool.ClearValues();
-            valuePool.AddValue(new Variable() { value = values[unit] });
-            return valuePool;
+                value = Random.Range(min, max + 1);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable() { value = value });
+            return null;
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
+            min = env.GetField(0).QuickParseInt();
+            max = env.GetField(1).QuickParseInt();
+            isStatic = env.GetField(0) == "Static";
             return null;
         }
     }

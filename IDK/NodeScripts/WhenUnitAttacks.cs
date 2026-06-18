@@ -1,30 +1,29 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
+using System;
 using System.Collections.Generic;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class WhenUnitAttacks : ITriggerNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
+            return null;
         }
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-
+            
+            env.unit.data.weaponHandler.AttackStarted += (target, ignore1, ignore2, ignore3, ignore4) => OnAttack(env, target);
+            return null;
         }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public void OnAttack(NodeEnv env, Unit u)
         {
-            void AttackStarted(Unit unit2)
-            {
-                savedNode.GetValuePool(unit).ClearValues();
-                savedNode.GetValuePool(unit).AddValue(unit2);
-                savedNode.GetValuePool(unit).AddValue(unit2.gameObject);
-                savedNode.GetValuePool(unit).AddValue(unit2.data.mainRig);
-                nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
-            }
-            unit.data.weaponHandler.AttackStarted += ((n, d4, d3, d2, d) => AttackStarted(n.data.targetData.unit));
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit,u);
         }
+    
     }
 
 }

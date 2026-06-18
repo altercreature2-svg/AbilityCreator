@@ -1,37 +1,64 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using IDK.Help;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using TFBGames;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SpawnProjectileAimedNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public EasyPool easyPool;
+        public GameObject prefab;
+        public float spread;
+        public int mode;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            foreach (var obj in gameObjects)
-            {
-               
-                GameObject proj = SmartProjectileSpawner.SpawnProjectile(AbilityCreator.projectiles[fields[0]], obj, unit, obj.transform, obj.transform, fields[1].QuickParse(), units[0].data.mainRig.position, units [0] , true);
-                if (fields[2] == "Other team only")
-                    proj.AddComponent<IgnoreProjectileForTeam>().team = unit.Team;
-                else if (fields[2] == "Same team only")
-                    proj.AddComponent<IgnoreProjectileForTeam>().team = unit.Team.Reverse();
-                valuePool.AddValue(proj);
-            }
-            yield return savedNode.TriggerConnection(nodeRunner);
 
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveGameObject);
+            foreach (var item in gameObjects)
+            {
+                if (!(item.value is GameObject go))
+                    continue;
+                foreach (var item2 in units)
+                {
+                    if (item2.value is Unit u)
+                    {
+                        GameObject pooled = easyPool.Spawn(Vector3.zero, Quaternion.identity);
+                        GameObject projectile = SmartProjectileSpawner.SpawnProjectile(prefab, go, env.unit, go.transform, go.transform, spread, u.data.mainRig.position, u, true, pooledProjectile: pooled);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, projectile);
+                    }
+                }
+                
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            prefab = AbilityCreator.projectiles[env.GetField(0)];
+            spread = env.GetField(1).QuickParse();
+            mode = env.GetField(2) == "Other Team only" ? 1 : mode;
+            mode = env.GetField(2) == "Same Team only" ? 2 : mode;
+            easyPool = new EasyPool(prefab, go => OnSpawn(env, go));
+            return null;
+        }
+        public void OnSpawn(NodeEnv env, GameObject go)
+        {
+            switch (mode)
+            {
+                case 1:
+                    go.AddComponent<IgnoreProjectileForTeam>().team = env.unit.Team;
+                    break;
+                case 2:
+                    go.AddComponent<IgnoreProjectileForTeam>().team = env.unit.Team.Reverse();
+                    break;
+            }
+        }
     }
 }

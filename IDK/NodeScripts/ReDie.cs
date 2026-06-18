@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using HarmonyLib;
 using Landfall.TABS;
 using Landfall.TABS.AI.Systems;
 using Landfall.TABS.GameMode;
@@ -11,73 +13,38 @@ using System.Reflection;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ReDie : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                
-                GameObjectEntity entity = unitIndex.GetComponentInChildren<GameObjectEntity>();
+                if (!(item.value is Unit u))
+                    continue;
+                GameObjectEntity entity = u.GetComponentInChildren<GameObjectEntity>();
                 TeamSystem teamSystem = World.Active.GetOrCreateManager<TeamSystem>();
-                try
-                {
-                    teamSystem.RemoveEntity(entity.Entity, unitIndex.Team, unitIndex);
-                    teamSystem.AddUnit(entity.Entity, unitIndex.gameObject, unitIndex.transform, unitIndex.data.mainRig, unitIndex.data, unitIndex.Team, unitIndex, false);
-                } catch { };
+                teamSystem?.RemoveEntity(entity.Entity, u.Team, u);
+                teamSystem?.AddUnit(entity.Entity, u.gameObject, u.transform, u.data.mainRig, u.data, u.Team, u, false);
 
-                unitIndex.data.Dead = false;
-                unitIndex.data.muscleControl = 1;
-                unitIndex.data.ragdollControl = 1;
-                unitIndex.data.fallTime = 0;
-                Rigidbody[] rigs = unitIndex.GetComponentInChildren<RigidbodyHolder>().AllRigs;
+                u.data.Dead = false;
+                u.data.muscleControl = 1;
+                u.data.ragdollControl = 1;
+                u.data.fallTime = 0;
+                Rigidbody[] rigs = u.GetComponentInChildren<RigidbodyHolder>().AllRigs;
                 for (int i = 0; i < rigs.Length; i++)
                 {
                     rigs[i].gameObject.layer = 0;
                 }
-                /*GroundChecker[] groundCheckers = unitIndex.unitBlueprint.UnitBase?.GetComponentsInChildren<GroundChecker>();
-                for (int i = 0; i < groundCheckers.Length; i++)
-                {
-                    GroundChecker checker = groundCheckers[i];
-                    Transform transform = checker.transform;
-                    List<Transform> parents = new List<Transform>();
-                    while (transform)
-                    {
-                        parents.Add(transform);
-                        transform = transform.parent;
-                    }
-                    parents.Reverse();
-                    parents.RemoveAt(0);
-                    GameObject gameObject = null;
-                    for (int i2 = 0; i2 < parents.Count; i2++)
-                    {
-                        Debug.Log("Searching for:" + parents[i2].name);
-                        try
-                        {
-                            gameObject = unitIndex.transform.Find(parents[i2].name).gameObject;
-                        }
-                        catch
-                        {
-                            Debug.LogError("very bad"); 
-                            Debug.Log("<#ff0000>very bad");
-                            
-                            break;
-                        }
-                    }
-                    if (gameObject)
-                    {
-                        GroundChecker checker2 = gameObject.AddComponent<GroundChecker>();
-                        checker2.footDownEvent = new UnityEngine.Events.UnityEvent();
-                    }
-                }*/
-                
-                unitIndex.gameObject.AddComponent<Revive>().DoRevive();
+                u.gameObject.AddComponent<Revive>().DoRevive();
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

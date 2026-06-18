@@ -1,25 +1,23 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetClothesOfName : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return false;
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveGameObject);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, AbilityCreator.props[env.GetField(0)]);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = new ValuePool();
-            valuePool.AddValue(AbilityCreator.props[fields[0]]);
-            return valuePool;
         }
     }
 }

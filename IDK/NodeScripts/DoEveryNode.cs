@@ -1,26 +1,31 @@
-﻿using Landfall.TABS;
+﻿using AC.Help_Componets;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class DoEveryNode : ITriggerNode
     {
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            
+            env.runner.StartCoroutine(IntervalLoop(env, env.GetField(0).QuickParse()));
+            yield break;
         }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            nodeRunner.StartCoroutine(IntervalLoop(nodeRunner, savedNode, fields[0].QuickParse()));
+            return null;
         }
-        public IEnumerator IntervalLoop(NodeRunner nodeRunner,LegacySavedNode savedNode, float seconds)
+        public IEnumerator IntervalLoop(NodeEnv env, float seconds)
         {
-
-            yield return new WaitForSeconds(seconds);
-            nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
-            nodeRunner.StartCoroutine(IntervalLoop(nodeRunner,savedNode, seconds));
+            while (true)
+            {
+                yield return new WaitForSeconds(seconds);
+                env.RunTrigger();
+            }
         }
 
     }

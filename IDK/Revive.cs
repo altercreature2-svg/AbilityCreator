@@ -7,16 +7,21 @@ using Landfall.TABS;
 using Landfall.TABS.AI;
 using Landfall.TABS.AI.Components.Modifiers;
 using Landfall.TABS.GameMode;
+using NaughtyAttributes;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace IDK
+namespace AC
 {
-    // Token: 0x02000049 RID: 73
+    
     public class Revive : MonoBehaviour
     {
+        public string _ = "this totally not just stolen from hidden units :pray: sorry big B dont whoop me";
+
+
         // Token: 0x040001B0 RID: 432
+
         private Unit Unit;
 
         // Token: 0x040001B1 RID: 433
@@ -159,7 +164,7 @@ namespace IDK
             {
                 
             }
-            /*bool flag16 = this.Unit.unitBlueprint.MovementComponents != null && this.Unit.unitBlueprint.MovementComponents.Count > 0;
+            bool flag16 = this.Unit.unitBlueprint.MovementComponents != null && this.Unit.unitBlueprint.MovementComponents.Count > 0;
             if (flag16)
             {
                 foreach (IMovementComponent mov in this.Unit.unitBlueprint.MovementComponents)
@@ -177,7 +182,7 @@ namespace IDK
                     } catch { }
                 }
                 
-            }*/
+            }
             this.Unit.data.healthHandler.deathEvent.RemoveAllListeners();
             foreach (AddRigidbodyOnDeath rigidbodyOnDeath in this.Unit.GetComponentsInChildren<AddRigidbodyOnDeath>())
             {
@@ -198,6 +203,7 @@ namespace IDK
             this.Unit.api.SetTargetingType(this.Unit.unitBlueprint.TargetingComponent);
             this.Unit.api.UpdateECSValues();
             this.Unit.InitializeUnit(this.Unit.Team);
+            
             
             yield break;
         }

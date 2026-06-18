@@ -1,5 +1,7 @@
-﻿using BitCode.Extensions;
-using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using BitCode.Extensions;
 using Landfall.TABS;
 using Landfall.TABS.AI;
 using System.Collections;
@@ -7,28 +9,27 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class CreateVariableNode : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            return false;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
+            string name = env.GetField(0);
+            ObjectStorer objectStorer = env.cacheSystem.GetCachedComponent<ObjectStorer>(env.unit.gameObject);
+            if (objectStorer == null)
+                env.unit.gameObject.AddComponent<ObjectStorer>();
+            if (!objectStorer.store.ContainsKey(name))
+            { 
+                objectStorer.store.Add(name, new Variable());
+            }
+            
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, objectStorer.store[name] as Variable);
             return null;
         }
-        
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            
-            ValuePool valuePool = new ValuePool();
-            ObjectStorer objectStorer = unit.gameObject.GetOrAddComponent<ObjectStorer>();
-            if (!objectStorer.store.ContainsKey(fields[0]))
-                objectStorer.store.Add(fields[0], new Variable());
-            valuePool.AddValue((Variable)objectStorer.store[fields[0]]);
-            return valuePool;
+            return null;
         }
     }
 }

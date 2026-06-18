@@ -1,7 +1,7 @@
 ﻿
 
 using HarmonyLib;
-using IDK.Help_Componets;
+using AC.Help_Componets;
 using Landfall.TABS;
 using LevelCreator;
 using System.Collections;
@@ -9,40 +9,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using AC.Node_Related_Scripts.NodeRunning;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddOnCollisionAction : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        bool waitUntilCollision = true;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            for (int i = 0; i < gameObjects.Length; i++)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var gameObject in gameObjects)
             {
-                OnCollisionEvent collisionEvent = gameObjects[i].AddComponent<OnCollisionEvent>();
-                collisionEvent.enter.AddListener((n => OnCollisionEnterEvent(n, savedNode, unit,nodeRunner)));
+                if (!(gameObject.value is GameObject go))
+                    continue;
+                OnCollisionEvent collisionEvent = go.AddComponent<OnCollisionEvent>();
+                collisionEvent.enter.AddListener((n => OnCollisionEnterEvent(n, env)));
+            }
+            while (waitUntilCollision)
+            {
+                yield return new CoroutineReturn(CoroutineReturn.CourtineType.PauseFrame);
             }
             
-            yield return null;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
 
         }
-        public void OnCollisionEnterEvent(Collision other, LegacySavedNode savedNode,Unit unit, NodeRunner nodeRunner)
+        public void OnCollisionEnterEvent(Collision other, NodeEnv env)
         {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            valuePool.AddValue(other.gameObject);
-            valuePool.AddValue(other.rigidbody);
-            nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, other);
+            waitUntilCollision = false;
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public void RunAction(NodeRunner nodeRunner, LegacySavedNode savedNode, ProjectileHit projectileHit)
-        {
-            Debug.Log("RUNNING ACTION!!!!");
-            nodeRunner.StartCoroutine(savedNode.TriggerConnection(nodeRunner));
+            return null;
         }
     }
 }

@@ -1,30 +1,46 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class PlaySoundNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        float volume;
+        float pitch;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Debug.Log("Spawning unit...");
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            Debug.Log("Length of Gameobjects :" + gameObjs.Length);
-            foreach (var gameObj in gameObjs)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in gameObjects)
             {
-
+                if (!(item.value is GameObject go))
+                    continue;
                 AudioPathData path = null;
-                AudioPathData.ValidateAndAssignPathData(fields[0].Replace("&", "/"), ref path);
-                AudioPlayer audioPlayer = ServiceLocator.GetService<SoundPlayer>().PlaySoundEffectNonAlloc(path,fields[1].QuickParse(), gameObj.transform.position, SoundEffectVariations.MaterialType.Default, gameObj.transform, fields[2].QuickParse());
-                Debug.Log("Playing sound..." + audioPlayer);
+                bool validated = AudioPathData.ValidateAndAssignPathData(env.GetField(0).Replace("&", "/"), ref path);
                 
-                
+                if (validated)
+                {
+                    AudioPlayer audioPlayer = ServiceLocator.GetService<SoundPlayer>().PlaySoundEffectNonAlloc(path, 
+                        volume, 
+                        go.transform.position, 
+                        SoundEffectVariations.MaterialType.Default, 
+                        go.transform, 
+                        pitch);
+                }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            volume = env.GetField(1).QuickParse();
+            if (volume > 10)
+                volume /= 100;  // cause of kylegaz
+            pitch = env.GetField(2).QuickParse();
+            return null;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.AI.Systems;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,28 +8,22 @@ using System.Linq;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AllTeam : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = new ValuePool();
-            List<Unit> units = World.Active.GetOrCreateManager<TeamSystem>().GetTeamUnits(unit.Team);
+            List<Unit> units = World.Active.GetOrCreateManager<TeamSystem>().GetTeamUnits(env.unit.Team);
             for (int i = 0; i < units.Count; i++)
             {
-                valuePool.AddValue(units[i]);
-            } 
-            return valuePool;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit, units[i]);
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
             return null;
         }
-
     }
 }

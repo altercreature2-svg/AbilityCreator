@@ -1,43 +1,43 @@
 ﻿
 
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetFieldNode : IValueNode
     {
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ValuePool valuePool = new ValuePool();
-            object[] objects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
-            Debug.Log("Getting Fields for " + objects.Length + " objects!");
-            foreach (var @object in objects)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveAnything);
+            var objs = env.GetValues(NodeBlueprint.ConnectionClass.ReciveAnything);
+            
+
+            foreach (var item in objs)
             {
-                Debug.Log($"FieldName:{fields[0]}");
-                object value = @object.GetField(fields[0]);
+                if (!(item.value is object obj))
+                    continue;
+                object value = obj.GetField(env.GetField(0));
+
                 if (value != null)
                 {
                     var newValue = EnumerableHelper.ToArrayIfEnumerable(value);
                     if (newValue == null)
-                        valuePool.AddValue(value);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, value);
                     else
-                    {
-                        for (int i = 0; i < newValue.Length; i++)
-                        {
-                            valuePool.AddValue(newValue[i]);
-                        }
-                    }
+                       env.AddValues(NodeBlueprint.ConnectionClass.GiveAnything, newValue);       
                 }
             }
-            return valuePool;
+
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

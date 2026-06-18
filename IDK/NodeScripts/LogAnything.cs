@@ -1,22 +1,29 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
+using Pathfinding;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class LogAnything : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            object[] everything = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
-            for (int i = 0; i < everything.Length; i++)
+            var everything = env.GetValues(NodeBlueprint.ConnectionClass.ReciveAnything);
+            foreach (var eachthing in everything)
             {
-                DeveloperLogger.Log("(" + nodeRunner.nodeScene.sceneName + ")" +"Log:"+ everything[i], true);
+                DeveloperLogger.Log("(" + env.runner.NodeScene.abilityName+ ")" + "Log:" + eachthing.value, true);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

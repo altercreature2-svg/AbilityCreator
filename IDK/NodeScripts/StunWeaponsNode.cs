@@ -1,21 +1,28 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class StunWeaponsNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in units)
             {
-                unitIndex.gameObject.AddComponent<StopAttacks>().StopAttacksFor(fields[0].QuickParse());
+                if (!(item.value is Unit u))
+                    continue;
+                u.gameObject.AddComponent<StopAttacks>().StopAttacksFor(env.GetField(0).QuickParse());
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

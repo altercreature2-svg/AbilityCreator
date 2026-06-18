@@ -1,10 +1,12 @@
-﻿using IDK.Node_Related_Scripts.ConnectionStuff;
-using IDK.Node_Related_Scripts.NodeRunning.Instructions;
+﻿using AC.Node_Related_Scripts.ConnectionStuff;
+using AC.Node_Related_Scripts.NodeRunning.Instructions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.IKSolverVR;
 
-namespace IDK.Node_Related_Scripts.NodeRunning
+namespace AC.Node_Related_Scripts.NodeRunning
 {
     public class NodeContext
     {
@@ -16,7 +18,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
 
         public struct Room
         {
-            public ConnectionType connectionType;
+            public ConnectionType.VirtualPort connectionType;
             public int headFurnitureIndex; // Points to master pool (-1 if empty)
             public int furnitureCount;
         }
@@ -37,7 +39,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
 
         // --- Read-Only Runtime Lookups (Allocated ONCE in constructor) ---
         private Dictionary<VirtualNode, int> _houseLookup;
-        private Dictionary<ConnectionType, int> _roomLookup;
+        private Dictionary<ConnectionType.VirtualPort, int> _roomLookup;
 
         public struct FurnitureElement
         {
@@ -46,9 +48,11 @@ namespace IDK.Node_Related_Scripts.NodeRunning
         }
 
         public House[] houses => _houses;
+        public Room[] rooms => _allRooms;
 
         public NodeContext(VirtualNode[] virtualNodes, NodeContextManager contextManager)
         {
+            
             this.contextManager = contextManager;
 
             _houseLookup = new Dictionary<VirtualNode, int>(virtualNodes.Length);
@@ -60,7 +64,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
                 totalRoomsCount += virtualNodes[i].connectionTypes.Count;
             }
 
-            _roomLookup = new Dictionary<ConnectionType, int>(totalRoomsCount);
+            _roomLookup = new Dictionary<ConnectionType.VirtualPort, int>(totalRoomsCount);
             _houses = new House[virtualNodes.Length];
             _allRooms = new Room[totalRoomsCount];
 
@@ -69,7 +73,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
             for (int i = 0; i < virtualNodes.Length; i++)
             {
                 var node = virtualNodes[i];
-
+                contextManager.contextCache.Add(node, this);
                 _houses[i] = new House
                 {
                     owner = node,
@@ -86,15 +90,17 @@ namespace IDK.Node_Related_Scripts.NodeRunning
 
                     _allRooms[currentRoomIndex] = new Room
                     {
-                        connectionType = connectionType,
+                        connectionType = connectionType.first,
                         headFurnitureIndex = -1,
                         furnitureCount = 0
                     };
 
-                    _roomLookup.Add(connectionType, currentRoomIndex);
+                    _roomLookup.Add(connectionType.first, currentRoomIndex);
                     currentRoomIndex++;
                 }
             }
+            if (!contextManager.AllContexts.Contains(this))
+                contextManager.AllContexts.Add(this);
         }
 
         // --- Restored & Optimized Public API ---
@@ -115,7 +121,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
         }
 
         // Updated to return our allocation-free structural collection instead of List<Furniture>
-        public FurnitureEnumerable GetFurnitures(ConnectionType connectionType)
+        public FurnitureEnumerable GetFurnitures(ConnectionType.VirtualPort connectionType)
         {
             if (!_roomLookup.TryGetValue(connectionType, out int globalRoomIndex))
             {
@@ -127,7 +133,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
             return new FurnitureEnumerable(_furniturePool, room.headFurnitureIndex);
         }
 
-        public void AddFurnitureToRoom(ConnectionType connectionType, Furniture item)
+        public void AddFurnitureToRoom(ConnectionType.VirtualPort connectionType, Furniture item)
         {
             if (!_roomLookup.TryGetValue(connectionType, out int globalRoomIndex)) return;
 
@@ -145,7 +151,18 @@ namespace IDK.Node_Related_Scripts.NodeRunning
 
             _allRooms[globalRoomIndex] = room;
         }
+        public void ClearFurnitureOfRoom(ConnectionType.VirtualPort connectionType)
+        {
+            if (!_roomLookup.TryGetValue(connectionType, out int globalRoomIndex)) return;
 
+            Room room = _allRooms[globalRoomIndex];
+
+            _furniturePool.Clear();
+            room.headFurnitureIndex = 0;
+            room.furnitureCount = 0;
+
+            _allRooms[globalRoomIndex] = room;
+        }
         public Furniture AllocateObject(object val)
         {
             NodeRegistery.Register register = contextManager.Registery.AllocateMemoryToRegister();
@@ -161,6 +178,10 @@ namespace IDK.Node_Related_Scripts.NodeRunning
         {
             private readonly List<FurnitureElement> _pool;
             private readonly int _headIndex;
+            public int Length
+            {
+                get { return _pool.Count; }
+            }
 
             public FurnitureEnumerable(List<FurnitureElement> pool, int headIndex)
             {

@@ -1,8 +1,11 @@
 ﻿
 
+using AC.Help_Componets;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using HarmonyLib;
-using IDK.Help_Componets;
 using Landfall.TABS;
+using LevelCreator;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,43 +14,42 @@ using System.Runtime.InteropServices;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddProjectileOnHitAction : IBehaviorNode
     {
-       
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        bool waitUntilCollision = true;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            for (int i = 0; i < gameObjects.Length; i++)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var gameObject in gameObjects)
             {
-                if (gameObjects[i].GetComponent<ProjectileHit>())
+                if (!(gameObject.value is GameObject go))
+                    continue;
+                ProjectileHit hit = env.cacheSystem.GetCachedComponent<ProjectileHit>(go);
+                HitEvents hitEvent = new HitEvents
                 {
-                    
-                    ProjectileHit projectileHit = gameObjects[i].GetComponent<ProjectileHit>();
-                    HitEvents hitEvent = new HitEvents
-                    {
-                        hitEvent = new UnityEngine.Events.UnityEvent()
-                    };
-                    hitEvent.hitEvent.AddListener(() => RunAction(unit,nodeRunner, savedNode, projectileHit));
-                    projectileHit.hitEvents = projectileHit.hitEvents.AddItem(hitEvent).ToArray();
-                }
+                    hitEvent = new UnityEngine.Events.UnityEvent()
+                };
+                hitEvent.hitEvent.AddListener(() => OnProjectileHitEvent(hit, env));
+                hit.hitEvents = hit.hitEvents.AddToArray(hitEvent);
             }
-            
-            yield return null;
+            while (waitUntilCollision)
+            {
+                yield return new CoroutineReturn(CoroutineReturn.CourtineType.PauseFrame);
+            }
+
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public void OnProjectileHitEvent(ProjectileHit hit, NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, hit.GetField<HitData>("hit").collider.transform.root.gameObject);
+            waitUntilCollision = false;
         }
-        public void RunAction(Unit unit, NodeRunner nodeRunner, LegacySavedNode savedNode, ProjectileHit projectileHit)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            Debug.Log("RUNNING ACTION!!!!");
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            valuePool.AddValue(projectileHit.GetField<HitData>("hit").collider.transform.root.gameObject);
-            nodeRunner.StartCoroutine(savedNode.TriggerConnection(nodeRunner));
+            return null;
         }
     }
 }

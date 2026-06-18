@@ -5,21 +5,33 @@ using System.Text;
 using System.Threading.Tasks;
 using Unity.IL2CPP.CompilerServices;
 
-namespace IDK.Node_Related_Scripts.NodeRunning.Instructions
+namespace AC.Node_Related_Scripts.NodeRunning.Instructions
 {
     public class NodeProgram
     {
-        public struct NodeInstructions
+        public class NodeCore
         {
             public int contextIndex;
+            public VirtualNode root;
+            public NodeRunner runner;
             public NodeInstruction[] nodeInstructions;
+            private int _counter = 0;
+            public void Next()
+            {
+                if (_counter >= nodeInstructions.Length)
+                    return;
+                NodeInstruction nodeInstruction = nodeInstructions[_counter];
+                runner.StartCoroutine(nodeInstruction.Execute(runner.GetNodeEnviroment(nodeInstruction.node), this));
+                _counter++;
+            }
         }
         public NodeContextManager contextManager;
-        public List<NodeInstructions> nodeInstructions; 
+        public List<NodeCore> nodeProccesses; 
         public NodeProgram(NodeContextManager contextManager)
         {
-            nodeInstructions = new List<NodeInstructions>();
+            nodeProccesses = new List<NodeCore>();
             this.contextManager = contextManager;
         }
+        
     }
 }

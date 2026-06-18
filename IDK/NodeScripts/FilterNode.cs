@@ -1,34 +1,42 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class FilterNode : IValueNode
     {
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            object[] everything = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
-            ValuePool valuePool = new ValuePool();
-            if (fields[0] == "Gameobjects only")
-                valuePool.AddRange(everything.Where(n => n is GameObject).ToArray());
-            if (fields[0] == "Units only")
-                valuePool.AddRange(everything.Where(n => n is Unit).ToArray());
-            if (fields[0] == "Components only")
-                valuePool.AddRange(everything.Where(n => n is Component).ToArray());
-            if (fields[0] == "Other")
-                valuePool.AddRange(everything.Where(n => !(n is Component)).Where(n => !(n is Unit)).Where(n => !(n is GameObject)).ToArray());
-            return valuePool;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
+        }
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
+        {
+            string option = env.GetField(0);
+            var everything = env.GetValues(NodeBlueprint.ConnectionClass.ReciveAnything);
+            foreach (var item in everything)
+            {
+                if (item.value == null)
+                    continue;
+                if (option == "Gameobjects only")
+                    if (item.value is GameObject converted)
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, converted);
+                if (option == "Units only")
+                    if (item.value is Unit converted)
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, converted);
+                if (option == "Components only")
+                    if (item.value is Component converted)
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, converted);
+                if (option == "Other")
+                    if (!((item.value is GameObject) | (item.value is Unit) | (item.value is Component)))
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, item.value);
+            }
+            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
 
     }

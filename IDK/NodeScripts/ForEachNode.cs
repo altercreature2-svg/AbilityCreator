@@ -1,40 +1,56 @@
-﻿using Landfall.TABS;
-using System.Collections;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ForEachNode : IBehaviorNode
     {
-        
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            object[] objects;
-            if (fields[1] == "All")
-                objects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
-            else if (fields[1] == "Gameobjects only")
-                objects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<GameObject>();
-            else if (fields[1] == "Units only")
-                objects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<Unit>();
-            else
-                objects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<Component>();
 
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            for (int i = 0; i < objects.Length; i++)
-            {
-                valuePool.ClearValues();
-                if (savedNode.fields[0].QuickParse() <= 0)
-                    yield return null;
-                else
-                    yield return new WaitForSeconds(savedNode.fields[0].QuickParse());
-                valuePool.AddValue(objects[i]);
-                yield return savedNode.TriggerConnection(nodeRunner);
-            }
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
+            return null;
+        }
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
+        {
+            var objects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveAnything);
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveAnything);
+            string option = env.GetField(0);
+            System.Type filterType;
+            switch (option)
+            {
+                case "All":
+                    filterType = null;
+                    break;
+                case "Gameobjects only":
+                    filterType = typeof(GameObject);
+                    break;
+                case "Units only":
+                    filterType = typeof(Unit);
+                    break;
+                default:
+                    filterType = typeof(Component);
+                    break;
+            }
+            FixedPool<object> pool = new FixedPool<object>(objects.Length);
+            foreach (var item in objects)
+            {
+                object typed = item.value;
+                if (typed.GetType() != filterType)
+                    continue;
+                pool.Insert(item);
+            }
+            AbilityCreator.reapeter.AddTask(pool.Length, env.GetField(1).QuickParse(),i => Run(env, i, pool));
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public void Run(NodeEnv env, int i, FixedPool<object> pool)
+        {
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveAnything);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, pool[i]);
+            env.RunTrigger();
         }
     }
 }

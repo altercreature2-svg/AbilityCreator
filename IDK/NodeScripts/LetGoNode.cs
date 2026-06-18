@@ -1,108 +1,107 @@
-﻿using BitCode.Debug.Commands;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using BitCode.Debug.Commands;
+using BitCode.Extensions;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static HoldingHandler;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class LetGoNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            float pause = env.GetField(0).QuickParse();
+            FixedPool<Unit> pool = new FixedPool<Unit>(units.Length);
+            switch (env.GetField(0))
             {
-                
-                if (fields[0] == "Both")
-                {
-                    LetGoRight(unitIndex);
-                    LetGoLeft(unitIndex);
-                }
-                if (fields[0] == "Right hand")
-                {
-                    LetGoRight(unitIndex);
-                }
-                if (fields[0] == "Left hand")
-                {
-                    LetGoLeft(unitIndex);
-                }
+                case "Both":
+                    foreach (var item in units)
+                    {
+                        if (!(item.value is Unit u))
+                            continue;
+                        LetGoLeft(u, env);
+                        LetGoRight(u, env);
+                    }
+                    break;
+                case "Right Hand":
+                    foreach (var item in units)
+                    {
+                        if (!(item.value is Unit u))
+                            continue;
+                        LetGoRight(u, env);
+                    }
+                    break;
+                case "Left Hand":
+                    foreach (var item in units)
+                    {
+                        if (!(item.value is Unit u))
+                            continue;
+                        LetGoLeft(u, env);
+                    }
+                    break;
+                default:
+                    break;
             }
-
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
 
-        public void LetGoRight(Unit unitIndex)
+        
+
+        public void LetGoRight(Unit unit, NodeEnv env)
         {
-            Holdable rightObject = unitIndex.holdingHandler.rightObject;
-            HoldingHandler holdingHandler = unitIndex.holdingHandler;
-            if ((bool)rightObject && !rightObject.ignoreDissarm)
+            
+            HoldingHandler holdingHandler = unit.holdingHandler;
+            Holdable rightObject = holdingHandler.rightObject;
+            if (!rightObject)
+                return;
+            if (!rightObject.ignoreDissarm)
             {
                 holdingHandler.rightHandActivity = HandActivity.NotHolding;
                 rightObject.WasDropped();
-            }
-
-
-            bool flag = false;
-            if ((bool)rightObject && rightObject.ignoreDissarm)
-            {
-                flag = true;
-            }
-            if (rightObject != null && !rightObject.ignoreDissarm)
-            {
                 rightObject.rig.isKinematic = false;
                 rightObject.gameObject.AddComponent<SetInterpolation>();
                 holdingHandler.rightObject = null;
-            }
-            if (!flag)
-            {
-                if ((bool)holdingHandler.GetField<ConfigurableJoint>("rightHandJoint"))
+                var joint = holdingHandler.GetField<ConfigurableJoint>("rightHandJoint");
+                if (joint)
                 {
-                    UnityEngine.Object.Destroy(holdingHandler.GetField<ConfigurableJoint>("rightHandJoint"));
+                    Object.Destroy(joint);
                 }
-
             }
-            if (rightObject?.GetComponent<Weapon>())
-                unitIndex.WeaponHandler.rightWeapon = null;
-            holdingHandler.rightHandActivity = HandActivity.NotHolding;
-            holdingHandler.rightObject = null;
+            if (env.cacheSystem.GetCachedComponent<Weapon>(rightObject.gameObject))
+                unit.WeaponHandler.rightWeapon = null;
         }
-        public void LetGoLeft(Unit unitIndex)
+        public void LetGoLeft(Unit unit, NodeEnv env)
         {
-            Holdable leftObject = unitIndex.holdingHandler.leftObject;
-            HoldingHandler holdingHandler = unitIndex.holdingHandler;
-            if ((bool)leftObject && !leftObject.ignoreDissarm)
+            HoldingHandler holdingHandler = unit.holdingHandler;
+            Holdable leftObject = holdingHandler.leftObject;
+            if (!leftObject)
+                return;
+            if (!leftObject.ignoreDissarm)
             {
                 holdingHandler.leftHandActivity = HandActivity.NotHolding;
                 leftObject.WasDropped();
-            }
-
-
-            bool flag = false;
-            if ((bool)leftObject && leftObject.ignoreDissarm)
-            {
-                flag = true;
-            }
-            if (leftObject != null && !leftObject.ignoreDissarm)
-            {
                 leftObject.rig.isKinematic = false;
                 leftObject.gameObject.AddComponent<SetInterpolation>();
                 holdingHandler.leftObject = null;
-            }
-            if (!flag)
-            {
-                if ((bool)holdingHandler.GetField<ConfigurableJoint>("leftHandJoint"))
+                var joint = holdingHandler.GetField<ConfigurableJoint>("rightHandJoint");
+                if (joint)
                 {
-                    UnityEngine.Object.Destroy(holdingHandler.GetField<ConfigurableJoint>("leftHandJoint"));
+                    Object.Destroy(joint);
                 }
-
             }
-            if (leftObject?.GetComponent<Weapon>())
-                unitIndex.WeaponHandler.leftWeapon = null;
-            holdingHandler.leftHandActivity = HandActivity.NotHolding;
-            holdingHandler.leftObject = null;
+            if (env.cacheSystem.GetCachedComponent<Weapon>(leftObject.gameObject))
+                unit.WeaponHandler.leftWeapon = null;
         }
     }
     

@@ -1,29 +1,29 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
+using Landfall.TABS.UnitEditor;
 using System.Collections.Generic;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetMaxUnitHealth : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return false;
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveVariable);
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
+            {
+                if (!(item.value is Unit u))
+                    continue;
+               env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable() { value = u.data.maxHealth});
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            for (int i = 0; i < units.Length; i++)
-            {
-                valuePool.AddValue(new Variable() { value = units[i].data.maxHealth });
-            }
-
-            return valuePool;
         }
     }
 }

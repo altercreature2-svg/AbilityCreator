@@ -1,14 +1,13 @@
 ﻿using Landfall.TABS;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public static class Refelection
     {
-
-        // Token: 0x06000003 RID: 3 RVA: 0x00002078 File Offset: 0x00000278
+        
         public static object CallMethod(this object o, string methodName, params object[] args)
         {
             MethodInfo method = o.GetType().GetMethod(methodName, (BindingFlags)(-1));
@@ -68,15 +67,11 @@ namespace IDK
                 {
                     if (type == null)
                         throw new Exception();
-                    try
-                    {
-                        FieldInfo field = (FieldInfo)GetFieldInfo(type, fieldName, flags);
-                        return field.GetValue(instance);
-                    }
-                    catch
-                    {
-                        type = type.BaseType;
-                    }
+                    FieldInfo field = (FieldInfo)GetFieldInfo(type, fieldName, flags);
+                    type = type.BaseType;
+                    if (field == null)
+                        continue;
+                    return field.GetValue(instance);
                 }
             }
             catch
@@ -91,7 +86,7 @@ namespace IDK
             object field = (object)type.GetField(fieldName, flags) ?? (object)type.GetProperty(fieldName, flags);
             return field;
 
-           
+
 
         }
         public static FieldInfo GetFieldInfo<T>(this T instance, string fieldName, BindingFlags flags = (BindingFlags)(-1))

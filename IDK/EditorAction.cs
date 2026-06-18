@@ -1,10 +1,10 @@
-﻿using IDK.Node_Related_Scripts.connection_stuff;
+﻿using AC.Node_Related_Scripts.connection_stuff;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public class StoredNode
     {
@@ -15,7 +15,7 @@ namespace IDK
         public StoredNode(NodeComponent node)
         {
             connections = node.Connections.Values.Select(n => n.connected).ToArray();
-            key = node.nodeBlueprint.key;
+            key = node.nodeBlueprint.nodeKey;
             position = node.transform.position;
             fields = node.GetComponentsInChildren<NodeField>().Select(n => n.Value).ToArray();
         } 

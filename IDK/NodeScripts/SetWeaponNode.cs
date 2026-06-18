@@ -1,45 +1,60 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static HoldingHandler;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SetWeaponNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        int mode;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] weapons = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            foreach (var unitIndex in units)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var gosEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach ( var item in unitsEnum )
             {
-                foreach (var weapon in weapons)
+                if (!(item.value is Unit u))
+                    continue;
+                foreach (var item2 in gosEnum)
                 {
-                    if (fields[0] == "Both")
+                    if (!(item2.value is GameObject go))
+                        continue;
+                    switch (mode)
                     {
-                        
-                        unitIndex.data.weaponHandler.rightWeapon?.GetComponent<Holdable>()?.Dissarm();
-                        unitIndex.data.weaponHandler.leftWeapon?.GetComponent<Holdable>()?.Dissarm();
-                        unitIndex.unitBlueprint.SetWeapon(unitIndex, unitIndex.Team, weapon, weapon.GetComponent<WeaponItem>().PropData ?? null, HandType.Right, Quaternion.identity, new List<GameObject>());
-                        unitIndex.holdingHandler.leftHandActivity = HandActivity.HoldingRightObject;
-                    }
-                    if (fields[0] == "Right")
-                    {
-                        unitIndex.data.weaponHandler.rightWeapon?.GetComponent<Holdable>()?.Dissarm();
-                        unitIndex.unitBlueprint.SetWeapon(unitIndex, unitIndex.Team, weapon, weapon.GetComponent<WeaponItem>().PropData ?? null, HandType.Right, Quaternion.identity, new List<GameObject>());
-                    }
-                    if (fields[0] == "Left")
-                    {
-                        unitIndex.data.weaponHandler.leftWeapon?.GetComponent<Holdable>()?.Dissarm();
-                        unitIndex.unitBlueprint.SetWeapon(unitIndex, unitIndex.Team, weapon, weapon.GetComponent<WeaponItem>().PropData ?? null, HandType.Left, Quaternion.identity, new List<GameObject>());
+                        case 0:
+                            u.data.weaponHandler.rightWeapon?.GetComponent<Holdable>()?.Dissarm();
+                            u.data.weaponHandler.leftWeapon?.GetComponent<Holdable>()?.Dissarm();
+                            u.unitBlueprint.SetWeapon(u, u.Team, go, env.cacheSystem.GetCachedComponent<WeaponItem>(go)?.PropData, HandType.Right, Quaternion.identity, new List<GameObject>());
+                            u.holdingHandler.rightHandActivity = HandActivity.HoldingRightObject;
+                            u.holdingHandler.leftHandActivity = HandActivity.HoldingRightObject;
+                            break;
+                        case 1:
+                            u.data.weaponHandler.rightWeapon?.GetComponent<Holdable>()?.Dissarm();
+                            u.unitBlueprint.SetWeapon(u, u.Team, go, env.cacheSystem.GetCachedComponent<WeaponItem>(go)?.PropData, HandType.Right, Quaternion.identity, new List<GameObject>());
+                            u.holdingHandler.rightHandActivity = HandActivity.HoldingRightObject;
+                            break;
+                        case 2:
+                            u.data.weaponHandler.leftWeapon?.GetComponent<Holdable>()?.Dissarm();
+                            u.unitBlueprint.SetWeapon(u, u.Team, go, env.cacheSystem.GetCachedComponent<WeaponItem>(go)?.PropData, HandType.Left, Quaternion.identity, new List<GameObject>());
+                            u.holdingHandler.leftHandActivity = HandActivity.HoldingLeftObject;
+                            break;
+                        default:
+                            break;
                     }
                 }
-
             }
-
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            mode = env.GetField(0) == "Both" ? 0 : 999;
+            mode = env.GetField(0) == "Right" ? 1 : mode;
+            mode = env.GetField(0) == "Left" ? 2 : mode;
+            return null;
         }
     }
 }

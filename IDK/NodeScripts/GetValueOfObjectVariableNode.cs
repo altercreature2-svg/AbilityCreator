@@ -1,36 +1,32 @@
 ﻿using BitCode.Extensions;
 using HarmonyLib;
-using IDK.Node_Related_Scripts;
+using AC.Node_Related_Scripts;
 using Landfall.TABS;
 using System.Collections.Generic;
 using UnityEngine;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using AC.Node_Related_Scripts.NodeRunning;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetValueOfObjectVariableNode : IValueNode
     {
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ObjectVariable[] objectVariables = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveObjectVariable).GetValuePoolSmart(unit).GetValues<ObjectVariable>();
-            ValuePool valuePool = new ValuePool();
-            for (int i = 0; i < objectVariables.Length; i++)
-            {
-                Debug.Log("Varibale:" + objectVariables[i]);
-                object[] store = objectVariables[i].value;
-                store.Do(n => Debug.Log("store product:" + n));
-                valuePool.AddRange(store);
-            }
-            return valuePool;
-        }
-
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
-            
+        }
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
+        {
+            string name = env.GetField(0);
+            var reciveObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveObjectVariable);
+            foreach (var reciveObject in reciveObjects)
+            {
+                if (!(reciveObject.value is ObjectVariable objectVariable))
+                    continue;
+                object[] store = objectVariable.value;
+                env.AddValues(NodeBlueprint.ConnectionClass.GiveAnything, store);
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
     }
 }

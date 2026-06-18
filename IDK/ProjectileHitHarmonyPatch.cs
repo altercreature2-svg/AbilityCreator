@@ -3,7 +3,7 @@ using Landfall.TABS;
 using System.Collections;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     [HarmonyPatch(typeof(ProjectileHit))]
     [HarmonyPatch(nameof(ProjectileHit.Hit))]

@@ -1,14 +1,15 @@
-﻿using IDK.Node_Related_Scripts.NodeRunning;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public interface INode
     {
-        IEnumerator Execute(NodeEnv env);
-        IEnumerator Cache(NodeEnv env);
+        IEnumerator<CoroutineReturn> Execute(NodeEnv env);
+        IEnumerator<CoroutineReturn> Cache(NodeEnv env);
     }
 }

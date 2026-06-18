@@ -1,7 +1,7 @@
-﻿using IDK.Node_Related_Scripts.connection_stuff;
-using IDK.Node_Related_Scripts.ConnectionStuff;
-using IDK.Node_Related_Scripts.Field_stuff;
-using IDK.Node_Related_Scripts.SavingStuff;
+﻿using AC.Node_Related_Scripts.connection_stuff;
+using AC.Node_Related_Scripts.ConnectionStuff;
+using AC.Node_Related_Scripts.Field_stuff;
+using AC.Node_Related_Scripts.SavingStuff;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace IDK.Node_Related_Scripts.Migrater
+namespace AC.Node_Related_Scripts.Migrater
 {
     public class NodeSceneMigrater
     {
@@ -20,7 +20,7 @@ namespace IDK.Node_Related_Scripts.Migrater
             savedNodeScene.abilityName = legacySavedNodeScene.sceneName;
             savedNodeScene.abilityDescription = legacySavedNodeScene.sceneDescription;
             savedNodeScene.abilityIcon = legacySavedNodeScene.sceneImage.ToString();
-            savedNodeScene.abilityID = legacySavedNodeScene.id.ToString();
+            savedNodeScene.abilityID = legacySavedNodeScene.id;
             List<ISaveable> saveables = new List<ISaveable>();
             for (int i = 0; legacySavedNodeScene.blueprints.Count > i; i++)
             {
@@ -42,14 +42,11 @@ namespace IDK.Node_Related_Scripts.Migrater
                 NodeConnections nodeConnections = legacySavedNodeScene.connections2[i];
                 for (int j = 0; j < nodeConnections.connectionsTypes.Count; j++)
                 {
-                    ConnectionType connectionType = new ConnectionStuff.ConnectionType();
-                    connectionType.portName = "0";
-                    int otherNodeID = legacySavedNodeScene.blueprints.FindIndex(n => n == nodeConnections.otherIDs[j]);
-                    NodeBlueprint nodeBlueprint = AbilityCreator.nodeDatabase[legacySavedNodeScene.blueprints2[otherNodeID]];
-                    connectionType.connectionType = nodeConnections.connectionsTypes[j];
-                    connectionType.connectedNodePortName = "0";
                     
-                    connectionType.connectedNode = legacySavedNodeScene.blueprints[i];
+                    int nodeID = legacySavedNodeScene.blueprints.FindIndex(n => n == legacySavedNodeScene.blueprints[i]);
+                    int otherNodeID = legacySavedNodeScene.blueprints.FindIndex(n => n == nodeConnections.otherIDs[j]);
+                    ConnectionType connectionType = ConnectionMigrater.MigrateToNew(nodeConnections.connectionsTypes[j],otherNodeID, nodeID);
+
                     saveableFields.Add(new SaveableField()
                     {
                         fieldName = "%CONNECTION%" + j,
@@ -69,7 +66,7 @@ namespace IDK.Node_Related_Scripts.Migrater
 
 
                 saveableObject.fields = saveableFields.ToArray();
-                IDK.VirtualNode savedNode = new IDK.VirtualNode();
+                global::AC.VirtualNode savedNode = new global::AC.VirtualNode();
                 savedNode.Load(saveableObject);
                 saveables.Add(savedNode);
             }

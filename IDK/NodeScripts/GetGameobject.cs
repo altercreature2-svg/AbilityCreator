@@ -1,135 +1,94 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
+using Landfall.TABS.UnitEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetGameobject : IValueNode
     {
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            Debug.Log("Units node:" + connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit));
-            Debug.Log("Units Length: " + units.Length);
-            foreach (var unitIndex in units)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveGameObject);
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                
-                if (fields[0] == "Root")
+                if (!(item.value is Unit u))
+                    continue;
+                switch (env.GetField(0))
                 {
-                    valuePool.AddValue(unitIndex.gameObject);
-                    valuePool.AddValue(unitIndex.data.torso.GetComponent<Rigidbody>());
+                    case "Root":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.gameObject);
+                        break;
+                    case "Torso":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.torso?.gameObject);
+                        break;
+                    case "Hip":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.hip?.gameObject);
+                        break;
+                    case "Head":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.head?.gameObject);
+                        break;
+                    case "Right Arm":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.rightArm?.gameObject);
+                        break;
+                    case "Left Arm":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.leftArm?.gameObject);
+                        break;
+                    case "Right Hand":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.rightHand?.gameObject);
+                        break;
+                    case "Left Hand":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.leftHand?.gameObject);
+                        break;
+                    case "Right Knee":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.legRight?.gameObject);
+                        break;
+                    case "Left Knee":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.legLeft?.gameObject);
+                        break;
+                    case "Right Foot":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footRight?.gameObject);
+                        break;
+                    case "Left Foot":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footLeft?.gameObject);
+                        break;
+                    case "Mesh":
+                        SkinnedMeshRenderer skinned = env.cacheSystem.GetCachedComponentInChildren<SkinnedMeshRenderer>(u.unitBlueprint.UnitBase);
+                        GameObject mesh = env.cacheSystem.GetCachedComponentsInChildren<SkinnedMeshRenderer>(u.gameObject).FirstOrDefault(n => n.sharedMesh == skinned.sharedMesh).transform.parent.gameObject;
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, mesh);
+                        break;
+                    case "Both Foots":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footRight?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footLeft?.gameObject);
+                        break;
+                    case "Both Hands":
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.rightHand?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.leftHand?.gameObject);
+                        break;
+                    default:
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.torso?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.hip?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.head?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.rightArm?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.leftArm?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.rightHand?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.leftHand?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.legRight?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.legLeft?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footRight?.gameObject);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, u.data.footLeft?.gameObject);
+                        break;
                 }
-                if (fields[0] == "Torso")
-                {
-                    valuePool.AddValue(unitIndex.data.torso.gameObject);
-                    valuePool.AddValue(unitIndex.data.torso.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Hip")
-                {
-                    valuePool.AddValue(unitIndex.data.hip.gameObject);
-                    valuePool.AddValue(unitIndex.data.hip.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Head")
-                {
-                    valuePool.AddValue(unitIndex.data.head.gameObject);
-                    valuePool.AddValue(unitIndex.data.head.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Right Arm")
-                {
-                    valuePool.AddValue(unitIndex.data.rightArm.gameObject);
-                    valuePool.AddValue(unitIndex.data.rightArm.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Left Arm")
-                {
-                    valuePool.AddValue(unitIndex.data.leftArm.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftArm.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Right Hand")
-                {
-                    valuePool.AddValue(unitIndex.data.rightHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.rightHand.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Left Hand")
-                {
-                    valuePool.AddValue(unitIndex.data.leftHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftHand.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Right Knee")
-                {
-                    valuePool.AddValue(unitIndex.data.legRight.gameObject);
-                    valuePool.AddValue(unitIndex.data.legRight.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Left Knee")
-                {
-                    valuePool.AddValue(unitIndex.data.legLeft.gameObject);
-                    valuePool.AddValue(unitIndex.data.legLeft.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Right Foot")
-                {
-                    valuePool.AddValue(unitIndex.data.footRight.gameObject);
-                    valuePool.AddValue(unitIndex.data.footRight.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Left Foot")
-                {
-                    valuePool.AddValue(unitIndex.data.footLeft.gameObject);
-                    valuePool.AddValue(unitIndex.data.footLeft.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Mesh")
-                {
-                    SkinnedMeshRenderer meshReference = unitIndex.unitBlueprint.UnitBase.GetComponentInChildren<SkinnedMeshRenderer>();
-                    GameObject mesh = unitIndex.GetComponentsInChildren<SkinnedMeshRenderer>().First(n => n.sharedMesh == meshReference.sharedMesh).transform.parent.gameObject;
-                    valuePool.AddValue(mesh) ;
-                }
-                if (fields[0] == "Both Foots")
-                {
-                    valuePool.AddValue(unitIndex.data.footLeft.gameObject);
-                    valuePool.AddValue(unitIndex.data.footLeft.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.footRight.gameObject);
-                    valuePool.AddValue(unitIndex.data.footRight.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "Both Hands")
-                {
-                    valuePool.AddValue(unitIndex.data.rightHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftHand.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.rightHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftHand.GetComponent<Rigidbody>());
-                }
-                if (fields[0] == "All")
-                {
-                    valuePool.AddValue(unitIndex.data.torso.gameObject);
-                    valuePool.AddValue(unitIndex.data.torso.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.head.gameObject);
-                    valuePool.AddValue(unitIndex.data.head.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.rightArm.gameObject);
-                    valuePool.AddValue(unitIndex.data.rightArm.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.leftArm.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftArm.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.rightHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.rightHand.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.leftHand.gameObject);
-                    valuePool.AddValue(unitIndex.data.leftHand.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.legRight.gameObject);
-                    valuePool.AddValue(unitIndex.data.legRight.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.legLeft.gameObject);
-                    valuePool.AddValue(unitIndex.data.legLeft.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.footRight.gameObject);
-                    valuePool.AddValue(unitIndex.data.footRight.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.footLeft.gameObject);
-                    valuePool.AddValue(unitIndex.data.footLeft.GetComponent<Rigidbody>());
-                    valuePool.AddValue(unitIndex.data.hip.gameObject);
-                    valuePool.AddValue(unitIndex.data.hip.GetComponent<Rigidbody>());
-                }
+
             }
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

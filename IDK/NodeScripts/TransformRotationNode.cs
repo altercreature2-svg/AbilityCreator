@@ -1,39 +1,65 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
-    public class TransformRotationNode : IBehaviorNode
+    public class TransformRotationNode : IBehaviorNode // son i dont give a fuck that transform position and transform rotation have different meanings of local
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public float x, y, z;
+        public bool local;
+        public bool set;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            yield return null;
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            
-            foreach (var gameObj in gameObjects)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+           
+            foreach (var item in gameObjects)
             {
-                Vector3 rotation = gameObj.transform.rotation.eulerAngles;
-                Vector3 localRotation = gameObj.transform.localRotation.eulerAngles;
-                if (fields[3] == "Global")
+                if (!(item.value is GameObject go))
+                    continue;
+                Transform transform = go.transform;
+                Vector3 rotation = transform.rotation.eulerAngles;
+                Vector3 localRotation = transform.localRotation.eulerAngles;
+                Vector3 rotationOffset = new Vector3(x, y, z);
+                switch (local)
                 {
-                    if (fields[4] == "Add")
-                        gameObj.transform.rotation = Quaternion.Euler(rotation + new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
-                    else
-                        gameObj.transform.rotation = Quaternion.Euler(new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
+                    case true:
+                        switch (set)
+                        {
+                            case true:
+                                transform.localRotation = Quaternion.Euler(rotationOffset);
+                                break;
+                            case false:
+                                transform.localRotation = Quaternion.Euler(localRotation + rotationOffset);
+                                break;
+                        }
+                        break;
+                    case false:
+                        switch (set)
+                        {
+                            case true:
+                                transform.rotation = Quaternion.Euler(rotationOffset);
+                                break;
+                            case false:
+                                transform.rotation = Quaternion.Euler(rotation + rotationOffset);
+                                break;
+                        }
+                        break;
                 }
-                else
-                {
-                    if (fields[4] == "Add")
-                        gameObj.transform.localRotation = Quaternion.Euler(localRotation + new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
-                    else
-                        gameObj.transform.localRotation = Quaternion.Euler(new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
-                }
-
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            local = env.GetField(3) != "Global";
+            set = env.GetField(4) != "Add";
+            x = env.GetField(0).QuickParse();
+            y = env.GetField(1).QuickParse();
+            z = env.GetField(2).QuickParse();
+            return null;
         }
     }
 }

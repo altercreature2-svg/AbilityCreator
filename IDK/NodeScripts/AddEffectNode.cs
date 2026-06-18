@@ -1,28 +1,40 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddEffectNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        UnitEffectBase unitEffectBase;
+        
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
             
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            for (int i = 0; i < units.Length; i++)
+            foreach (var item in units) 
             {
-                var effectt = UnitEffectBase.AddEffectToTarget(units[i].gameObject, AbilityCreator.effects[fields[0]].GetComponent<UnitEffectBase>());
-                effectt.transform.position = units[i].transform.position;
-                if (effectt.GetComponent<UnitEffectBase>())
+                if (!(item.value is Unit unit))
+                    continue;
+                var effect = UnitEffectBase.AddEffectToTarget(unit.gameObject, unitEffectBase);
+                effect.transform.position = unit.transform.position;
+                UnitEffectBase spawnedEffect = env.cacheSystem.GetCachedComponent<UnitEffectBase>(effect.gameObject);
+                if (spawnedEffect)
                 {
-                    effectt.GetComponent<UnitEffectBase>().DoEffect();
+                    spawnedEffect.DoEffect();
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
 
         }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            unitEffectBase = env.cacheSystem.GetCachedComponent<UnitEffectBase>(AbilityCreator.effects[env.GetField(0)]);
+            yield break;
+        }  
     }
 }

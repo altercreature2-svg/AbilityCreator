@@ -1,23 +1,25 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class WhenUnitDies : ITriggerNode
     {
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            
+            return null;
         }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            Action action = (Action)Delegate.Combine((Action)(() => nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode))),(Action)unit.data.healthHandler.GetField("DieAction"));
-            unit.data.healthHandler.SetField("DieAction", action);
+            Action action = (Action)Delegate.Combine((Action)(() => env.RunTrigger()), (Action)env.unit.data.healthHandler.GetField("DieAction"));
+            env.unit.data.healthHandler.SetField("DieAction", action);
+            return null;
         }
-        
     }
     
 }

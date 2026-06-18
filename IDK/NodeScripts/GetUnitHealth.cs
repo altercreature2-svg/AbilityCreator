@@ -1,35 +1,36 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetUnitHealth : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            for (int i = 0; i < units.Length; i++)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveVariable);
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            bool usePrecentage = env.GetField(0) == "Normal";  
+            foreach (var item in unitsEnum)
             {
-                if (fields[0] == "Normal")
-                    valuePool.AddValue(new Variable() { value = units[i].data.health });
+                if (!(item.value is Unit u))
+                    continue;
+                
+                if (!usePrecentage)
+                    env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable() { value = u.data.health });
                 else
                 {
-                    float preune = units[i].data.health / units[i].data.maxHealth;
-                    valuePool.AddValue(new Variable() { value = Mathf.Clamp01(preune) * 100 });
+                    float precent = u.data.health / u.data.maxHealth;
+                    env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable() { value = Mathf.Clamp01(precent) * 100 });
                 }
             }
-
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

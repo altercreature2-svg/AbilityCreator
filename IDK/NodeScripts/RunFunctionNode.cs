@@ -1,30 +1,32 @@
 ﻿
 
-using IDK.Help_Componets;
+using AC.Help_Componets;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class RunFunctionNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        string funcName;
+        FunctionStorer functionStorer;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            FunctionStorer functionStorer;
-            if (!unit.GetComponent<FunctionStorer>())
-            {
-                functionStorer = unit.gameObject.AddComponent<FunctionStorer>();
-            }
-            else
-            {
-                functionStorer = unit.GetComponent<FunctionStorer>();
-            }
-            functionStorer.RunAction(fields[0]);
-            yield return savedNode.TriggerConnection(nodeRunner);
-            yield return null;
+            functionStorer.RunAction(funcName);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            functionStorer = env.cacheSystem.GetCachedComponent<FunctionStorer>(env.unit.gameObject);
+            if (!functionStorer)
+                functionStorer = env.unit.gameObject.AddComponent<FunctionStorer>();
+            funcName = env.GetField(0);
+            return null;
         }
     }
 }

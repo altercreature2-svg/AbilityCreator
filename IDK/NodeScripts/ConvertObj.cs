@@ -1,22 +1,25 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ConvertObj : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
+            var values = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var val in values)
+            {
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveAnything, val);
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            return connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit);
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

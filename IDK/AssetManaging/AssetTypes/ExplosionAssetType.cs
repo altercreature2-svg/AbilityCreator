@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace IDK.AssetManaging.AssetTypes
+namespace AC.AssetManaging.AssetTypes
 {
     public class ExplosionAssetType : AssetType<GameObject>
     {

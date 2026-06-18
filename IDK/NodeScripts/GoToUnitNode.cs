@@ -1,154 +1,165 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GoToUnitNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var gameobjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            string option = env.GetField(0);
+            string option2 = env.GetField(1);
+            foreach (var item in units)
             {
-                foreach (var gameObj in gameObjects)
+                if (!(item.value is Unit u))
+                    continue;
+                foreach (var item2 in gameobjects)
                 {
-                    if (fields[0] == "Both")
+                    if (!(item2.value is GameObject go))
+                        continue;
+                    if (option == "Both")
                     {
-                        if (fields[1] == "Head")
+                        if (option2 == "Head")
                         {
-                            TeleportObject(gameObj, unitIndex.data.head);
+                            TeleportObject(go, u.data.head);
                         }
-                        if (fields[1] == "Torso")
+                        if (option2 == "Torso")
                         {
-                            TeleportObject(gameObj, unitIndex.data.head);
+                            TeleportObject(go, u.data.head);
                         }
-                        if (fields[1] == "Right Arm")
+                        if (option2 == "Right Arm")
                         {
-                            TeleportObject(gameObj, unitIndex.data.rightArm);
+                            TeleportObject(go, u.data.rightArm);
                         }
-                        if (fields[1] == "Left Arm")
+                        if (option2 == "Left Arm")
                         {
-                            TeleportObject(gameObj, unitIndex.data.leftArm);
+                            TeleportObject(go, u.data.leftArm);
                         }
-                        if (fields[1] == "Right Hand")
+                        if (option2 == "Right Hand")
                         {
-                            TeleportObject(gameObj, unitIndex.data.rightHand);
+                            TeleportObject(go, u.data.rightHand);
                         }
-                        if (fields[1] == "Left Hand")
+                        if (option2 == "Left Hand")
                         {
-                            TeleportObject(gameObj, unitIndex.data.leftHand);
+                            TeleportObject(go, u.data.leftHand);
                         }
-                        if (fields[1] == "Right Knee")
+                        if (option2 == "Right Knee")
                         {
-                            TeleportObject(gameObj, unitIndex.data.legRight);
+                            TeleportObject(go, u.data.legRight);
                         }
-                        if (fields[1] == "Left Knee")
+                        if (option2 == "Left Knee")
                         {
-                            TeleportObject(gameObj, unitIndex.data.legLeft);
+                            TeleportObject(go, u.data.legLeft);
                         }
-                        if (fields[1] == "Right Foot")
+                        if (option2 == "Right Foot")
                         {
-                            TeleportObject(gameObj, unitIndex.data.footRight);
+                            TeleportObject(go, u.data.footRight);
                         }
-                        if (fields[1] == "Left Foot")
+                        if (option2 == "Left Foot")
                         {
-                            TeleportObject(gameObj, unitIndex.data.footLeft);
+                            TeleportObject(go, u.data.footLeft);
                         }
                     }
-                    else if (fields[0] == "Position only")
+                    else if (option == "Position only")
                     {
-                        if (fields[1] == "Head")
+                        if (option2 == "Head")
                         {
-                            TeleportPos(gameObj, unitIndex.data.head);
+                            TeleportPos(go, u.data.head);
                         }
-                        if (fields[1] == "Torso")
+                        if (option2 == "Torso")
                         {
-                            TeleportPos(gameObj, unitIndex.data.head);
+                            TeleportPos(go, u.data.head);
                         }
-                        if (fields[1] == "Right Arm")
+                        if (option2 == "Right Arm")
                         {
-                            TeleportPos(gameObj, unitIndex.data.rightArm);
+                            TeleportPos(go, u.data.rightArm);
                         }
-                        if (fields[1] == "Left Arm")
+                        if (option2 == "Left Arm")
                         {
-                            TeleportPos(gameObj, unitIndex.data.leftArm);
+                            TeleportPos(go, u.data.leftArm);
                         }
-                        if (fields[1] == "Right Hand")
+                        if (option2 == "Right Hand")
                         {
-                            TeleportPos(gameObj, unitIndex.data.rightHand);
+                            TeleportPos(go, u.data.rightHand);
                         }
-                        if (fields[1] == "Left Hand")
+                        if (option2 == "Left Hand")
                         {
-                            TeleportPos(gameObj, unitIndex.data.leftHand);
+                            TeleportPos(go, u.data.leftHand);
                         }
-                        if (fields[1] == "Right Knee")
+                        if (option2 == "Right Knee")
                         {
-                            TeleportPos(gameObj, unitIndex.data.legRight);
+                            TeleportPos(go, u.data.legRight);
                         }
-                        if (fields[1] == "Left Knee")
+                        if (option2 == "Left Knee")
                         {
-                            TeleportPos(gameObj, unitIndex.data.legLeft);
+                            TeleportPos(go, u.data.legLeft);
                         }
-                        if (fields[1] == "Right Foot")
+                        if (option2 == "Right Foot")
                         {
-                            TeleportPos(gameObj, unitIndex.data.footRight);
+                            TeleportPos(go, u.data.footRight);
                         }
-                        if (fields[1] == "Left Foot")
+                        if (option2 == "Left Foot")
                         {
-                            TeleportPos(gameObj, unitIndex.data.footLeft);
+                            TeleportPos(go, u.data.footLeft);
                         }
                     }
                     else
                     {
-                        if (fields[1] == "Head")
+                        if (option2 == "Head")
                         {
-                            TeleportRot(gameObj, unitIndex.data.head);
+                            TeleportRot(go, u.data.head);
                         }
-                        if (fields[1] == "Torso")
+                        if (option2 == "Torso")
                         {
-                            TeleportRot(gameObj, unitIndex.data.head);
+                            TeleportRot(go, u.data.head);
                         }
-                        if (fields[1] == "Right Arm")
+                        if (option2 == "Right Arm")
                         {
-                            TeleportRot(gameObj, unitIndex.data.rightArm);
+                            TeleportRot(go, u.data.rightArm);
                         }
-                        if (fields[1] == "Left Arm")
+                        if (option2 == "Left Arm")
                         {
-                            TeleportRot(gameObj, unitIndex.data.leftArm);
+                            TeleportRot(go, u.data.leftArm);
                         }
-                        if (fields[1] == "Right Hand")
+                        if (option2 == "Right Hand")
                         {
-                            TeleportRot(gameObj, unitIndex.data.rightHand);
+                            TeleportRot(go, u.data.rightHand);
                         }
-                        if (fields[1] == "Left Hand")
+                        if (option2 == "Left Hand")
                         {
-                            TeleportRot(gameObj, unitIndex.data.leftHand);
+                            TeleportRot(go, u.data.leftHand);
                         }
-                        if (fields[1] == "Right Knee")
+                        if (option2 == "Right Knee")
                         {
-                            TeleportRot(gameObj, unitIndex.data.legRight);
+                            TeleportRot(go, u.data.legRight);
                         }
-                        if (fields[1] == "Left Knee")
+                        if (option2 == "Left Knee")
                         {
-                            TeleportRot(gameObj, unitIndex.data.legLeft);
+                            TeleportRot(go, u.data.legLeft);
                         }
-                        if (fields[1] == "Right Foot")
+                        if (option2 == "Right Foot")
                         {
-                            TeleportRot(gameObj, unitIndex.data.footRight);
+                            TeleportRot(go, u.data.footRight);
                         }
-                        if (fields[1] == "Left Foot")
+                        if (option2 == "Left Foot")
                         {
-                            TeleportRot(gameObj, unitIndex.data.footLeft);
+                            TeleportRot(go, u.data.footLeft);
                         }
                     }
 
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
         public void TeleportObject(GameObject a, Transform b)
         {

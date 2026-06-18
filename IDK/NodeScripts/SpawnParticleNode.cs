@@ -1,46 +1,68 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using IDK.Help;
+using Landfall.TABS;
 using Landfall.TABS.AI.Components;
+using Landfall.TABS.RuntimeCleanup;
 using Photon.Bolt.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SpawnParticleNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public EasyPool easyPool;
+        public GameObject prefab;
+        public float scale;
+        public float speed;
+        public float length;
+        public bool loop;
+        public bool follow;
+        public RuntimeGarbageCollector garbageCollector;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>(); 
-            for (int o = 0; o < gameObjs.Length; o++)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in gameObjects)
             {
-                var particle = Object.Instantiate(AbilityCreator.particles[fields[0]]);
-                particle.transform.position = gameObjs[o].transform.position;
-                if (fields[1].QuickParse() != 0)
-                    particle.transform.localScale *= fields[1].QuickParse();
-                if (fields[2] == "Don't")
-                    particle.GetComponent<ParticleSystem>().loop = false;
-                else
-                    particle.GetComponent<ParticleSystem>().loop = true;
-                particle.GetComponent<ParticleSystem>().playbackSpeed *= fields[3].QuickParse();
-                if (fields[5] == "Follow")
-                    particle.transform.parent = gameObjs[o].transform;
-                particle.GetComponent<ParticleSystem>().Play();
-                particle.AddComponent<DestroySelfWhenObjectDestroyed>().obj = gameObjs[o];
-                particle.AddComponent < RemoveAfterSeconds>().seconds = fields[4].QuickParse();
-                Debug.Log("Summoned particle: " + particle.name);
-                
-                valuePool.AddValue(particle);
+                if (!(item.value is GameObject go))
+                    continue;
+                Transform transform = go.transform;
+                GameObject particle = easyPool.Spawn(transform.position, transform.rotation);
+                ParticleSystem particleSystem = env.cacheSystem.GetCachedComponent<ParticleSystem>(particle);
+                if (!particleSystem.main.playOnAwake)
+                    particleSystem.Play();
+                if (follow)
+                    particle.transform.parent = transform;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, particle);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            prefab = AbilityCreator.particles[env.GetField(0)];
+            scale = env.GetField(1).QuickParse();
+            scale = scale == 0 ? 1 : scale;
+            loop = env.GetField(2) != "Don't";
+            speed = env.GetField(3).QuickParse();
+            speed = speed == 0 ? 1 : speed;
+            length = env.GetField(4).QuickParse();
+            follow = env.GetField(5) == "Follow";
+            garbageCollector = ServiceLocator.GetService<RuntimeGarbageCollector>();
+            easyPool = new EasyPool(prefab, go => OnSpawn(env, go));
+            return null;
+        }
+        public void OnSpawn(NodeEnv env, GameObject particle)
+        {
+            garbageCollector.AddGameObject(particle);
+            ParticleSystem particleSystem = env.cacheSystem.GetCachedComponent<ParticleSystem>(particle);
+            particle.transform.localScale *= scale;
+            ParticleSystem.MainModule main = particleSystem.main;
+            main.loop = loop;
+            main.simulationSpeed *= speed;
+            particle.AddComponent<RemoveAfterSeconds>().seconds = length;
         }
     }
 }

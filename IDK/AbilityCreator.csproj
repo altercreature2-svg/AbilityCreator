@@ -14,7 +14,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>D:\games\Tabs Moded\TABS Moded\BepInEx\plugins</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -37,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbilityCreatorSavePatch.cs" />
+    <Compile Include="AbilityHandling\AbilityManager.cs" />
+    <Compile Include="AbilityHandling\Saving\SaveableHelper.cs" />
+    <Compile Include="AbilityHandling\SpawnAbility.cs" />
     <Compile Include="AssetManaging\AssetTypes\ComponentAssetType.cs" />
     <Compile Include="AssetManaging\AssetTypes\SoundAssetType.cs" />
     <Compile Include="AssetManaging\AssetTypes\UnitAssetType.cs" />
@@ -62,40 +65,51 @@
     <Compile Include="ExampleAbilites\UpdateSaveManager.cs" />
     <Compile Include="ExampleManager.cs" />
     <Compile Include="FixNodeSystem.cs" />
+    <Compile Include="GlobalReferencing\GlobalReference.cs" />
+    <Compile Include="GlobalReferencing\GlobalReferenceManager.cs" />
     <Compile Include="GlobalSettings.cs" />
-    <Compile Include="Help Componets\FunctionStoreer.cs" />
-    <Compile Include="Help Componets\HoldPosition.cs" />
-    <Compile Include="Help Componets\MakeUnitStealth.cs" />
+    <Compile Include="Help\EasyPool.cs" />
+    <Compile Include="Help\FastTeamColor.cs" />
+    <Compile Include="Help\FixedPool.cs" />
+    <Compile Include="Help\FunctionStoreer.cs" />
+    <Compile Include="Help\GlobalCaching.cs" />
+    <Compile Include="Help\HoldPosition.cs" />
+    <Compile Include="Help\MakeUnitStealth.cs" />
+    <Compile Include="Help\SmartStringConverter.cs" />
     <Compile Include="IgnoreProjectileForTeam.cs" />
     <Compile Include="IRegisterable.cs" />
     <Compile Include="MyModalPanel.cs" />
     <Compile Include="Node Related Scripts\ConnectionStuff\ConnectionType.cs" />
     <Compile Include="Node Related Scripts\ExtraAttribute.cs" />
     <Compile Include="Node Related Scripts\Field stuff\VirtualNodeField.cs" />
+    <Compile Include="AbilityHandling\FileManager.cs" />
+    <Compile Include="AbilityHandling\FilePaths.cs" />
+    <Compile Include="Node Related Scripts\Intercating\UIManager.cs" />
+    <Compile Include="Node Related Scripts\Intercating\VirtualNodeSceneLoader.cs" />
     <Compile Include="Node Related Scripts\Migrater\ConnectionMigrater.cs" />
     <Compile Include="Node Related Scripts\Migrater\FieldMigrater.cs" />
     <Compile Include="Node Related Scripts\Migrater\NodeMigrater.cs" />
     <Compile Include="Node Related Scripts\Migrater\NodeSceneMigrater.cs" />
     <Compile Include="Node Related Scripts\ConnectionStuff\NodeConnections.cs" />
     <Compile Include="Node Related Scripts\ConnectionStuff\NodeConnector.cs" />
+    <Compile Include="Node Related Scripts\NodeIDHelper.cs" />
+    <Compile Include="Node Related Scripts\NodeRunning\Instructions\Coroutines\CoroutineReturn.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\Instructions\NodeInstruction.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\Instructions\NodeProgram.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\Instructions\NodeRegistery.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\NodeContext.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\NodeContextManager.cs" />
     <Compile Include="Node Related Scripts\ItemList.cs" />
-    <Compile Include="Node Related Scripts\NodeRunning\CacheSystem.cs" />
+    <Compile Include="Node Related Scripts\NodeRunning\ComponentCacheSystem.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\Instructions\NodeEnv.cs" />
     <Compile Include="Node Related Scripts\NodeRunning\NodeRunner.cs" />
-    <Compile Include="Node Related Scripts\NodeRunning\NodeRunnerFixer.cs" />
-    <Compile Include="Node Related Scripts\NodeUtility.cs" />
-    <Compile Include="Node Related Scripts\RunNodeAttackEffect.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\ISaveable.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\VirtualNodeScene.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\VirtualNode.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\LegacySavedNode.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\LegacySavedNodeScene.cs" />
-    <Compile Include="Node Related Scripts\SavingStuff\Serialize.cs" />
+    <Compile Include="Node Related Scripts\NodeRunning\NodeTree.cs" />
+    <Compile Include="AbilityHandling\Saving\ISaveable.cs" />
+    <Compile Include="AbilityHandling\Saving\VirtualNodeScene.cs" />
+    <Compile Include="AbilityHandling\Saving\VirtualNode.cs" />
+    <Compile Include="AbilityHandling\Saving\LegacySavedNode.cs" />
+    <Compile Include="AbilityHandling\Saving\LegacySavedNodeScene.cs" />
+    <Compile Include="AbilityHandling\Saving\Serialize.cs" />
     <Compile Include="NodeScripts\AddOnCollisionAction.cs" />
     <Compile Include="NodeScripts\AddAbility.cs" />
     <Compile Include="NodeScripts\AddCloth.cs" />
@@ -116,7 +130,6 @@
     <Compile Include="NodeScripts\FilterNode.cs" />
     <Compile Include="NodeScripts\GetValueOfObjectVariableNode.cs" />
     <Compile Include="NodeScripts\CreateObjectVariableNode.cs" />
-    <Compile Include="NodeScripts\DoAnimation.cs" />
     <Compile Include="NodeScripts\GetClothes.cs" />
     <Compile Include="NodeScripts\GetAbilites.cs" />
     <Compile Include="NodeScripts\GetWeaponOfName.cs" />
@@ -149,9 +162,6 @@
     <Compile Include="NodeScripts\SpawnProjectileAimedNode.cs" />
     <Compile Include="NodeScripts\SwapTeam.cs" />
     <Compile Include="NodeScripts\AddProps.cs" />
-    <Compile Include="NodeScripts\TransformPositionNodeAnim.cs" />
-    <Compile Include="NodeScripts\TransfromScaleAnimated.cs" />
-    <Compile Include="NodeScripts\LeftOrRight.cs" />
     <Compile Include="NodeScripts\WhenUnitShootsProjectile.cs" />
     <Compile Include="NodeScripts\WhenUnitDamaged.cs" />
     <Compile Include="NodeScripts\WhenUnitSpawned.cs" />
@@ -173,7 +183,7 @@
     <Compile Include="AbilityCreator.cs" />
     <Compile Include="Node Related Scripts\NodeComponent.cs" />
     <Compile Include="Node Related Scripts\NodeBlueprint.cs" />
-    <Compile Include="Node Related Scripts\NodeManager.cs" />
+    <Compile Include="Node Related Scripts\Intercating\NodeManager.cs" />
     <Compile Include="Node Related Scripts\Variable.cs" />
     <Compile Include="Node Related Scripts\NodeField.cs" />
     <Compile Include="NodeScripts\AllOtherTeam.cs" />
@@ -193,7 +203,6 @@
     <Compile Include="NodeScripts\WhenAbilityTriggered.cs" />
     <Compile Include="NodeScripts\UnitWasAttacked.cs" />
     <Compile Include="NodeScripts\WhenUnitAttacks.cs" />
-    <Compile Include="NodeScripts\WhenUnitDamages.cs" />
     <Compile Include="NodeScripts\WhenUnitDies.cs" />
     <Compile Include="NodeScripts\DoEveryNode.cs" />
     <Compile Include="NodeScripts\ITriggerNode.cs" />
@@ -235,7 +244,6 @@
     <Compile Include="NodeScripts\SelfNode.cs" />
     <Compile Include="NodeScripts\WhenBattleBegins.cs" />
     <Compile Include="object holder.cs" />
-    <Compile Include="OnlyRunWhenAddedToUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuickLine.cs" />
     <Compile Include="Refelection.cs" />

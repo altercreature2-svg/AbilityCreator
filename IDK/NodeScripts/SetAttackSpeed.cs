@@ -1,38 +1,68 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SetAttackSpeed : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        float value;
+        string mode;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            for (int i = 0; i < units.Length; i++)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-
-                SetSpeed(units[i], fields[0].QuickParse(), fields[1]);
+                if (!(item.value is Unit u))
+                    continue;
+                SetSpeed(env,u , value, mode);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        private void SetSpeed(Unit unit, float value, string field)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            Weapon[] weapons = unit.GetComponentsInChildren<Weapon>();
-            for (int i = 0; i < weapons.Length; i++)
+            value = env.GetField(0).QuickParse();
+            mode = env.GetField(1);
+            return null;
+        }
+        private void SetSpeed(NodeEnv env, Unit u, float value, string mode)
+        {
+            Weapon[] weapons = env.cacheSystem.GetCachedComponentsInChildren<Weapon>(u.gameObject);
+            switch (mode)
             {
-                if (field == "Set")
-                    weapons[i].internalCooldown = value;
-                if (field == "Add")
-                    weapons[i].internalCooldown += value;
-                if (field == "Multiply")
-                    weapons[i].internalCooldown *= value;
-                if (field == "Set (%)")
-                    weapons[i].internalCooldown = (weapons[i].internalCooldown / 100) * value;
-                if (field == "Add (%)")
-                    weapons[i].internalCooldown += (weapons[i].internalCooldown / 100) * value;
+                case "Set":
+                    for (int i = 0; i < weapons.Length; i++)
+                    {
+                        weapons[i].internalCooldown = value;
+                    }
+                    break;
+                case "Add":
+                    for (int i = 0; i < weapons.Length; i++)
+                    {
+                        weapons[i].internalCooldown += value;
+                    }
+                    break;
+                case "Multiply":
+                    for (int i = 0; i < weapons.Length; i++)
+                    {
+                        weapons[i].internalCooldown *= value;
+                    }
+                    break;
+                case "Set (%)":
+                    for (int i = 0; i < weapons.Length; i++)
+                    {
+                        weapons[i].internalCooldown = (weapons[i].internalCooldown / 100) * value;
+                    }
+                    break;
+                case "Add (%)":
+                    for (int i = 0; i < weapons.Length; i++)
+                    {
+                        weapons[i].internalCooldown += (weapons[i].internalCooldown / 100) * value;
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }

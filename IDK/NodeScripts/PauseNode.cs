@@ -1,19 +1,25 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class PauseNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        float time = 0f;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            LegacySavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.Trigger);
-            yield return new WaitForSeconds(savedNode.fields[0].QuickParse());
-            yield return nodeRunner.RunNode(nodeToTrigger);
-            yield return null;
-            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.WaitForSeconds, time);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            time = env.GetField(0).QuickParse();
+            return null;
         }
     }
 }

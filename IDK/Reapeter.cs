@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 
-namespace IDK
+namespace AC
 {
     public class Reapeter : MonoBehaviour
     {
@@ -15,8 +15,8 @@ namespace IDK
             public int timesLeft;
             public float interval;
             public float timeToNext;
-            public Action action;
-            public RepeaterTask(int times, float interval, Action action)
+            public Action<int> action;
+            public RepeaterTask(int times, float interval, Action<int> action)
             {
                 timesLeft = times;
                 this.interval = Mathf.Max(0f, interval);
@@ -26,14 +26,14 @@ namespace IDK
         }
 
         public List<RepeaterTask> queue = new List<RepeaterTask>();
-        public void AddTask(int times, float interval, Action action)
+        public void AddTask(int times, float interval, Action<int> action)
         {
             queue.Add(new RepeaterTask(times, interval, action));
         }
         public void Update()
         {
             float dt = Time.deltaTime;
-            for (int i = queue.Count - 1; i >= 0; i--)
+            for (int i = 0; i < queue.Count; i++)
             {
                 var task = queue[i];
                 task.timeToNext -= dt;
@@ -41,7 +41,7 @@ namespace IDK
                 {
                     try
                     {
-                        task.action?.Invoke();
+                        task.action?.Invoke(i);
                     }
                     catch (Exception ex)
                     {

@@ -1,22 +1,29 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ClearObjectVariable : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ObjectVariable[] variables = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveObjectVariable).GetValuePoolSmart(unit).GetValues<ObjectVariable>();
-            for (int i = 0; i < variables.Length; i++)
+            var variables = env.GetValues(NodeBlueprint.ConnectionClass.ReciveObjectVariable);
+            foreach (var variable in variables)
             {
-                variables[i].value = new object[0];
+                if (!(variable.value is ObjectVariable ov))
+                    continue;
+                ov.value = System.Array.Empty<object>();
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

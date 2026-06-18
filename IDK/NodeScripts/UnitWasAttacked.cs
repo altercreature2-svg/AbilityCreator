@@ -1,35 +1,38 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections.Generic;
+using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class UnitWasAttacked : ITriggerNode
     {
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            
+            return null;
         }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            bool startonCD = true;
-            //startonCD = (fields[2] != "Don't");
-            ConditionalEvent conditionalEvent = nodeRunner.gameObject.AddComponent<ConditionalEvent>();
+            float range = env.GetField(1).QuickParse();
+            float cooldown = env.GetField(0).QuickParse();
+            ConditionalEvent conditionalEvent = env.runner.gameObject.AddComponent<ConditionalEvent>();
             conditionalEvent.events = new ConditionalEventInstance[]
             {
                 new ConditionalEventInstance()
                 {
-                    turnOnEvent = new UnityEngine.Events.UnityEvent(),
+                    continuousEvent = new UnityEngine.Events.UnityEvent(),
                     turnOffEvent = new UnityEngine.Events.UnityEvent(),
-                        continuousEvent = new UnityEngine.Events.UnityEvent(),
+                        turnOnEvent = new UnityEngine.Events.UnityEvent(),
                         delay = 0,
                         conditions = new EventCondition[]
                         {
                             new EventCondition()
                             {
                                 conditionType = EventCondition.ConditionType.Cooldown,
-                                startOnCD = startonCD,
-                                value = fields[0].QuickParse(),
-                                counter = fields[0].QuickParse(),
+                                startOnCD = false,
+                                value = cooldown,
+                                counter = cooldown,
                             },
                             new EventCondition()
                             {
@@ -38,17 +41,18 @@ namespace IDK.NodeScripts
                             },
                             new EventCondition()
                             {
-                                startOnCD = startonCD,
+                                startOnCD = false,
                                 conditionType = EventCondition.ConditionType.UnitDistanceToTarget,
                                 whichRange = EventCondition.WhichRange.UnitRange,
-                                value = savedNode.fields[1].QuickParse(),
+                                value = range,
                                 valueType = EventCondition.ValueType.Max,
                             }
 
                         }
                 }
             };
-            conditionalEvent.events[0].continuousEvent.AddListener(() => nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode)));
+            conditionalEvent.events[0].continuousEvent.AddListener(env.RunTrigger);
+            return null;
         }
     }
 

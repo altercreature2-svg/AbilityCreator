@@ -1,6 +1,6 @@
 ﻿using BitCode.Debug.Commands;
-using IDK.Node_Related_Scripts.connection_stuff;
-using IDK.NodeScripts;
+using AC.Node_Related_Scripts.connection_stuff;
+using AC.NodeScripts;
 using Landfall.TABS;
 
 using System.Collections;
@@ -12,13 +12,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using IDK.AbilityHandling;
+using IDK.Node_Related_Scripts;
+using IDK.AbilityHandling.Saving;
+using AC.Node_Related_Scripts.SavingStuff;
 
-namespace IDK
+namespace AC
 {
     public class StreamedSceneManager : MonoBehaviour
     {
-        public static LegacyNodeScene currentscene;
-        private int CurrentEditMenuState = 0;
+        public static VirtualNodeScene currentScene;
+        private int currentEditMenuState = 0;
         private GameObject butto;
         private void Awake()
         {
@@ -42,34 +46,22 @@ namespace IDK
                 ShowAllObjects(child);
             }
         }
-        public void EnterNodeScene(int nodesceneIndex)
+        public void EnterNodeScene(VirtualNodeScene virtualNodeScene)
         {
             TABSSceneManager.LoadScene("Assets/Scenes/AbilityCreator.unity");
-            //ShowAllObjects(FindObjectOfType<Canvas>().transform);
-            Debug.Log("NodeSceneIndex:" + nodesceneIndex);
-            currentscene = AbilityCreator.nodeScenes[nodesceneIndex];
             StartCoroutine(EnterNodeSceneEnumerator());
         }
         public void EnterNewNodeScene()
         {
             TABSSceneManager.LoadScene("Assets/Scenes/AbilityCreator.unity");
-            
         }
         public void EnterNodeChanger()
         {
-            LegacyNodeScene[] nodeScenes = FindObjectsOfType<LegacyNodeScene>();
-
-            for (int i = 0; i < nodeScenes.Length; i++)
-            {
-                if (!nodeScenes[i].isFinal)
-                    Destroy(nodeScenes[i]);
-            }
             TABSSceneManager.LoadScene("Assets/Scenes/Ability Selector.unity");
             Debug.Log("bananana :)");
             Time.timeScale = 1;
             StartCoroutine(EnterNodeChangerEnumerator());
             Time.timeScale = 1;
-
         }
         private IEnumerator EnterNodeChangerEnumerator()
         {
@@ -77,28 +69,25 @@ namespace IDK
             yield return new WaitUntil(() => GameObject.Find("New Ability") != null);
             GameObject.Find("New Ability").GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => EnterNewNodeScene());
 
-            foreach (LegacyNodeScene nodeScene in AbilityCreator.nodeScenes)
+            foreach (AbilityManager.AbilityData abilityData in AbilityManager.Instance.Abilities)
             {
-                if (!nodeScene)
-                {
-                    continue;
-                }
-
+                if (!abilityData.abilityGo) continue;
                 try
                 {
                     GameObject button = Instantiate(GameObject.Find("Ability"));
-                    button.name = nodeScene.id.ToString();
+                    button.name = abilityData.nodeScene.abilityID.ToString();
                     button.transform.SetParent(GameObject.Find("Ability").transform.parent, false);
                     void Move()
                     {
                         ServiceLocator.GetService<SoundPlayer>().PlaySoundEffect("UI/Click", 0.9f, Camera.current.transform.position);
-                        MoveMenu(nodeScene);
+                        MoveMenu(abilityData.nodeScene);
                     }
                     button.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => Move());
 
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = nodeScene.sceneName;
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = abilityData.nodeScene.abilityName;
 
-                    button.transform.Find("Icon").GetComponent<Image>().sprite = AbilityCreator.GetSprite(nodeScene);
+                    if (FileManager.SearchForSpirte(abilityData.abilityName, out Sprite sprite))
+                        button.transform.Find("Icon").GetComponent<Image>().sprite = sprite;
                 }
                 catch { }
 
@@ -131,9 +120,9 @@ namespace IDK
             for (int i = 0; i < AbilityCreator.assetManager.assets.Count; i++)
             {
                 GameObject button = Instantiate(BaseButton.gameObject, BaseButton.transform.parent);
-                string buttonName = AbilityCreator.assetManager.assets.Keys.ElementAt(i).GetName();
+                string buttonName = AbilityCreator.assetManager.assets.Keys.ToArray()[i];
                 button.GetComponentInChildren<TextMeshProUGUI>().text = buttonName;
-                button.GetComponent<Button>().onClick.AddListener(() => txt.text = File.ReadAllText(Path.Combine(AbilityCreator.path, buttonName + ".txt")));
+                button.GetComponent<Button>().onClick.AddListener(() => txt.text = File.ReadAllText(Path.Combine(FilePaths.AbilityCreatorPath, buttonName + ".txt")));
             }
             Destroy(BaseButton.gameObject);
             GameObject.Find("GoMainMenu").GetComponent<Button>().onClick.AddListener(() => EnterNodeChanger());
@@ -255,8 +244,8 @@ namespace IDK
         }
         public static void AddBundledAbility(BundledAbilitesManager.BundledAbility bundledAbility)
         {
-            VirtualNodeScene savedNodeScene = AbilityCreator.DeserializeAbility(bundledAbility.abilityData);
-            NodeManager.WriteAbility(savedNodeScene, bundledAbility.abilityData, true, true);
+            VirtualNodeScene nodeScene = SaveableHelper.Load<VirtualNodeScene>(bundledAbility.abilityData);
+            FileManager.WriteAbility(nodeScene.abilityName, bundledAbility.abilityData);
             BundledAbilitesManager.bundledAbilities.Remove(bundledAbility);
             MyModalPanel.queue.Remove(bundledAbility);
             
@@ -283,25 +272,25 @@ namespace IDK
             contentButton.SetActive(false);
         }
 
-        private void MoveMenu(LegacyNodeScene scene)
+        private void MoveMenu(VirtualNodeScene scene)
         {
             Time.timeScale = 1;
-            if (CurrentEditMenuState == 0)
+            if (currentEditMenuState == 0)
             {
-                CurrentEditMenuState = 1;
+                currentEditMenuState = 1;
                 GameObject.Find("EditMenu").GetComponent<CodeAnimation>().setFirstFrame = true;
                 GameObject.Find("EditMenu").GetComponent<CodeAnimation>().PlayIn();
             }
-            else if (CurrentEditMenuState == 1)
+            else if (currentEditMenuState == 1)
             {
-                CurrentEditMenuState = 0;
+                currentEditMenuState = 0;
                 GameObject.Find("EditMenu").GetComponent<CodeAnimation>().setFirstFrame = false;
                 GameObject.Find("EditMenu").GetComponent<CodeAnimation>().PlayOut();
 
             }
-            GameObject.Find("EditMenuText").GetComponent<TextMeshProUGUI>().text = scene.sceneName;
+            GameObject.Find("EditMenuText").GetComponent<TextMeshProUGUI>().text = scene.abilityName;
             GameObject.Find("EditButton").GetComponent<Button>().onClick.RemoveAllListeners();
-            GameObject.Find("EditButton").GetComponent<Button>().onClick.AddListener(() => EnterNodeScene(scene.NodeSceneIndex));
+            GameObject.Find("EditButton").GetComponent<Button>().onClick.AddListener(() => EnterNodeScene(scene));
             GameObject.Find("EditButton").GetComponent<Button>().onClick.AddListener(() => ServiceLocator.GetService<SoundPlayer>().PlaySoundEffect("UI/Click", 0.9f, Camera.current.transform.position));
 
             butto.GetComponent<Button>().onClick.RemoveAllListeners();
@@ -312,26 +301,15 @@ namespace IDK
 
 
         }
-        public void DeleteScene(LegacyNodeScene scene)
+        public void DeleteScene(VirtualNodeScene scene)
         {
-            string path = Directory.GetParent(AbilityCreator.GetPath(scene)).FullName;
-            Directory.Delete(path, true);
-            GameObject buttonToDestroy = GameObject.Find(scene.id.ToString());
-            if (AbilityCreator.nodeScenes.Contains(scene))
-                AbilityCreator.nodeScenes.Remove(scene);
-            if (AbilityCreator.abilites.ContainsKey(scene.sceneName))
-                AbilityCreator.abilites.Remove(scene.sceneName);
-            Destroy(buttonToDestroy);
-            MoveMenu(scene);
-            Destroy(scene);
-            AbilityCreator.Reload();
-
+            AbilityManager.Instance.DeregisterAbility(scene);
         }
 
         public IEnumerator EnterNodeSceneEnumerator()
         {
             Time.timeScale = 1;
-            //THIS IS NEEDED!!! ok (thx me btw) np man we should really make a better system for this ngl
+            //THIS IS NEEDED!!! ok (thx me btw) np man we should really make a better system for this ngl (no fuck you)
             CampaignPlayerDataHolder.SetToNone();
 
             yield return new WaitUntil(() => GameObject.Find("nodesScaler") != null);
@@ -339,7 +317,7 @@ namespace IDK
             GameObject.Find("AbilitySaveButton").transform.position += new Vector3(0, 0, -10);
             GameObject.Find("Quitbutton").AddComponent<SetSiblingIndex>().Ind = 99;
             GameObject.Find("Quitbutton").transform.position += new Vector3(0, 0, -10);
-            if (currentscene == null)
+            if (currentScene == null)
             {
                 Debug.Log("null nodescene!");
                 yield break;
@@ -347,49 +325,18 @@ namespace IDK
             // Objectefize nodescenes
             // what???
             
-            Dictionary<LegacySavedNode, NodeComponent> nodes = new Dictionary<LegacySavedNode, NodeComponent>();
-            for (int i = 0; i < currentscene.everyNode.Length; i++)
+            Dictionary<VirtualNodeScene, NodeComponent> nodes = new Dictionary<VirtualNodeScene, NodeComponent>(currentScene.savedObjects.Length);
+            for (int i = 0; i < currentScene.savedObjects.Length; i++)
             {
-                try
+                ISaveable saveable = currentScene.savedObjects[i];
+                if (!(saveable is VirtualNode virtualNode))
+                    continue;
+                NodeBlueprint nodeBlueprint = AbilityCreator.nodeDatabase[virtualNode.nodeBlueprint];
+                NodeComponent nodeComponent = nodeBlueprint.Spawn();
+                NodeField[] nodeFields = nodeComponent.GetComponentsInChildren<NodeField>();
+                for (int j = 0; j < Mathf.Min(nodeFields.Length, virtualNode.fields.Count); j++)
                 {
-                    NodeBlueprint nodeBlueprint = currentscene.everyNode[i].Blueprint;
-                    List<string> fields = currentscene.everyNode[i].fields;
-                    NodeComponent node = nodeBlueprint.Spawn();
-                    node.corispondingNode = currentscene.everyNode[i];
-                    currentscene.everyNode[i].corispondingNode = node;
-                    node.transform.position = currentscene.everyNode[i].position;
-                    for (int i2 = 0; i2 < nodeBlueprint.fields.Count; i2++)
-                    {
-                        Debug.Log($"Field {fields[i2]}");
-                        try
-                        {
-                            if (fields[i2] == "")
-                                continue;
-                            if (fields[i2] != "_")
-                                node.transform.Find("Fields").Find(nodeBlueprint.fields[i2].name).GetComponentInChildren<NodeField>().Value = fields[i2];
-                            else
-                                node.transform.Find("Fields").Find(nodeBlueprint.fields[i2].name);
-                        }
-                        catch { }
-                    }
-                    nodes.Add(currentscene.everyNode[i], node);
-                }
-                catch { }
-            }
-            for (int i = 0; i < currentscene.everyNode.Length; i++)
-            {
-                NodeComponent node = nodes[currentscene.everyNode[i]];
-                foreach (NodeComponent.LegacyConnection connection in currentscene.everyNode[i].connections)
-                {
-                    try
-                    {
-                        int index = node.Connections.Keys.ToList().FindIndex(n => n == connection.connectionsType);
-                        node.Connections.Values.ElementAt(index).connected = nodes[connection.savedNode].GetComponentsInChildren<NodeConnector>().ToList().Find(n => n.CanConnect(node.Connections.Values.ToArray()[index]));
-                    }
-                    catch 
-                    {
-                        node.Connections.Clear();
-                    }
+                    nodeFields[i].Value = virtualNode.fields[i].value;
                 }
             }
 

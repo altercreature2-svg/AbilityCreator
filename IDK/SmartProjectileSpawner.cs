@@ -1,12 +1,24 @@
 ﻿using BitCode.Extensions;
 using Landfall.TABS;
+using Landfall.TABS.RuntimeCleanup;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public class SmartProjectileSpawner
     {
+        private static ProjectilesSpawnManager spawnManager;
+        private static RuntimeGarbageCollector runtimeGC;
+        private static bool init;
+        private static void Init()
+        {
+            if (!init)
+                return;
+            spawnManager = ServiceLocator.GetService<ProjectilesSpawnManager>();
+            runtimeGC = ServiceLocator.GetService<RuntimeGarbageCollector>();
+            init = true;
+        }
         public static GameObject SpawnProjectile(
             GameObject projectilePrefab,
             GameObject spawnPosition,
@@ -16,8 +28,10 @@ namespace IDK
             float spread,
             Vector3? targetPosition = null,
             Unit target = null,
-            bool aimAtTarget = false)
+            bool aimAtTarget = false,
+            GameObject pooledProjectile = null)
         {
+            Init();
             Vector3 spawnDirection;
             if (aimAtTarget && targetPosition.HasValue)
             {
@@ -44,7 +58,7 @@ namespace IDK
                 spawnDirection = GetSpawnDirection(spawnRig.forward, spawnRig.forward, mainrig);
             }
 
-            GameObject proj = ServiceLocator.GetService<ProjectilesSpawnManager>().SpawnProjectile(
+            GameObject proj = SpawnProjectile(
                 projectilePrefab,
                 spawnPosition.transform.position,
                 Quaternion.LookRotation(spawnDirection + 0.01f * spread * UnityEngine.Random.insideUnitSphere),
@@ -54,7 +68,8 @@ namespace IDK
                 spawnRig.forward,
                 target.data.mainRig,
                 spawnRig.forward,
-                out var projectile
+                out var projectile,
+                pooledProjectile
             );
             SetTeamHolder(unit, proj, target.data.mainRig, spawnPosition);
             return proj;
@@ -65,10 +80,7 @@ namespace IDK
             Vector3 result = Vector3.Lerp(directionToTarget, mainrig.forward, new AnimationCurve().Evaluate(Vector3.Angle(directionToTarget, mainrig.forward))).normalized;
             return result;
         }
-
-        // Ballistic trajectory calculation (returns normalized direction)
-        // Assumes projectile is fired from 'origin' to hit 'target' with given velocity and gravity.
-        // Returns Vector3.zero if no valid solution.
+        // totally not ai (i suck at math man dont judge me)
         private static Vector3 CalculateBallisticDirection(
             Vector3 origin,
             Vector3 target,
@@ -108,14 +120,63 @@ namespace IDK
                     TeamHolder orAddComponent = spawnedObject.GetOrAddComponent<TeamHolder>();
                     orAddComponent.team = unit.data.team;
                     orAddComponent.spawner = unit.transform.root.gameObject;
-
                     orAddComponent.spawnerWeapon = spawner;
-
-
                     orAddComponent.target = targetRig;
                 }
             }
         }
 
+        public static GameObject SpawnProjectile(GameObject prefab, Vector3 position, Quaternion rotation, Unit unit, byte weaponIndex, Vector3 spawnDirection, Vector3 directionToTarget, Rigidbody targetRigidbody, Vector3 shootPositionForward, out Projectile projectile, bool isSpawnedFromPrefabId = false, byte? randomSeed = null, GameObject pooled = null)
+        {
+            GameObject gameObject;
+            if (pooled)
+                gameObject = pooled;
+            else
+            {
+                gameObject = UnityEngine.Object.Instantiate(prefab, position, rotation);
+                runtimeGC.AddGameObject(gameObject);
+            }
+            
+
+            if (gameObject == null)
+            {
+                projectile = null;
+                return null;
+            }
+
+            projectile = gameObject.GetComponent<Projectile>();
+            if (projectile == null)
+            {
+                Debug.LogErrorFormat("Projectile \"{0}\" does not have the \"{1}\" component.", gameObject.name, "Projectile");
+                return gameObject;
+            }
+
+            projectile.DestroyedOrReturnedToPool += OnDestroyedOrReturnedToPool;
+            if (randomSeed.HasValue)
+            {
+                projectile.RandomSeed = randomSeed;
+            }
+            else if (!isSpawnedFromPrefabId)
+            {
+                if (projectile.GetComponentInChildren<Compensation>() != null || projectile.GetComponentInChildren<MoveTransform>() != null)
+                {
+                    projectile.RandomSeed = (byte)UnityEngine.Random.Range(0, 32);
+                }
+                else
+                {
+                    projectile.RandomSeed = null;
+                }
+            }
+            ((ProjectilesSpawnManager.SpawnedProjectileEventHandler)spawnManager.GetField("SpawnedProjectile")).Invoke(projectile, unit, weaponIndex, spawnDirection, directionToTarget, targetRigidbody, shootPositionForward, isSpawnedFromPrefabId);
+            return gameObject;
+        }
+        private static void OnDestroyedOrReturnedToPool(Projectile projectile)
+        {
+            if (!(projectile == null))
+            {
+                projectile.DestroyedOrReturnedToPool -= OnDestroyedOrReturnedToPool;
+                ((System.Action<Projectile>)spawnManager.GetField("DestroyedProjectile")).Invoke(projectile);
+            }
+        }
     }
 }

@@ -1,43 +1,52 @@
 ﻿using DM;
 using HarmonyLib;
+using AC.Node_Related_Scripts.NodeRunning;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddCloth : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
             AssetLoader assetLoader = ContentDatabase.Instance().AssetLoader;
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            foreach (var unitIndex in units)
+            foreach (var item in units)
             {
-                UnitRig rig = unitIndex.GetComponentInChildren<UnitRig>();
-                CharacterItem[] characterItems = gameObjects.Where(n => n.GetComponent<PropItem>()).Select(n => n.GetComponent<CharacterItem>()).ToArray();
-                GameObject[] cleanProps = characterItems.Select(n => assetLoader.GetAsset<GameObject>(n.Entity.GUID)).ToArray();
-                cleanProps.Do(n => Debug.Log("Prop:" + n));
+                if (!(item.value is Unit unit))
+                    continue;
+                UnitRig rig = env.cacheSystem.GetCachedComponent<UnitRig>(unit.gameObject);
+                FixedPool<GameObject> cleanProps = new FixedPool<GameObject>(gameObjects.Length);
+                foreach (var item2 in gameObjects)
+                {
+                    if (!(item2.value is GameObject gameObject))
+                        continue;
+                    cleanProps.Insert(assetLoader.GetAsset<GameObject>(env.cacheSystem.GetCachedComponent<PropItem>(gameObject).Entity.GUID));
+                }
                 Stitcher.TransformCatalog catalog = new Stitcher.TransformCatalog(rig.gameObject, Stitcher.TransformCatalog.RigType.Human, "M_");
                 for (int i = 0; i < cleanProps.Length; i++)
                 {
                     if (cleanProps[i])
                     {
                         GameObject obj = rig.SpawnProp(cleanProps[i].GetComponent<CharacterItem>(), new PropItemData(), Stitcher.TransformCatalog.RigType.Human, unit.Team, catalog);
-                        valuePool.AddValue(obj);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, obj);
                     }
                 }
-
             }
-            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
 
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            yield break;
         }
     }
 }

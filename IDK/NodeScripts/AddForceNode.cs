@@ -1,4 +1,7 @@
-﻿using Landfall.TABC;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABC;
 using Landfall.TABS;
 using System;
 using System.Collections;
@@ -8,38 +11,45 @@ using System.Reflection;
 using UnityEngine;
 using static RootMotion.FinalIK.RagdollUtility;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddForceNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            
-            try
+            var gameobjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            FixedPool<Rigidbody> rigs = new FixedPool<Rigidbody>(gameobjects.Length);
+            foreach (var item in gameobjects)
             {
-                ValuePool valuePool = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit);
-                Rigidbody[] rbs = valuePool.GetValues<Rigidbody>();
-                foreach (var rigidbody in rbs)
+                float x = env.GetField(0).QuickParse();
+                float y = env.GetField(1).QuickParse();
+                float z = env.GetField(2).QuickParse();
+                if (!(item.value is GameObject go))
+                    continue;
+                Rigidbody rb = env.cacheSystem.GetCachedComponent<Rigidbody>(go);
+                MoveTransform mt = env.cacheSystem.GetCachedComponent<MoveTransform>(go);
+                Transform transform = go.transform;
+                if (rb)
                 {
-                    rigidbody.AddForce(rigidbody.transform.forward * fields[0].QuickParse() * 10);
-                    rigidbody.AddForce(rigidbody.transform.up * fields[1].QuickParse() * 10);
-                    rigidbody.AddForce(rigidbody.transform.right * fields[2].QuickParse() * 10);
+                    
+                    rb.AddForce(transform.forward * x * 10);
+                    rb.AddForce(transform.up * y * 10);
+                    rb.AddForce(transform.right * z * 10);
                 }
-                MoveTransform[] moveTransforms = valuePool.GetValues<GameObject>().Select(n => n.GetComponent<MoveTransform>()).Where(n => n).ToArray();
-                foreach (var moveTransform in moveTransforms)
+                if (mt)
                 {
-                    moveTransform.velocity += moveTransform.transform.forward * fields[0].QuickParse();
-                    moveTransform.velocity += moveTransform.transform.up * fields[1].QuickParse();
-                    moveTransform.velocity += moveTransform.transform.right * fields[2].QuickParse();
+                    mt.velocity += transform.forward * x;
+                    mt.velocity += transform.up * y;
+                    mt.velocity += transform.right * z;
                 }
-
+                
             }
-            catch
-            {
-
-            }
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
             
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

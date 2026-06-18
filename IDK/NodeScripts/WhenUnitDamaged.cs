@@ -1,32 +1,30 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class WhenUnitDamaged : ITriggerNode
     {
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-
+            return null;
         }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            void Assign()
-            {
-                ValuePool valuePool = savedNode.GetValuePool(unit);
-                valuePool.ClearValues();
-                Unit unit1 = unit.data.targetData.unit;
-                valuePool.AddValue(unit1);
-                valuePool.AddValue(unit1.data.mainRig);
-                valuePool.AddValue(unit1.gameObject);
-                nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
-            }
-            unit.data.healthHandler.AssignDamageAction(Assign);
+            Action<float> action = (Action<float>)env.unit.GetField("WasDealtDamageAction");
+            Action<float> action2 = (float f) => OnDamage(env, f);
+            env.unit.SetField("WasDealtDamageAction", Delegate.Combine(action, action2));
+            return null;
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public void OnDamage(NodeEnv env, float damage)
         {
-            return savedNode.GetValuePool(unit);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit, env.unit.data.targetData);
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable() { value = damage});
         }
     }
 

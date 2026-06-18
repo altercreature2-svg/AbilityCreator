@@ -1,26 +1,24 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class WhenProjectileEntersRange : ITriggerNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
+            return null;
         }
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-
-        }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            float blockPower = fields[0].QuickParse();
-            float range = fields[0].QuickParse();
-            if (!nodeRunner.GetComponent<BlockMove>())
+            float blockPower = env.GetField(0).QuickParse();
+            float range = env.GetField(1).QuickParse();
+            if (!env.runner.GetComponent<BlockMove>())
             {
-                BlockMove blockMove = nodeRunner.gameObject.AddComponent<BlockMove>();
+                BlockMove blockMove = env.runner.gameObject.AddComponent<BlockMove>();
                 blockMove.enableEvent = new UnityEngine.Events.UnityEvent();
                 blockMove.disableEvent = new UnityEngine.Events.UnityEvent();
                 blockMove.goodReflectChance = 1;
@@ -39,25 +37,20 @@ namespace IDK.NodeScripts
             }
             void Block(GameObject gameObject)
             {
-                ValuePool valuePool = savedNode.GetValuePool(unit);
-                valuePool.ClearValues();
-                valuePool.AddValue(gameObject);
-                nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
+                env.ClearValue(NodeBlueprint.ConnectionClass.GiveGameObject);
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, gameObject);
+                env.GetTriggerCore();
             }
-            //for (int i = 1; i < 5; i++)
-            //{
             GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.parent = nodeRunner.transform;
+            sphere.transform.parent = env.runner.transform;
             sphere.transform.localScale *= range;
-            sphere.transform.position = unit.data.torso.position;
+            sphere.transform.position = env.unit.data.torso.position;
             sphere.layer = LayerMask.NameToLayer("Block");
             //sphere.GetComponent<SphereCollider>().isTrigger = true;
             sphere.AddComponent<SurfaceEvent>().onBlock.AddListener(n => Block(n));
-            sphere.AddComponent<FollowTransform>().target = nodeRunner.transform;
+            sphere.AddComponent<FollowTransform>().target = env.runner.transform;
             Object.Destroy(sphere.GetComponent<MeshRenderer>());
-            //}
-
-
+            return null;
         }
 
     }

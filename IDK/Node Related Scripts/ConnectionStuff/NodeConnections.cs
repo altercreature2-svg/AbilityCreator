@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.Node_Related_Scripts.connection_stuff
+namespace AC.Node_Related_Scripts.connection_stuff
 {
     [Serializable]
     public class NodeConnections

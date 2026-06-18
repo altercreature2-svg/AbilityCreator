@@ -1,72 +1,38 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ToggleProps : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        int min, max;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                for (int p = (int)fields[0].QuickParse(); p < (int)fields[1].QuickParse(); p++)
+                if (!(item.value is Unit u))
+                    continue;
+                PropItem[] props = env.cacheSystem.GetCachedComponentsInChildren<PropItem>(u.gameObject);
+                for (int i = Mathf.Min(0, min); i < Mathf.Max(props.Length, max); i++)
                 {
-
-                    try
-                    {
-
-                        if (unitIndex.GetComponentsInChildren<PropItem>(true)[p].GetComponent<Weapon>())
-                        {
-                            continue;
-                        }
-                        if (unitIndex.GetComponentsInChildren<PropItem>(true)[p].GetComponentInChildren<Renderer>().enabled == true)
-                        {
-
-                            GameObject[] gameobjs = (GameObject[])typeof(CharacterItem).GetField("m_gameObjects", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(unitIndex.GetComponentsInChildren<PropItem>(true)[p]);
-                            for (int q = 0; q < gameobjs.Length; q++)
-                            {
-                                for (int s = 0; s < gameobjs[q].GetComponentsInChildren<Renderer>(true).Length; s++)
-                                {
-                                    gameobjs[q].GetComponentsInChildren<Renderer>(true)[s].enabled = false;
-                                }
-
-                            }
-
-
-                        }
-                        else if (unitIndex.GetComponentsInChildren<PropItem>(true)[p].GetComponentInChildren<Renderer>().enabled == false)
-                        {
-
-
-                            GameObject[] gameobjs = (GameObject[])typeof(CharacterItem).GetField("m_gameObjects", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(unitIndex.GetComponentsInChildren<PropItem>(true)[p]);
-                            for (int q = 0; q < gameobjs.Length; q++)
-                            {
-                                for (int s = 0; s < gameobjs[q].GetComponentsInChildren<Renderer>(true).Length; s++)
-                                {
-                                    gameobjs[q].GetComponentsInChildren<Renderer>(true)[s].enabled = true;
-                                }
-
-                            }
-                        }
-
-
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-
-
-                        break;
-                    }
-
+                    bool isVisible = (bool)((CharacterItem)props[i]).GetField("m_isVisible");
+                    props[i].SetVisibility(!isVisible);
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            min = env.GetField(0).QuickParseInt();
+            max = env.GetField(1).QuickParseInt();
+            return null;
         }
     }
 }

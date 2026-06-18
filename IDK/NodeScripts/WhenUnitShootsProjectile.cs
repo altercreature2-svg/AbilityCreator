@@ -1,96 +1,41 @@
-﻿using BitCode.Extensions;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using BitCode.Extensions;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class WhenUnitShootsProjectile : ITriggerNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
+            return null;
         }
-        public override void EveryFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-        }
-        public override void StartFrame(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            nodeRunner.StartCoroutine(DelayStart(unit, nodeRunner, savedNode));
-        }
-        public IEnumerator DelayStart(Unit unit, NodeRunner nodeRunner, LegacySavedNode savedNode)
-        {
-            yield return new WaitUntil(() => unit.data);
-            yield return new WaitUntil(() => unit.data.weaponHandler);
-            if (unit?.data?.weaponHandler?.rightWeapon && unit?.data?.weaponHandler?.rightWeapon is RangeWeapon rightRangeWeapon)
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.WaitUntil, arg0: 0, arg1: () => env.unit.data?.weaponHandler);
+            WeaponHandler weaponHandler = env.unit.data.weaponHandler;
+            List<Weapon> weapons = (List<Weapon>)weaponHandler.GetField("allWeapons");
+            foreach (var weapon in weapons)
             {
-                rightRangeWeapon.shootEvent.AddListener(() => AttackStarted(nodeRunner, savedNode, unit, 2));
-                rightRangeWeapon.shootEndEvent.AddListener(() => AttackEnded(nodeRunner, savedNode, unit, 2));
-            }
-            if (unit?.data?.weaponHandler?.leftWeapon && unit?.data?.weaponHandler?.leftWeapon is RangeWeapon leftRangeWeapon)
-            {
-                leftRangeWeapon.shootEvent.AddListener(() => AttackStarted(nodeRunner, savedNode, unit, 1));
-                leftRangeWeapon.shootEndEvent.AddListener(() => AttackEnded(nodeRunner, savedNode, unit, 1));
+                if (!(weapon is RangeWeapon rangeWeapon))
+                    continue;
+                rangeWeapon.shootEvent.AddListener(() => AttackStarted(env, rangeWeapon.gameObject));
+                rangeWeapon.shootEndEvent.AddListener(() => AttackEnded(env, rangeWeapon.gameObject));
             }
         }
-        void AttackStarted(NodeRunner nodeRunner, LegacySavedNode savedNode,Unit self, int forceWeapon)
-        {
-            switch (forceWeapon)
-            {
-                case 0:
-                    break;
-                case 1:
-                    if (self.data.weaponHandler.leftWeapon is RangeWeapon rangeWeapon)
-                    {
-                        rangeWeapon.gameObject.GetOrAddComponent<RangeWeaponProjectileStorer>();
-                    }
-                    break;
-                case 2:
-                    if (self.data.weaponHandler.rightWeapon is RangeWeapon rangeWeapon1)
-                    {
-                        rangeWeapon1.gameObject.GetOrAddComponent<RangeWeaponProjectileStorer>();
-                    }
-                    break;
-                default:
-                    break;
-            }
-            
-        }
-        void AttackEnded(NodeRunner nodeRunner, LegacySavedNode savedNode, Unit self, int forceWeapon)
-        {
-            switch (forceWeapon)
-            {
-                case 0:
-                    break;
-                case 1:
-                    if (self.data.weaponHandler.leftWeapon is RangeWeapon rangeWeapon)
-                    {
-                        RangeWeaponProjectileStorer rangeWeaponProjectileStorer = rangeWeapon.GetComponent<RangeWeaponProjectileStorer>();
-                        if (rangeWeaponProjectileStorer)
-                        {
-                            savedNode.GetValuePool(self).AddValue(rangeWeaponProjectileStorer.lastProjectile);
-                            savedNode.GetValuePool(self).AddValue(BundleManager.LeftRight.Left);
-                            nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
-                        }
-                    }
-                    break;
-                case 2:
-                    if (self.data.weaponHandler.rightWeapon is RangeWeapon rangeWeapon1)
-                    {
-                        RangeWeaponProjectileStorer rangeWeaponProjectileStorer = rangeWeapon1.GetComponent<RangeWeaponProjectileStorer>();
-                        if (rangeWeaponProjectileStorer)
-                        {
-                            savedNode.GetValuePool(self).AddValue(rangeWeaponProjectileStorer.lastProjectile);
-                            savedNode.GetValuePool(self).AddValue(BundleManager.LeftRight.Right);
-                            nodeRunner.StartCoroutine(nodeRunner.TriggerConnection(savedNode));
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
 
+        void AttackStarted(NodeEnv env, GameObject weapon)
+        {
+            weapon.GetOrAddComponent<RangeWeaponProjectileStorer>();
+        }
+        void AttackEnded(NodeEnv env, GameObject rangeWeapon)
+        {
+            RangeWeaponProjectileStorer rangeWeaponProjectileStorer = rangeWeapon.GetComponent<RangeWeaponProjectileStorer>();
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, rangeWeaponProjectileStorer.lastProjectile);
         }
     }
 

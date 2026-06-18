@@ -1,43 +1,53 @@
 ﻿
 
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ColorObjectNodeHSV : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            yield return null;
-            float h = fields[0].QuickParse();
-            float s = fields[1].QuickParse();
-            float v = fields[2].QuickParse();
-            float a = fields[3].QuickParse();
-            int index = (int)fields[4].QuickParse();
-            Color color = new Color(h,s,v,a);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            float h = env.GetField(0).QuickParse();
+            float s = env.GetField(1).QuickParse();
+            float v = env.GetField(2).QuickParse();
+            float a = env.GetField(3).QuickParse();
+            int index = env.GetField(4).QuickParseInt();
+            bool colorChildren = env.GetField(5) == "Color children";
+            Color color = new Color(h, s, v, a);
 
-            foreach (var gameObj in gameObjects)
+
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var obj in gameObjects)
             {
-                if (gameObj.GetComponent<Renderer>())
+                if (!(obj.value is GameObject gameObj))
+                    continue;
+
+                if (env.cacheSystem.GetCachedComponent<Renderer>(gameObj))
                 {
                     Colorer.ColorObject(gameObj, color, index, false, true);
                 }
-                if (fields[5] == "Color children")
+                if (colorChildren)
                 {
-                    Renderer[] renderers = gameObj.GetComponentsInChildren<Renderer>();
+                    Renderer[] renderers = env.cacheSystem.GetCachedComponentsInChildren<Renderer>(gameObj);
                     for (int i = 0; i < renderers.Length; i++)
                     {
                         Colorer.ColorObject(renderers[i].gameObject, color, index, false, true);
                     }
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        
-        
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
+        }
+
+
     }
 }

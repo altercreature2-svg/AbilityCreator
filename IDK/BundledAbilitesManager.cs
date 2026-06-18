@@ -1,9 +1,10 @@
 ﻿using EMPTY;
+using IDK.Node_Related_Scripts;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public class BundledAbilitesManager : MonoBehaviour
     {
@@ -27,13 +28,14 @@ namespace IDK
             }
         }
         public static List<BundledAbility> bundledAbilities = new List<BundledAbility>();
-        public static BundledAbility BundleAbility(ExtraSerializedUnit unit, LegacySavedNodeScene savedNodeScene, string data)
+        public static BundledAbility BundleAbility(ExtraSerializedUnit unit, VirtualNodeScene savedNodeScene, string data)
         {
             BundledAbility bundledAbility = new GameObject("Bundledability").AddComponent<BundledAbility>();
             bundledAbility.abilityData = data;
-            bundledAbility.abilityName = savedNodeScene.sceneName;
+            bundledAbility.abilityName = savedNodeScene.abilityName;
             bundledAbility.unitName = unit.m_name;
-            bundledAbility.sprite = AbilityCreator.GetSprite(savedNodeScene);
+            if (FileManager.SearchForSpirte(savedNodeScene.abilityName, out Sprite sprite))
+                bundledAbility.sprite = sprite;
             return bundledAbility;
             
         }

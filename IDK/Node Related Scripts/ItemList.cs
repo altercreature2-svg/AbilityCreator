@@ -10,7 +10,7 @@ using UnityEngine.UI;
 using static Sony.PS4.SaveData.Dialogs;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace IDK.Node_Related_Scripts
+namespace AC.Node_Related_Scripts
 {
     public class ItemList : MonoBehaviour
     {

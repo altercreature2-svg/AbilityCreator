@@ -2,11 +2,11 @@
 using CASA.Tools;
 using DM;
 using HarmonyLib;
-using IDK.AssetManaging;
-using IDK.ExampleAbilites;
-using IDK.Node_Related_Scripts.Migrater;
-using IDK.Node_Related_Scripts.SavingStuff;
-using IDK.NodeScripts;
+using AC.AssetManaging;
+using AC.ExampleAbilites;
+using AC.Node_Related_Scripts.Migrater;
+using AC.Node_Related_Scripts.SavingStuff;
+using AC.NodeScripts;
 using Landfall.TABS;
 using Landfall.TABS.UnitEditor;
 using Sirenix.Utilities;
@@ -20,7 +20,9 @@ using TFBGames;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-namespace IDK
+using IDK.Node_Related_Scripts;
+using IDK.AbilityHandling;
+namespace AC
 {
     [BepInPlugin("AAC", "Alter Ability Creator", "2.6.1")]
     public class AbilityCreator : CASA.Main.CASAMod
@@ -28,10 +30,9 @@ namespace IDK
         public static GameObject sliceEffect;
         public static List<DatabaseID> nodeIDS = new List<DatabaseID>();
         public static List<BundledAbilitesManager.BundledAbility> bundledAbilitiesQueue = new List<BundledAbilitesManager.BundledAbility>();
-        public static string path = Path.Combine(GamePaths.DataPath + "/Abilty Creator");
         public static string Guide = "";
         public static VanillaAssetManager assetManager;
-        public static IDK.Reapeter reapeter;
+        public static Reapeter reapeter;
         public static Dictionary<string, UnitBlueprint> units
         {
             get
@@ -124,27 +125,18 @@ namespace IDK
         }
         public void Awake()
         {
-
-            if (Application.platform == RuntimePlatform.OSXPlayer)
-            {
-                path = GamePaths.PersistentDataPath + "/Abilty Creator";
-                abilitespath = path + "/Abilites";
-            }
             Harmony harmony = new Harmony("Alter.AbilityCreator");
             harmony.PatchAll();
             Code.commnet = "Dear Code Viewer (pervert), prepare your self for the most unoptomized, evil, straight up SHIT code you will ever see";
             Code.commnet = "Please understand that most of this was made like 2 years ago, I'm aware how bad it is and i hope to rewrite most of it someday";
             Code.commnet = "Today is not that day though";
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-            if (!Directory.Exists(abilitespath))
-            {
-                Directory.CreateDirectory(abilitespath);
-            }
+            if (!Directory.Exists(FilePaths.AbilityCreatorPath))
+                Directory.CreateDirectory(FilePaths.AbilityCreatorPath);
+            if (!Directory.Exists(FilePaths.AbilitesPath))
+                Directory.CreateDirectory(FilePaths.AbilitesPath);
+            
             UpdateSaveManager.Handle();
-            string[] abilities = Directory.GetDirectories(abilitespath);
+            string[] abilities = FilePaths.AbilityDirs;
             for (int i = 0; i < abilities.Length; i++)
             {
                 string[] abilityFiles = Directory.GetFiles(abilities[i]);
@@ -153,40 +145,18 @@ namespace IDK
                     // Migrate
                     VirtualNodeScene savedNodeScene = NodeSceneMigrater.GetNewSavedNodeScene(Serialize.LoadJson<LegacySavedNodeScene>(File.ReadAllText(abilityFiles[i])));
                     // Move
-                    if (!Directory.Exists(abilitespath + "/OldAbilites"))
-                        Directory.CreateDirectory(abilitespath + "/OldAbilites");
-                    File.Copy(abilityFiles[i], abilitespath + "/OldAbilites/" + Path.GetFileName(abilityFiles[i]));
+                    if (!Directory.Exists(FilePaths.AbilityCreatorPath + "/OldAbilites"))
+                        Directory.CreateDirectory(FilePaths.AbilityCreatorPath + "/OldAbilites");
+                    File.Copy(abilityFiles[i], FilePaths.AbilityCreatorPath + "/OldAbilites/" + Path.GetFileNameWithoutExtension(abilityFiles[i]));
                     File.Delete(abilityFiles[i]);
                     // Add new
                     string json = Serialize.SaveJson(savedNodeScene);
-                    File.WriteAllText(abilityFiles[i], json);
+                    FileManager.WriteAbility(savedNodeScene.abilityName, json);
                 }
             }
             StartCoroutine(Call());
             
             reapeter = gameObject.AddComponent<Reapeter>();
-            string[] files = Directory.GetFiles(abilitespath);
-            for (int i = 0; i < files.Length; i++)
-            {
-                Debug.Log("File Extension! " + Path.GetExtension(files[i]));
-                if (Path.GetExtension(files[i]) == ".newnodescene")
-                {
-                    LegacySavedNodeScene nodeScene = Serialize.LoadJson<LegacySavedNodeScene>(File.ReadAllText(files[i]));
-                    if (!FixNodeSystem.IsValid(nodeScene))
-                    {
-                        continue;
-                    }
-                    string p = abilitespath + "/" + nodeScene.sceneName + "/";
-                    if (!Directory.Exists(p))
-                        Directory.CreateDirectory(p);
-                    File.Copy(files[i], p + nodeScene.id + ".abilityx");
-                    if (!Directory.Exists(abilitespath + "/OldAbilites"))
-                        Directory.CreateDirectory(abilitespath + "/OldAbilites");
-                    File.Copy(files[i], abilitespath + "/OldAbilites/" + Path.GetFileName(files[i]));
-                    File.Delete(files[i]);
-                }
-            }
-
         }
         public string GetNiceName(string name)
         {
@@ -227,14 +197,14 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.grey, "When Battle Begins", "Triggers", node: typeof(WhenBattleBegins));
+            },  Color.grey, "When Battle Begins", "Triggers", node: typeof(WhenBattleBegins));
             CreateNodeBlueprint("UNIT_SPAWN", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.grey, "When unit spawns", "Triggers", node: typeof(WhenUnitSpawned));
+            },  Color.grey, "When unit spawns", "Triggers", node: typeof(WhenUnitSpawned));
             CreateNewNodeBlueprint("ENDBATTLE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -251,7 +221,7 @@ namespace IDK
                         "Lose"
                     }
                 }
-            }, node: typeof(EndBattle), NodeBlueprint.Type.Function, Color.white, "End battle", "Misc");
+            }, node: typeof(EndBattle),  Color.white, "End battle", "Misc");
             CreateNewNodeBlueprint("GETMAXUNITHEALTH", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -268,7 +238,7 @@ namespace IDK
                         "Precentage"
                     }
                 }
-            }, node: typeof(GetMaxUnitHealth), NodeBlueprint.Type.Function, Color.white, "Get max unit health", "Data");
+            }, node: typeof(GetMaxUnitHealth),  Color.white, "Get max unit health", "Data");
             CreateNewNodeBlueprint("GETUNITHEALTH", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -285,7 +255,7 @@ namespace IDK
                         "Precentage"
                     }
                 }
-            }, node: typeof(GetUnitHealth), NodeBlueprint.Type.Function, Color.white, "Get unit health", "Data");
+            }, node: typeof(GetUnitHealth),  Color.white, "Get unit health", "Data");
             CreateNewNodeBlueprint("SETUNITHEALTH", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -308,7 +278,7 @@ namespace IDK
 
                     }
                 }
-            }, node: typeof(SetUnitHealth), NodeBlueprint.Type.Function, Color.white, "Set unit health", "Data");
+            }, node: typeof(SetUnitHealth),  Color.white, "Set unit health", "Data");
             CreateNewNodeBlueprint("SETUNITDAMAGE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -331,7 +301,7 @@ namespace IDK
 
                     }
                 }
-            }, node: typeof(SetUnitDamage), NodeBlueprint.Type.Function, Color.white, "Set unit damage", "Data");
+            }, node: typeof(SetUnitDamage),  Color.white, "Set unit damage", "Data");
             CreateNewNodeBlueprint("SETUNITCOOLDOWN", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -354,7 +324,7 @@ namespace IDK
 
                     }
                 }
-            }, node: typeof(SetUnitDamage), NodeBlueprint.Type.Function, Color.white, "Set unit cooldown", "Data");
+            }, node: typeof(SetUnitDamage),  Color.white, "Set unit cooldown", "Data");
 
             CreateNewNodeBlueprint("QUICKBUFF", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -378,7 +348,7 @@ namespace IDK
                         "Speed up attacks",
                     }
                 }
-            }, node: typeof(QuickBuff), NodeBlueprint.Type.Function, Color.white, "Quick buff", "Data");
+            }, node: typeof(QuickBuff),  Color.white, "Quick buff", "Data");
 
 
 
@@ -390,7 +360,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveVariable,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.white, "Log variable", "Variables", node: typeof(LogVariable));
+            },  Color.white, "Log variable", "Variables", node: typeof(LogVariable));
             CreateNodeBlueprint("LOGANY", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -398,7 +368,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveAnything,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.white, "Log anything", "Gameobjects", node: typeof(LogAnything));
+            },  Color.white, "Log anything", "Gameobjects", node: typeof(LogAnything));
 
 
             CreateNewNodeBlueprint("ABILITYACTVIATE", new List<NodeBlueprint.ConnectionClass>()
@@ -408,17 +378,7 @@ namespace IDK
             {
                  new NodeBlueprint.Field("Delay", TMP_InputField.ContentType.DecimalNumber),
                  new NodeBlueprint.Field("Range", TMP_InputField.ContentType.DecimalNumber),
-                 /*new NodeBlueprint.Field()
-                 {
-                     name = "StartCD",
-                     isDropdown = true,
-                     dropDowns = new string[]
-                     {
-                         "Start on cooldown",
-                         "Don't",
-                     }
-                 }*/
-            }, node: typeof(WhenAbilityTriggered), NodeBlueprint.Type.Input, Color.grey, "When ability triggered...", "Triggers"); ;
+            }, node: typeof(WhenAbilityTriggered),  Color.grey, "When ability triggered...", "Triggers"); ;
 
 
             CreateNewNodeBlueprint("UNITWASATTACKED", new List<NodeBlueprint.ConnectionClass>()
@@ -426,36 +386,36 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.Trigger
             }, new List<NodeBlueprint.Field>()
             {
-                 new NodeBlueprint.Field("Delay", TMP_InputField.ContentType.DecimalNumber),
+                 new NodeBlueprint.Field("Cooldown", TMP_InputField.ContentType.DecimalNumber),
                  new NodeBlueprint.Field("Range", TMP_InputField.ContentType.DecimalNumber),
-            }, node: typeof(UnitWasAttacked), NodeBlueprint.Type.Input, Color.grey, "When unit gets attacked...", "Triggers");
+            }, node: typeof(UnitWasAttacked),  Color.grey, "When unit gets attacked...", "Triggers");
             CreateNodeBlueprint("INTERVAL", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Interval", TMP_InputField.ContentType.DecimalNumber },
-            }, NodeBlueprint.Type.Input, Color.grey, "Do Every...", "Triggers", node: typeof(DoEveryNode));
+            },  Color.grey, "Do Every...", "Triggers", node: typeof(DoEveryNode));
             CreateNodeBlueprint("WHENUNITDIE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Input, Color.grey, "When Unit Dies...", "Triggers", node: typeof(WhenUnitDies));
+            },  Color.grey, "When Unit Dies...", "Triggers", node: typeof(WhenUnitDies));
             /*CreateNodeBlueprint("WHENUNITDAMAGES", new List<NodeBlueprint.ConnectionType>()
             {
                 NodeBlueprint.ConnectionType.Trigger,
                 NodeBlueprint.ConnectionType.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Input, Color.grey, "When unit damages...", "Triggers", node: typeof(WhenUnitDamages));*/
+            },  Color.grey, "When unit damages...", "Triggers", node: typeof(WhenUnitDamages));*/
             CreateNodeBlueprint("WHENUNITDAMAGED", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
                 NodeBlueprint.ConnectionClass.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Input, Color.grey, "When unit damaged...", "Triggers", node: typeof(WhenUnitDamaged))
+            },  Color.grey, "When unit damaged...", "Triggers", node: typeof(WhenUnitDamaged))
             ;
             CreateNodeBlueprint("WHENUNITATTACKS", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -463,7 +423,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Input, Color.grey, "When unit attacks...", "Triggers", node: typeof(WhenUnitAttacks));
+            },  Color.grey, "When unit attacks...", "Triggers", node: typeof(WhenUnitAttacks));
             CreateNewNodeBlueprint("PROJECTILERANGE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -472,7 +432,7 @@ namespace IDK
             {
                 new NodeBlueprint.Field("Range",TMP_InputField.ContentType.DecimalNumber),
                 new NodeBlueprint.Field("Block Power",TMP_InputField.ContentType.DecimalNumber),
-            }, node: typeof(WhenProjectileEntersRange), NodeBlueprint.Type.Input, Color.grey, "When projectile in range...", "Triggers");
+            }, node: typeof(WhenProjectileEntersRange),  Color.grey, "When projectile in range...", "Triggers");
             CreateNodeBlueprint("IS_BATTLE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -480,7 +440,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.grey, "Run if in battle state", "Control", node: typeof(IsBattleState));
+            },  Color.grey, "Run if in battle state", "Control", node: typeof(IsBattleState));
             CreateNodeBlueprint("IS_DEAD", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -489,7 +449,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.grey, "Run if unit is dead", "Control", node: typeof(IsDead));
+            },  Color.grey, "Run if unit is dead", "Control", node: typeof(IsDead));
             CreateNodeBlueprint("IS_NOTDEAD", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -498,7 +458,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.grey, "Run if unit is alive", "Control", node: typeof(IsAlive));
+            },  Color.grey, "Run if unit is alive", "Control", node: typeof(IsAlive));
             CreateNodeBlueprint("PAUSE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -507,7 +467,7 @@ namespace IDK
             {
                 { "Seconds", TMP_InputField.ContentType.DecimalNumber },
 
-            }, NodeBlueprint.Type.Function, Color.grey, "Do after pause", "Control", node: typeof(PauseNode));
+            },  Color.grey, "Do after pause", "Control", node: typeof(PauseNode));
             CreateNodeBlueprint("REAPET", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -516,7 +476,7 @@ namespace IDK
             {
                 { "Times", TMP_InputField.ContentType.IntegerNumber },
                 { "Delay", TMP_InputField.ContentType.DecimalNumber},
-            }, NodeBlueprint.Type.Input, Color.grey, "Repeat", "Control", node: typeof(ReapetNode));
+            },  Color.grey, "Repeat", "Control", node: typeof(ReapetNode));
             CreateNodeBlueprint("REAPETVAR", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -525,7 +485,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Delay", TMP_InputField.ContentType.DecimalNumber},
-            }, NodeBlueprint.Type.Input, Color.grey, "Repeat for variable", "Control", node: typeof(ReapetVarNode));
+            },  Color.grey, "Repeat for variable", "Control", node: typeof(ReapetVarNode));
             CreateNewNodeBlueprint("FOREACH", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -547,7 +507,7 @@ namespace IDK
                         "Components only",
                     }
                 }
-            }, node: typeof(ForEachNode), NodeBlueprint.Type.Input, Color.grey, "Repeat for each value", "Control");
+            }, node: typeof(ForEachNode),  Color.grey, "Repeat for each value", "Control");
             CreateNewNodeBlueprint("FILTER", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveAnything,
@@ -566,7 +526,7 @@ namespace IDK
                         "Other",
                     }
                 }
-            }, node: typeof(FilterNode), NodeBlueprint.Type.Input, Color.grey, "Filter values", "Control");
+            }, node: typeof(FilterNode),  Color.grey, "Filter values", "Control");
 
 
 
@@ -576,7 +536,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Object name", TMP_InputField.ContentType.Standard },
-            }, NodeBlueprint.Type.Function, Color.green, "Create gameObject", "Gameobjects", node: typeof(CreateGameobject));
+            },  Color.green, "Create gameObject", "Gameobjects", node: typeof(CreateGameobject));
 
 
 
@@ -585,39 +545,39 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Enemy unit", "Units", node: typeof(EnemyNode));
+            },  Color.green, "Enemy unit", "Units", node: typeof(EnemyNode));
             CreateNodeBlueprint("SELF", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Self unit", "Units", node: typeof(SelfNode));
+            },  Color.green, "Self unit", "Units", node: typeof(SelfNode));
             CreateNodeBlueprint("EXPSENSIVETEAMMATE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
                 NodeBlueprint.ConnectionClass.GiveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Most expensive teammate of unit", "Units", node: typeof(MostExspensiveTeamMateUnit));
+            },  Color.green, "Most expensive teammate of unit", "Units", node: typeof(MostExspensiveTeamMateUnit));
             CreateNodeBlueprint("EXPSENSIVEENEMY", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
                 NodeBlueprint.ConnectionClass.GiveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Most expensive enemy of unit", "Units", node: typeof(MostExspensiveEnemy));
+            },  Color.green, "Most expensive enemy of unit", "Units", node: typeof(MostExspensiveEnemy));
             CreateNodeBlueprint("ALLTEAM", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "All units of same team", "Units", node: typeof(AllTeam));
+            },  Color.green, "All units of same team", "Units", node: typeof(AllTeam));
             CreateNodeBlueprint("ALLOTHERTEAM", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "All units of other team", "Units", node: typeof(AllOtherTeam));
+            },  Color.green, "All units of other team", "Units", node: typeof(AllOtherTeam));
 
 
             CreateNodeBlueprint("GETUNIT", new List<NodeBlueprint.ConnectionClass>()
@@ -626,14 +586,14 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveGameObject
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Get unit from gameobject", "Unit Tools", node: typeof(GetUnitFromGameobject));
+            },  Color.green, "Get unit from gameobject", "Unit Tools", node: typeof(GetUnitFromGameobject));
             CreateNodeBlueprint("TEAMMATE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveUnit,
                 NodeBlueprint.ConnectionClass.ReciveUnit
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.green, "Closest team mate of unit", "Unit Tools", node: typeof(ClosestTeamMateUnit));
+            },  Color.green, "Closest team mate of unit", "Unit Tools", node: typeof(ClosestTeamMateUnit));
             CreateNodeBlueprint("FREAZE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -642,7 +602,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Length", TMP_InputField.ContentType.DecimalNumber}
-            }, NodeBlueprint.Type.Function, Color.magenta, "freeze unit for", "Unit Tools", node: typeof(FreezeNode));
+            },  Color.magenta, "freeze unit for", "Unit Tools", node: typeof(FreezeNode));
             CreateNodeBlueprint("DONTWALK", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -651,7 +611,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Length", TMP_InputField.ContentType.DecimalNumber}
-            }, NodeBlueprint.Type.Function, Color.magenta, "make unit not walk for", "Unit Tools", node: typeof(DontWalkNode));
+            },  Color.magenta, "make unit not walk for", "Unit Tools", node: typeof(DontWalkNode));
             CreateNewNodeBlueprint("HOLDPOSITION", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -676,7 +636,7 @@ namespace IDK
                     isDropdown = true,
                     dropDowns = new string[] {"Z Axis", "Off"}
                 },
-            }, node: typeof(HoldPostionNode), NodeBlueprint.Type.Function, Color.magenta, "hold body part positions for", "Unit Tools");
+            }, node: typeof(HoldPostionNode),  Color.magenta, "hold body part positions for", "Unit Tools");
 
             CreateNewNodeBlueprint("GAMEOBJ", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -709,7 +669,7 @@ namespace IDK
                         "All",
                     }
                 }
-            }, typeof(GetGameobject), NodeBlueprint.Type.Function, Color.green, "Get body part of unit", "Unit Tools");
+            }, typeof(GetGameobject),  Color.green, "Get body part of unit", "Unit Tools");
             CreateNewNodeBlueprint("CLOTH", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -731,7 +691,7 @@ namespace IDK
                         "Shoes",
                     }
                 }
-            }, typeof(GetClothes), NodeBlueprint.Type.Function, Color.green, "Get clothes of unit", "Unit Tools");
+            }, typeof(GetClothes),  Color.green, "Get clothes of unit", "Unit Tools");
             CreateNewNodeBlueprint("ABILITIES", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -739,7 +699,7 @@ namespace IDK
             }
             , new List<NodeBlueprint.Field>
             {
-            }, typeof(GetAbilites), NodeBlueprint.Type.Function, Color.green, "Get abilites of unit", "Unit Tools");
+            }, typeof(GetAbilites),  Color.green, "Get abilites of unit", "Unit Tools");
             CreateNewNodeBlueprint("GETWEAPON", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -758,7 +718,7 @@ namespace IDK
                         "Right Weapon",
                     }
                 }
-            }, typeof(GetWeapon), NodeBlueprint.Type.Function, Color.green, "Get weapon of unit", "Weapons");
+            }, typeof(GetWeapon),  Color.green, "Get weapon of unit", "Weapons");
             CreateNewNodeBlueprint("SETFIST", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -767,7 +727,7 @@ namespace IDK
             }
             , new List<NodeBlueprint.Field>
             {
-            }, typeof(SetFistNode), NodeBlueprint.Type.Function, Color.green, "Make unit use fists", "Weapons");
+            }, typeof(SetFistNode),  Color.green, "Make unit use fists", "Weapons");
             CreateNewNodeBlueprint("GETEYE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -775,7 +735,7 @@ namespace IDK
             }
             , new List<NodeBlueprint.Field>
             {
-            }, typeof(GetEye), NodeBlueprint.Type.Function, Color.green, "Get eyes of unit", "Unit Tools");
+            }, typeof(GetEye),  Color.green, "Get eyes of unit", "Unit Tools");
 
             CreateNewNodeBlueprint("GETWEAPONGLOBAL", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -786,7 +746,7 @@ namespace IDK
                  {
                      fieldType = NodeBlueprint.Field.FieldType.Weapon
                  }
-             }, node: typeof(GetWeaponOfName), NodeBlueprint.Type.Function, Color.magenta, "Get weapon of name", "Weapons");
+             }, node: typeof(GetWeaponOfName),  Color.magenta, "Get weapon of name", "Weapons");
             CreateNewNodeBlueprint("DEAL_DAMAGE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -805,7 +765,7 @@ namespace IDK
                         "Precentage",
                     }
                 }
-            }, node: typeof(Deal_Damage), NodeBlueprint.Type.Function, Color.red, "Deal Damage", "Unit Tools");
+            }, node: typeof(Deal_Damage),  Color.red, "Deal Damage", "Unit Tools");
             CreateNodeBlueprint("DIE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -813,7 +773,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.red, "Kill", "Unit Tools", node: typeof(DieNode));
+            },  Color.red, "Kill", "Unit Tools", node: typeof(DieNode));
             CreateNodeBlueprint("REVIVE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -821,7 +781,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.red, "Revive unit", "Unit Tools", node: typeof(ReDie));
+            },  Color.red, "Revive unit", "Unit Tools", node: typeof(ReDie));
             CreateNewNodeBlueprint("REVIVEFIXER", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -839,7 +799,7 @@ namespace IDK
                         "Wont be revived"
                     }
                 }
-            }, node: typeof(SetWillBeRevived), NodeBlueprint.Type.Function, Color.red, "Set will be revived", "Unit Tools"); ;
+            }, node: typeof(SetWillBeRevived),  Color.red, "Set will be revived", "Unit Tools"); ;
             CreateNodeBlueprint("SWAPTEAM", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -847,7 +807,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.red, "Swap unit's team", "Unit Tools", node: typeof(SwapTeam));
+            },  Color.red, "Swap unit's team", "Unit Tools", node: typeof(SwapTeam));
             CreateNewNodeBlueprint("SPAWNPROJ", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -873,7 +833,7 @@ namespace IDK
                     }
                 },
 
-            }, node: typeof(SpawnProjectileNode), NodeBlueprint.Type.Function, Color.red, "Spawn projectile", "Projectiles");
+            }, node: typeof(SpawnProjectileNode),  Color.red, "Spawn projectile", "Projectiles");
             //CreateNewNodeBlueprint("SPAWNPROJAIMED", new List<NodeBlueprint.ConnectionType>()
             //{
             //    NodeBlueprint.ConnectionType.Trigger,
@@ -900,7 +860,7 @@ namespace IDK
             //        }
             //    },
 
-            //}, node: typeof(SpawnProjectileAimedNode), NodeBlueprint.Type.Function, Color.red, "Spawn projectile to target", "Projectiles");
+            //}, node: typeof(SpawnProjectileAimedNode),  Color.red, "Spawn projectile to target", "Projectiles");
             CreateNewNodeBlueprint("PARRYPROJECTILE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -929,7 +889,7 @@ namespace IDK
                     }
                 }
 
-            }, node: typeof(ParryProjectile), NodeBlueprint.Type.Function, Color.red, "Parry projectile", "Projectiles");
+            }, node: typeof(ParryProjectile),  Color.red, "Parry projectile", "Projectiles");
             CreateNewNodeBlueprint("PLAYSLICE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -939,7 +899,7 @@ namespace IDK
             }, new List<NodeBlueprint.Field>()
             {
 
-            }, node: typeof(PlaySlice), NodeBlueprint.Type.Function, Color.red, "Play slice effect", "Projectiles");
+            }, node: typeof(PlaySlice),  Color.red, "Play slice effect", "Projectiles");
             CreateNewNodeBlueprint("EXPLOSION", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -967,7 +927,7 @@ namespace IDK
                     name = "Team",
                 },
 
-            }, typeof(SpawnExplosionNode), NodeBlueprint.Type.Function, Color.red, "Summon Explosion", "Misc");
+            }, typeof(SpawnExplosionNode),  Color.red, "Summon Explosion", "Misc");
             CreateNewNodeBlueprint("PARTICLE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1002,7 +962,7 @@ namespace IDK
                         "Don't"
                     }
                 },
-            }, typeof(SpawnParticleNode), NodeBlueprint.Type.Function, Color.red, "Spawn particle", "Misc");
+            }, typeof(SpawnParticleNode),  Color.red, "Spawn particle", "Misc");
 
             CreateNewNodeBlueprint("ADDEFFECT", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1016,7 +976,7 @@ namespace IDK
                 {
                     fieldType = NodeBlueprint.Field.FieldType.Effect,
                 },
-            }, node: typeof(AddEffectNode), NodeBlueprint.Type.Function, Color.red, "Add Effect to unit", "Unit Tools");
+            }, node: typeof(AddEffectNode),  Color.red, "Add Effect to unit", "Unit Tools");
 
             CreateNodeBlueprint("STUNWEAPONS", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1029,7 +989,7 @@ namespace IDK
                 { "Time", TMP_InputField.ContentType.DecimalNumber},
 
 
-            }, NodeBlueprint.Type.Function, Color.red, "Stun weapons for unit", "Weapons", node: typeof(StunWeaponsNode));
+            },  Color.red, "Stun weapons for unit", "Weapons", node: typeof(StunWeaponsNode));
 
             CreateNewNodeBlueprint("LETGO", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1050,7 +1010,7 @@ namespace IDK
                         "Left hand",
                     }
                 }
-            }, node: typeof(LetGoNode), NodeBlueprint.Type.Function, Color.red, "Let go of stuff at hand", "Unit Tools");
+            }, node: typeof(LetGoNode),  Color.red, "Let go of stuff at hand", "Unit Tools");
             CreateNewNodeBlueprint("SETWEAPON", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1071,7 +1031,7 @@ namespace IDK
                         "Left",
                     }
                 }
-            }, node: typeof(SetWeaponNode), NodeBlueprint.Type.Function, Color.red, "Set unit's weapon", "Weapons");
+            }, node: typeof(SetWeaponNode),  Color.red, "Set unit's weapon", "Weapons");
             CreateNewNodeBlueprint("SPAWNUNIT", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1095,7 +1055,7 @@ namespace IDK
                         "Other Team",
                     }
                 },
-            }, typeof(SpawnUnitNode), NodeBlueprint.Type.Function, Color.red, "Spawn unit at gameobject", "Units");
+            }, typeof(SpawnUnitNode),  Color.red, "Spawn unit at gameobject", "Units");
 
 
 
@@ -1106,7 +1066,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveUnit,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.magenta, "Play all abilites", "Unit Tools", node: typeof(PlayAllAbilites));
+            },  Color.magenta, "Play all abilites", "Unit Tools", node: typeof(PlayAllAbilites));
             CreateNodeBlueprint("IMMUNE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1115,7 +1075,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Length", TMP_InputField.ContentType.DecimalNumber },
-            }, NodeBlueprint.Type.Function, Color.magenta, "Make Immune for", "Unit Tools", node: typeof(MakeUnitImmune));
+            },  Color.magenta, "Make Immune for", "Unit Tools", node: typeof(MakeUnitImmune));
 
             CreateNodeBlueprint("TOGGLEPROPS", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1126,7 +1086,7 @@ namespace IDK
             {
                  { "From", TMP_InputField.ContentType.IntegerNumber},
                 { "To", TMP_InputField.ContentType.IntegerNumber},
-            }, NodeBlueprint.Type.Function, Color.magenta, "Toggle Props at indexs", "Unit Tools", node: typeof(ToggleProps));
+            },  Color.magenta, "Toggle Props at indexs", "Unit Tools", node: typeof(ToggleProps));
             CreateNewNodeBlueprint("ADDPROPS", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1145,7 +1105,7 @@ namespace IDK
                         "Abilites",
                     }
                 }
-            }, node: typeof(AddProps), NodeBlueprint.Type.Function, Color.magenta, "Add clothes/abilites to unit (OBSELETE DONT USE)", "Unit Tools",true);
+            }, node: typeof(AddProps),  Color.magenta, "Add clothes/abilites to unit (OBSELETE DONT USE)", "Unit Tools",true);
             CreateNewNodeBlueprint("ADDABILITY", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1155,7 +1115,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveGameObject,
             }, new List<NodeBlueprint.Field>
             {
-            }, node: typeof(AddAbility), NodeBlueprint.Type.Function, Color.magenta, "Add ability to unit", "Abilites");
+            }, node: typeof(AddAbility),  Color.magenta, "Add ability to unit", "Abilites");
             CreateNewNodeBlueprint("GETABILITYGLOBAL", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveGameObject
@@ -1165,7 +1125,7 @@ namespace IDK
                  {
                      fieldType = NodeBlueprint.Field.FieldType.Ability
                  }
-             }, node: typeof(GetAbilityOfName), NodeBlueprint.Type.Function, Color.magenta, "Get ability of name", "Abilites");
+             }, node: typeof(GetAbilityOfName),  Color.magenta, "Get ability of name", "Abilites");
             CreateNewNodeBlueprint("ADDCLOTHES", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1175,7 +1135,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveGameObject,
             }, new List<NodeBlueprint.Field>
             {
-            }, node: typeof(AddCloth), NodeBlueprint.Type.Function, Color.magenta, "Add clothes to unit", "Clothes");
+            }, node: typeof(AddCloth),  Color.magenta, "Add clothes to unit", "Clothes");
             CreateNewNodeBlueprint("GETCLOTHESGLOBAL", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveGameObject
@@ -1185,7 +1145,7 @@ namespace IDK
                  {
                      fieldType = NodeBlueprint.Field.FieldType.Clothing
                  }
-             }, node: typeof(GetClothesOfName), NodeBlueprint.Type.Function, Color.magenta, "Get clothing of name", "Clothes");
+             }, node: typeof(GetClothesOfName),  Color.magenta, "Get clothing of name", "Clothes");
             CreateNodeBlueprint("ADDFORCE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1196,7 +1156,7 @@ namespace IDK
                 { "Forward", TMP_InputField.ContentType.DecimalNumber},
                 { "Upwareds", TMP_InputField.ContentType.DecimalNumber},
                 { "Sideway", TMP_InputField.ContentType.DecimalNumber},
-            }, NodeBlueprint.Type.Function, Color.magenta, "Add force to gameobject", "Gameobjects", node: typeof(AddForceNode));
+            },  Color.magenta, "Add force to gameobject", "Gameobjects", node: typeof(AddForceNode));
             CreateNodeBlueprint("ADDFORCEGLOBAL", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1208,7 +1168,7 @@ namespace IDK
                 { "Y", TMP_InputField.ContentType.DecimalNumber},
                  { "Z", TMP_InputField.ContentType.DecimalNumber},
 
-            }, NodeBlueprint.Type.Function, Color.magenta, "Add global force to gameobject", "Gameobjects", node: typeof(AddGlobalForceNode));
+            },  Color.magenta, "Add global force to gameobject", "Gameobjects", node: typeof(AddGlobalForceNode));
 
             CreateNewNodeBlueprint("PLAYSOUND", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1226,7 +1186,7 @@ namespace IDK
 
 
 
-            }, node: typeof(PlaySoundNode), NodeBlueprint.Type.Function, Color.magenta, "Play sound at gameobject position", "Gameobjects");
+            }, node: typeof(PlaySoundNode),  Color.magenta, "Play sound at gameobject position", "Gameobjects");
 
             CreateNewNodeBlueprint("GOTOUNIT", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1265,7 +1225,7 @@ namespace IDK
                         "Left Foot",
                     }
                 }
-            }, node: typeof(GoToUnitNode), NodeBlueprint.Type.Function, Color.magenta, "Teleport gameobject to unit", "Gameobjects");
+            }, node: typeof(GoToUnitNode),  Color.magenta, "Teleport gameobject to unit", "Gameobjects");
             CreateNewNodeBlueprint("ROTATETOUNIT", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1292,7 +1252,7 @@ namespace IDK
                         "Left Foot",
                     }
                 }
-            }, node: typeof(RotateTowardsNode), NodeBlueprint.Type.Function, Color.magenta, "Rotate gameobject towards unit", "Gameobjects");
+            }, node: typeof(RotateTowardsNode),  Color.magenta, "Rotate gameobject towards unit", "Gameobjects");
             CreateNewNodeBlueprint("GETDISTANCE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveGameObject,
@@ -1300,7 +1260,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveVariable,
             }, new List<NodeBlueprint.Field>()
             {
-            }, node: typeof(GetDistanceFrom), NodeBlueprint.Type.Function, Color.magenta, "Get distance from unit to gameobject", "Gameobjects");
+            }, node: typeof(GetDistanceFrom),  Color.magenta, "Get distance from unit to gameobject", "Gameobjects");
             CreateNewNodeBlueprint("TRANSFORMPOS", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1331,7 +1291,7 @@ namespace IDK
                         "Set",
                     }
                 }
-            }, node: typeof(TransformPositionNode), NodeBlueprint.Type.Function, Color.yellow, "Modify position of gameobj", "Animations");
+            }, node: typeof(TransformPositionNode),  Color.yellow, "Modify position of gameobj", "Animations");
 
             CreateNodeBlueprint("TRANSFORMSCALE", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1343,7 +1303,7 @@ namespace IDK
                 { "x", TMP_InputField.ContentType.DecimalNumber},
                 { "y", TMP_InputField.ContentType.DecimalNumber},
                 { "z", TMP_InputField.ContentType.DecimalNumber}
-            }, NodeBlueprint.Type.Function, Color.yellow, "Change scale of gameobj", "Animations", node: typeof(TransformScaleNode));
+            },  Color.yellow, "Change scale of gameobj", "Animations", node: typeof(TransformScaleNode));
             CreateNewNodeBlueprint("TRANSFORMROT", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1374,7 +1334,7 @@ namespace IDK
                         "Set",
                     }
                 }
-            }, node: typeof(TransformRotationNode), NodeBlueprint.Type.Function, Color.yellow, "Modify rotation of gameobj", "Animations");
+            }, node: typeof(TransformRotationNode),  Color.yellow, "Modify rotation of gameobj", "Animations");
             CreateNewNodeBlueprint("COLOR", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1409,7 +1369,7 @@ namespace IDK
                 },
                
 
-            }, node: typeof(ColorObjectNode), NodeBlueprint.Type.Function, Color.yellow, "Color object", "Gameobjects"); ;
+            }, node: typeof(ColorObjectNode),  Color.yellow, "Color object", "Gameobjects"); ;
             CreateNewNodeBlueprint("COLORHSV", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1433,7 +1393,7 @@ namespace IDK
                     }
                 },
                 
-            }, node: typeof(ColorObjectNodeHSV), NodeBlueprint.Type.Function, Color.yellow, "Tweak Color of object with HSV", "Gameobjects"); ;
+            }, node: typeof(ColorObjectNodeHSV),  Color.yellow, "Tweak Color of object with HSV", "Gameobjects"); ;
             CreateNodeBlueprint("DESTROY", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1442,14 +1402,14 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.yellow, "Destroy", "Gameobjects", node: typeof(DestroyNode));
+            },  Color.yellow, "Destroy", "Gameobjects", node: typeof(DestroyNode));
             CreateNodeBlueprint("CREATEFUNC", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 {"Function name" , TMP_InputField.ContentType.Standard}
-            }, NodeBlueprint.Type.Function, Color.yellow, "Create function", "Functions", node: typeof(CreateFunctionNode));
+            },  Color.yellow, "Create function", "Functions", node: typeof(CreateFunctionNode));
             CreateNodeBlueprint("RUNFUNC", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -1457,7 +1417,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 {"Function name" , TMP_InputField.ContentType.Standard}
-            }, NodeBlueprint.Type.Function, Color.yellow, "Run function", "Functions", node: typeof(RunFunctionNode));
+            },  Color.yellow, "Run function", "Functions", node: typeof(RunFunctionNode));
             CreateNodeBlueprint("ADDONHITACTION", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -1466,7 +1426,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveGameObject,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.yellow, "Add projectile hit action ", "Projectiles", node: typeof(AddProjectileOnHitAction));
+            },  Color.yellow, "Add projectile hit action ", "Projectiles", node: typeof(AddProjectileOnHitAction));
             CreateNodeBlueprint("ADDONCOLLISIONACTION", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -1475,7 +1435,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.GiveGameObject,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, Color.yellow, "Add collision enter action ", "Gameobjects", node: typeof(AddOnCollisionAction));
+            },  Color.yellow, "Add collision enter action ", "Gameobjects", node: typeof(AddOnCollisionAction));
             CreateNewNodeBlueprint("ADDCOMP", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1488,7 +1448,7 @@ namespace IDK
                 {
                     fieldType = NodeBlueprint.Field.FieldType.Component
                 },
-            }, node: typeof(AddComponentNode), NodeBlueprint.Type.Function, Color.yellow, "Add Component to gameObj", "Gameobjects");
+            }, node: typeof(AddComponentNode),  Color.yellow, "Add Component to gameObj", "Gameobjects");
 
             CreateNewNodeBlueprint("GETCOMP", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1520,7 +1480,7 @@ namespace IDK
                         "Don't",
                     }
                 },
-            }, node: typeof(GetComponentNode), NodeBlueprint.Type.Function, Color.yellow, "Get Component from gameObj", "Gameobjects");
+            }, node: typeof(GetComponentNode),  Color.yellow, "Get Component from gameObj", "Gameobjects");
             CreateNewNodeBlueprint("SetField", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1530,7 +1490,7 @@ namespace IDK
             {
                 new NodeBlueprint.Field( "Field name", TMP_InputField.ContentType.Standard),
                 new NodeBlueprint.Field( "Value", TMP_InputField.ContentType.Standard),
-            }, node: typeof(SetFieldNode), NodeBlueprint.Type.Function, Color.yellow, "Set Field for gameObj", "Gameobjects");
+            }, node: typeof(SetFieldNode),  Color.yellow, "Set Field for gameObj", "Gameobjects");
             CreateNodeBlueprint("GETFIELD", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveAnything,
@@ -1538,7 +1498,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
                 { "Field name", TMP_InputField.ContentType.Standard},
-            }, NodeBlueprint.Type.Function, Color.yellow, "Get Field for gameObj", "Gameobjects", node: typeof(GetFieldNode));
+            },  Color.yellow, "Get Field for gameObj", "Gameobjects", node: typeof(GetFieldNode));
             CreateNodeBlueprint("INVOKE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1549,7 +1509,7 @@ namespace IDK
             {
                 { "Method name", TMP_InputField.ContentType.Standard},
 
-            }, NodeBlueprint.Type.Function, Color.yellow, "Invoke Method From Component", "Gameobjects", node: typeof(InvokeMethodNode));
+            },  Color.yellow, "Invoke Method From Component", "Gameobjects", node: typeof(InvokeMethodNode));
             CreateNodeBlueprint("DUPE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1559,7 +1519,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.yellow, "Duplicate object", "Gameobjects", node: typeof(Duplicate));
+            },  Color.yellow, "Duplicate object", "Gameobjects", node: typeof(Duplicate));
             CreateNewNodeBlueprint("SETACTIVE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1578,7 +1538,7 @@ namespace IDK
                         "True",
                     }
                 }
-            }, node: typeof(SetActive), NodeBlueprint.Type.Function, Color.yellow, "Set Active", "Gameobjects");
+            }, node: typeof(SetActive),  Color.yellow, "Set Active", "Gameobjects");
             // Variable
 
 
@@ -1589,7 +1549,7 @@ namespace IDK
             {
                 { "variable name", TMP_InputField.ContentType.Standard},
 
-            }, NodeBlueprint.Type.Function, Color.white, "Get variable", "Variables", node: typeof(CreateVariableNode));
+            },  Color.white, "Get variable", "Variables", node: typeof(CreateVariableNode));
 
             CreateNodeBlueprint("VARADD", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1601,7 +1561,7 @@ namespace IDK
 
                 { "value", TMP_InputField.ContentType.DecimalNumber},
 
-            }, NodeBlueprint.Type.Function, Color.white, "Change variable by", "Variables", node: typeof(ChangeVariableBy));
+            },  Color.white, "Change variable by", "Variables", node: typeof(ChangeVariableBy));
             CreateNodeBlueprint("VARSET", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1611,7 +1571,7 @@ namespace IDK
             {
                 { "value", TMP_InputField.ContentType.DecimalNumber},
 
-            }, NodeBlueprint.Type.Function, Color.white, "Set variable to", "Variables", node: typeof(SetVariableTo));
+            },  Color.white, "Set variable to", "Variables", node: typeof(SetVariableTo));
             CreateNewNodeBlueprint("VARIF", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Triggered,
@@ -1634,7 +1594,7 @@ namespace IDK
                     }
                 },
 
-            }, node: typeof(IfVariableNode), NodeBlueprint.Type.Function, Color.white, "If variable", "Variables");
+            }, node: typeof(IfVariableNode),  Color.white, "If variable", "Variables");
             CreateNewNodeBlueprint("RANDOM", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.GiveVariable,
@@ -1653,7 +1613,7 @@ namespace IDK
                     }
                 }
 
-            }, node: typeof(RandomNode), NodeBlueprint.Type.Function, Color.white, "Choose Random", "Variables");
+            }, node: typeof(RandomNode),  Color.white, "Choose Random", "Variables");
             // Object variables
             CreateNodeBlueprint("OBJECTVARCREATE", new List<NodeBlueprint.ConnectionClass>()
             {
@@ -1662,7 +1622,7 @@ namespace IDK
             {
                 { "variable name", TMP_InputField.ContentType.Standard},
 
-            }, NodeBlueprint.Type.Function, new Color(.2f, .2f, .8f), "Get object variable", "Object Variables", node: typeof(CreateObjectVariableNode));
+            },  new Color(.2f, .2f, .8f), "Get object variable", "Object Variables", node: typeof(CreateObjectVariableNode));
             CreateNodeBlueprint("OBJECTVARSET", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1671,7 +1631,7 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveAnything,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, new Color(.2f, .2f, .8f), "Store object in object variable", "Object Variables", node: typeof(SetObjectVariableTo));
+            },  new Color(.2f, .2f, .8f), "Store object in object variable", "Object Variables", node: typeof(SetObjectVariableTo));
             CreateNodeBlueprint("OBJECTVARCLEAR", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.Trigger,
@@ -1679,14 +1639,14 @@ namespace IDK
                 NodeBlueprint.ConnectionClass.ReciveObjectVariable,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, new Color(.2f, .2f, .8f), "Clear object variable", "Object Variables", node: typeof(ClearObjectVariable));
+            },  new Color(.2f, .2f, .8f), "Clear object variable", "Object Variables", node: typeof(ClearObjectVariable));
             CreateNodeBlueprint("OBJECTVARIABLEVALUE", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveObjectVariable,
                 NodeBlueprint.ConnectionClass.GiveAnything,
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
-            }, NodeBlueprint.Type.Function, new Color(.2f, .2f, .8f), "Get value of object variable", "Object Variables", node: typeof(GetValueOfObjectVariableNode));
+            },  new Color(.2f, .2f, .8f), "Get value of object variable", "Object Variables", node: typeof(GetValueOfObjectVariableNode));
 
 
 
@@ -1699,7 +1659,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert gameobject to anything", "Convert", node: typeof(ConvertObj));
+            },  Color.black, "Convert gameobject to anything", "Convert", node: typeof(ConvertObj));
             CreateNodeBlueprint("CONVERTUNIT", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveUnit,
@@ -1707,7 +1667,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert unit to anything", "Convert", node: typeof(ConvertUnit));
+            },  Color.black, "Convert unit to anything", "Convert", node: typeof(ConvertUnit));
             CreateNodeBlueprint("CONVERTCOMP", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveComponent,
@@ -1715,7 +1675,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert component to anything", "Convert", node: typeof(ConvertComp));
+            },  Color.black, "Convert component to anything", "Convert", node: typeof(ConvertComp));
             CreateNodeBlueprint("CONVERTOBJ2", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveAnything,
@@ -1723,7 +1683,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert anything to gameobject", "Convert", node: typeof(AnythingToObj));
+            },  Color.black, "Convert anything to gameobject", "Convert", node: typeof(AnythingToObj));
             CreateNodeBlueprint("CONVERTUNIT2", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveAnything,
@@ -1731,7 +1691,7 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert anything to unit", "Convert", node: typeof(AnythingToUnit));
+            },  Color.black, "Convert anything to unit", "Convert", node: typeof(AnythingToUnit));
             CreateNodeBlueprint("CONVERTCOMP2", new List<NodeBlueprint.ConnectionClass>()
             {
                 NodeBlueprint.ConnectionClass.ReciveAnything,
@@ -1739,28 +1699,9 @@ namespace IDK
             }, new Dictionary<string, TMP_InputField.ContentType>
             {
 
-            }, NodeBlueprint.Type.Function, Color.black, "Convert anything to component", "Convert", node: typeof(ConvertComp2));
-
-            string[] directories = Directory.GetDirectories(abilitespath);
-            for (int i = 0; i < directories.Length; i++)
-            {
-                string[] files = Directory.GetFiles(directories[i]);
-                for (int i2 = 0; i2 < files.Length; i2++)
-                {
-                    string path = files[i2];
-                    if (System.IO.Path.GetExtension(path) != ".ability")
-                    {
-                        continue;
-                    }
-                    var n = File (File.ReadAllText(path));
-                    AddAbility(n.SavedNodeSceneToNodeScene());
-                }
-
-            }
-
-
+            }, Color.black, "Convert anything to component", "Convert", node: typeof(ConvertComp2));
+            AbilityManager.Instance.Init();
             Code.commnet = "------------------Ability------------------------";
-
             yield return new WaitUntil(() => TABSSceneManager.IsInMainMenuScene());
             yield return new WaitForEndOfFrame(); ;
 
@@ -1773,68 +1714,9 @@ namespace IDK
             yield return new WaitUntil(() => (int)ServiceLocator.GetService<LoadingScreenHandler>().GetField("currentLoadingScreenFadeState") == 0);
             yield return MyModalPanel.ShowModal(bundledAbility);
         }
-        public static GameObject CreateAbility(VirtualNodeScene nodeScene)
-        {
-            if (!nodeScenes.Contains(nodeScene))
-                nodeScenes.Add(nodeScene);
-            GameObject abilityObject = new GameObject(nodeScene.abilityName);
-            abilityObject.hideFlags = HideFlags.HideAndDontSave;
-            SpecialAbility specialAbility = abilityObject.AddComponent<SpecialAbility>();
-            specialAbility.SetField("m_entity", new Landfall.TABS.DatabaseEntity(Landfall.TABS.Workshop.WorkshopContentType.Any)
-            {
-                GUID = new Landfall.TABS.DatabaseID()
-                {
-                    m_ID = nodeScene.abilityID,
-                    m_modID = -2,
-
-                },
-                Name = nodeScene.abilityName,
-            });
-            NodeRunner nodeRunner = abilityObject.AddComponent<NodeRunner>();
-            abilityObject.AddComponent<NodeRunnerFixer>();
-            abilityObject.AddComponent<DodgeMove>();
-            abilityObject.AddComponent<ConditionalEvent>();
-
-            GoToBodyPart goToBodyPart = abilityObject.AddComponent<GoToBodyPart>();
-            goToBodyPart.targetPart = GoToBodyPart.TargetPart.Torso;
-            abilityObject.AddComponent<OnlyRunWhenAddedToUnit>();
-            specialAbility.Entity.SetSpriteIcon(GetSprite(nodeScene));
-            nodeRunner.nodeScene = nodeScene;
-            return abilityObject;
-        }
-        public static GameObject AddAbility(VirtualNodeScene nodeScene)
-        {
-            try
-            {
-                GameObject abilityObj = CreateAbility(nodeScene);
-
-                SpecialAbility specialAbility = abilityObj.GetComponent<SpecialAbility>();
-                nodeIDS.Add(specialAbility.Entity.GUID);
-
-                LandfallContentDatabase database = ContentDatabase.Instance().LandfallContentDatabase;
-                AssetLoader assetLoader = ContentDatabase.Instance().AssetLoader;
-
-                Dictionary<DatabaseID, UnityEngine.Object> streamableAssets = assetLoader.GetField<Dictionary<DatabaseID, UnityEngine.Object>>("m_nonStreamableAssets");
-                Dictionary<DatabaseID, UnityEngine.GameObject> combatMoves = database.GetField<Dictionary<DatabaseID, UnityEngine.GameObject>>("m_combatMoves");
-                if (!streamableAssets.ContainsKey(specialAbility.Entity.GUID))
-                    streamableAssets.Add(specialAbility.Entity.GUID, abilityObj);
-                else
-                    streamableAssets[specialAbility.Entity.GUID] = abilityObj;
-                if (!combatMoves.ContainsKey(specialAbility.Entity.GUID))
-                    combatMoves.Add(specialAbility.Entity.GUID, abilityObj);
-                else
-                    combatMoves[specialAbility.Entity.GUID] = abilityObj;
-                database.SetField("m_combatMoves", combatMoves);
-                assetLoader.SetField("m_nonStreamableAssets", streamableAssets);
-                specialAbility.tags.Add(new CharacterItem.Tag(CharacterItem.TagType.Faction, "Custom Abilites"));
-                if (abilites.ContainsKey(abilityObj.GetComponent<NodeRunner>().nodeScene.abilityName))
-                    abilites.Remove(abilityObj.GetComponent<NodeRunner>().nodeScene.abilityName);
-                abilites.Add(abilityObj.GetComponent<NodeRunner>().nodeScene.abilityName, abilityObj);
-                return abilityObj;
-            }
-            catch { return null; }
-        }
-        void CreateNodeBlueprint(string key, List<NodeBlueprint.ConnectionClass> connectionsTypes, Dictionary<string, TMP_InputField.ContentType> fields, NodeBlueprint.Type type, Color color, string name, string Tab, bool longfield = false, Type node = null)
+        
+       
+        void CreateNodeBlueprint(string key, List<NodeBlueprint.ConnectionClass> connectionsTypes, Dictionary<string, TMP_InputField.ContentType> fields, Color color, string name, string tab, Type node = null)
         {
             if (nodeDatabase.ContainsKey(key))
                 key += "+";
@@ -1852,16 +1734,14 @@ namespace IDK
             {
                 var nodeBlueprint = new NodeBlueprint()
                 {
-                    color = color,
-                    key = key,
-                    Name = name,
-                    type = type,
-                    fields = fields1,
-                    LongField = longfield,
+                    nodeBarColor = color,
+                    nodeKey = key,
+                    nodeName = name,
+                    nodeFields = fields1,
                     name = name,
-                    connections = connectionsTypes,
+                    nodeConnections = connectionsTypes,
                     nodeFunction = node,
-                    tab = Tab,
+                    tab = tab,
                 };
                 nodeDatabase.Add(key, nodeBlueprint);
                 DontDestroyOnLoad(nodeDatabase[key]);
@@ -1871,97 +1751,36 @@ namespace IDK
             {
                 var NodeBlueprint = new NodeBlueprint()
                 {
-                    color = color,
-                    key = key,
-                    Name = name,
-                    type = type,
-                    fields = fields1,
-                    LongField = longfield,
+                    nodeBarColor = color,
+                    nodeKey = key,
+                    nodeName = name,
+                    nodeFields = fields1,
                     name = name,
-                    connections = connectionsTypes,
-                    tab = Tab,
+                    nodeConnections = connectionsTypes,
+                    tab = tab,
                 };
                 nodeDatabase.Add(key, NodeBlueprint);
             }
         }
-        void CreateNewNodeBlueprint(string key, List<NodeBlueprint.ConnectionClass> connectionsTypes, List<NodeBlueprint.Field> fields, Type node, NodeBlueprint.Type type, Color color, string name, string tab, bool obselete = false)
+        void CreateNewNodeBlueprint(string key, List<NodeBlueprint.ConnectionClass> connectionsTypes, List<NodeBlueprint.Field> fields, Type node, Color color, string name, string tab, bool obselete = false)
         {
             if (nodeDatabase.ContainsKey(key))
                 key += "+";
             var nodeBlueprint = new NodeBlueprint()
             {
-                color = color,
-                key = key,
-                Name = name,
-                type = type,
-                fields = fields,
-                LongField = false,
+                nodeBarColor = color,
+                nodeKey = key,
+                nodeName = name,
+                nodeFields = fields,
                 obselete = obselete,
                 name = name,
-                connections = connectionsTypes,
+                nodeConnections = connectionsTypes,
                 nodeFunction = node,
                 tab = tab,
             };
             nodeDatabase.Add(key, nodeBlueprint);
             DontDestroyOnLoad(nodeDatabase[key]);
             return;
-        }
-        public static void Reload()
-        {
-            MReload();
-        }
-        public static void MReload()
-        {
-            
-            
-            ContentDatabase contentDatabase = ContentDatabase.Instance();
-            // Landfall Content database
-            LandfallContentDatabase landfallContentDatabase = contentDatabase.LandfallContentDatabase;
-            var combatMoves = landfallContentDatabase.GetField<Dictionary<DatabaseID, GameObject>>("m_combatMoves");
-            for (int i = 0; i < nodeIDS.Count; i++)
-            {
-                combatMoves.Remove(nodeIDS[i]);
-            }
-            landfallContentDatabase.SetField("m_combatMoves", combatMoves);
-
-            // AssetLoader
-            AssetLoader assetLoader = contentDatabase.AssetLoader;
-            var nonStreamableAssets = assetLoader.GetField<Dictionary<DatabaseID, UnityEngine.Object>>("m_nonStreamableAssets");
-            for (int i = 0; i < nodeIDS.Count; i++)
-            {
-                nonStreamableAssets.Remove(nodeIDS[i]);
-            }
-            assetLoader.SetField("m_nonStreamableAssets", nonStreamableAssets);
-
-            // Other
-            assetManager.assets[assetManager.assets.Keys.FirstOrDefault(n =>n.GetName() == "move")] = new Dictionary<string, object>();
-            nodeScenes = new List<VirtualNodeScene>();
-            LegacyNodeScene[] oldNodeScenes = FindObjectsOfType<LegacyNodeScene>();
-            oldNodeScenes.Do(n => Destroy(n.gameObject));
-            string[] directories = Directory.GetDirectories(abilitespath);
-            for (int i = 0; i < directories.Length; i++)
-            {
-                string[] files = Directory.GetFiles(directories[i]);
-                for (int i2 = 0; i2 < files.Length; i2++)
-                {
-                    string path = files[i2];
-                    if (System.IO.Path.GetExtension(path) != ".ability")
-                    {
-                        continue;
-                    }
-                    VirtualNodeScene nodeScene = Serialize.LoadJson<VirtualNodeScene>(File.ReadAllText(path));
-                    GameObject ability = AddAbility(nodeScene);
-                    ability.GetComponent<NodeRunner>().nodeScene = nodeScene;
-                }
-                
-
-            }
-
-            UnitBlueprint[] unitBlueprints = contentDatabase.UserContentDatabase.GetUnitBlueprints().ToArray();
-            for (int i = 0; i < unitBlueprints.Length; i++)
-            {
-                CleanUnitblueprint(unitBlueprints[i]);
-            }
         }
         private static void CleanUnitblueprint(UnitBlueprint unitBlueprint)
         {
@@ -1982,50 +1801,7 @@ namespace IDK
                 catch { }
             }
         }
-        public static string CleanNodeName(string name)
-        {
-            return name.Replace("<", "").Replace(">", "").Replace("/", "").Replace("\\", "").Replace(":", "").Replace("*", "").Replace("?", "").Replace("\"", "").Replace("|", "");
-        }
-        public static string GetPath(VirtualNodeScene nodeScene)
-        {
-            return abilitespath + "/" + CleanNodeName(nodeScene.abilityName) + "/" + nodeScene.abilityID + ".abilityx";
-        }
-        public static Sprite GetSprite(VirtualNodeScene nodeScene)
-        {
-            string image = "";
-            string[] imgs = Directory.GetFiles(Directory.GetParent(GetPath(nodeScene)).FullName);
-            for (int i = 0; i < imgs.Length; i++)
-            {
-                if (Path.GetExtension(imgs[i]) == ".png" | Path.GetExtension(imgs[i]) == ".bmp")
-                {
-                    image = imgs[i];
-                }
-            }
-            if (image != "")
-            {
-
-                Texture2D texture = new Texture2D(0, 0);
-                texture.LoadImage(File.ReadAllBytes(image));
-                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-                return sprite;
-            }
-            else if (sprites.ContainsKey(nodeScene.abilityIcon))
-            {
-                return sprites[nodeScene.abilityIcon];
-            }
-            return null;
-        }
-        public static bool IsAbilityWritten(LegacyNodeScene nodeScene)
-        {
-            return Directory.Exists(AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(nodeScene.sceneName));
-        }
-        public static bool IsAbilityWritten(LegacySavedNodeScene nodeScene)
-        {
-            return Directory.Exists(AbilityCreator.abilitespath + "/" + AbilityCreator.CleanNodeName(nodeScene.sceneName));
-        }
         public static StreamedSceneManager sceneManager;
         public static Dictionary<string, NodeBlueprint> nodeDatabase = new Dictionary<string, NodeBlueprint>();
-        public static List<VirtualNodeScene> nodeScenes = new List<VirtualNodeScene>();
-        public static string abilitespath = path + "/Abilites";
     }
 }

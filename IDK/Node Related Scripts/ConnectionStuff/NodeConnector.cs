@@ -1,22 +1,63 @@
-﻿using IDK.Node_Related_Scripts.ConnectionStuff;
-using Mono.Cecil.Pdb;
+﻿using AC.Node_Related_Scripts.ConnectionStuff;
+using Newtonsoft.Json.Linq;
 using ProGrids;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace IDK.Node_Related_Scripts.connection_stuff
+namespace AC.Node_Related_Scripts.connection_stuff
 {
 
     public class NodeConnector : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IEventSystemHandler
     {
+        [Header("Curve")]
         public float curveHeight = .5f;
         public Vector3 vec = Vector3.left;
         public int segmentCount = 32;
+        [Header("Control")]
         public bool isDragging;
         private Transform m_copy;
+        [Header("Info")]
+        public NodeComponent papa;
+        public int index;
+        public NodeConnector connected;
+        public LineRenderer m_lineRenderer;
+        public Transform Copy
+        {
+            get
+            {
+                if (m_copy == null)
+                {
+                    m_copy = new GameObject("Copy of:" + transform.name).transform;
+
+                }
+                m_copy.position = transform.position;
+                return m_copy;
+            }
+        }
+        public LineRenderer LineRenderer
+        {
+            get
+            {
+                if (m_lineRenderer == null)
+                {
+                    m_lineRenderer = gameObject.AddComponent<LineRenderer>();
+                    m_lineRenderer.widthMultiplier = .05f;
+                    m_lineRenderer.positionCount = 2;
+                    m_lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                    Image renderer = GetComponent<Image>();
+                    LineRenderer.startColor = renderer.color;
+                    LineRenderer.endColor = renderer.color;
+                    LineRenderer.material.color = renderer.color;
+                }
+
+                return m_lineRenderer;
+            }
+        }
+
         public static Dictionary<NodeBlueprint.ConnectionClass, Dictionary<NodeBlueprint.ConnectionClass, string>> convertTable = new Dictionary<NodeBlueprint.ConnectionClass, Dictionary<NodeBlueprint.ConnectionClass, string>>()
         {
             {NodeBlueprint.ConnectionClass.GiveUnit, new Dictionary<NodeBlueprint.ConnectionClass, string>
@@ -52,50 +93,23 @@ namespace IDK.Node_Related_Scripts.connection_stuff
         };
         public static NodeBlueprint.ConnectionClass FlipConnection(NodeBlueprint.ConnectionClass connectionType)
         {
-            int difference = IsReciver(connectionType) ? 1 : -1;
-            return connectionType + difference;
+            int value = (int)connectionType;
+            NodeBlueprint.ConnectionClass result = (NodeBlueprint.ConnectionClass)(IsReciver(connectionType) ? (value << 1) : (value >> 1));
+            return result;
         }
         public static bool IsReciver(NodeBlueprint.ConnectionClass connectionType)
         {
-            float i = (float)connectionType;
-            if (i % 2 == 0) return true;
-            return false;
+            bool result = (NodeBlueprint.ConnectionClass.AllRecivers & connectionType) != 0;
+            return result;
         }
-        public Transform Copy
-        {
-            get
-            {
-                if (m_copy == null)
-                {
-                    m_copy = new GameObject("Copy of:" + transform.name).transform;
 
-                }
-                m_copy.position = transform.position;
-                return m_copy;
-            }
-        }
-        public NodeConnector connected;
-        public LineRenderer m_lineRenderer;
-        public LineRenderer LineRenderer
-        {
-            get
-            {
-                if (m_lineRenderer == null)
-                {
-                    m_lineRenderer = gameObject.AddComponent<LineRenderer>();
-                    m_lineRenderer.widthMultiplier = .05f;
-                    m_lineRenderer.positionCount = 2;
-                    m_lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-                    Image renderer = GetComponent<Image>();
-                    LineRenderer.startColor = renderer.color;
-                    LineRenderer.endColor = renderer.color;
-                    LineRenderer.material.color = renderer.color;
-                }
-
-                return m_lineRenderer;
-            }
-        }
         public ConnectionType connectionType;
+        void Start()
+        {
+            papa = transform.GetComponentInParent<NodeComponent>();
+            NodeConnector[] neighbours = transform.root.GetComponentsInChildren<NodeConnector>().Where(n => n.connectionType.connectionClass == connectionType.connectionClass).ToArray();
+            index = Array.FindIndex(neighbours, n => n == this);
+        }
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
 
@@ -112,7 +126,7 @@ namespace IDK.Node_Related_Scripts.connection_stuff
         }
         void IBeginDragHandler.OnBeginDrag(UnityEngine.EventSystems.PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left)
+            if ((eventData.button & PointerEventData.InputButton.Left) != PointerEventData.InputButton.Left)
                 return;
 
             isDragging = true;
@@ -154,6 +168,7 @@ namespace IDK.Node_Related_Scripts.connection_stuff
                 }
             }
 
+            UpdateConnectionType();
         }
         public void RemoveAllConnections()
         {
@@ -169,7 +184,7 @@ namespace IDK.Node_Related_Scripts.connection_stuff
         }
         public bool CanConnect(NodeConnector other)
         {
-            return connectionType.connectionType == FlipConnection(other.connectionType.connectionType);
+            return connectionType.connectionClass == FlipConnection(other.connectionType.connectionClass);
         }
         public void Connect(NodeConnector nodeConnector, out bool createdNewNodes)
         {
@@ -182,26 +197,26 @@ namespace IDK.Node_Related_Scripts.connection_stuff
             }
             else
             {
-                if (convertTable.ContainsKey(connectionType.connectionType))
+                if (convertTable.ContainsKey(connectionType.connectionClass))
                 {
-                    if (convertTable[connectionType.connectionType].ContainsKey(nodeConnector.connectionType.connectionType))
+                    if (convertTable[connectionType.connectionClass].ContainsKey(nodeConnector.connectionType.connectionClass))
                     {
-                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[connectionType.connectionType][nodeConnector.connectionType.connectionType]].Spawn();
+                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[connectionType.connectionClass][nodeConnector.connectionType.connectionClass]].Spawn();
                         node.transform.position = (transform.position + nodeConnector.transform.position) / 2;
-                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(connectionType.connectionType)), out _);
-                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(nodeConnector.connectionType.connectionType)), out _);
+                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionClass == FlipConnection(connectionType.connectionClass)), out _);
+                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionClass == FlipConnection(nodeConnector.connectionType.connectionClass)), out _);
                         createdNewNodes = true;
                         Debug.Log("Created new node!");
                     }
                 }
-                else if (convertTable.ContainsKey(nodeConnector.connectionType.connectionType))
+                else if (convertTable.ContainsKey(nodeConnector.connectionType.connectionClass))
                 {
-                    if (convertTable[nodeConnector.connectionType.connectionType].ContainsKey(connectionType.connectionType))
+                    if (convertTable[nodeConnector.connectionType.connectionClass].ContainsKey(connectionType.connectionClass))
                     {
-                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[nodeConnector.connectionType.connectionType][connectionType.connectionType]].Spawn();
+                        NodeComponent node = AbilityCreator.nodeDatabase[convertTable[nodeConnector.connectionType.connectionClass][connectionType.connectionClass]].Spawn();
                         node.transform.position = (transform.position + nodeConnector.transform.position) / 2;
-                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(connectionType.connectionType)), out _);
-                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionType == FlipConnection(nodeConnector.connectionType.connectionType)), out _);
+                        Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionClass == FlipConnection(connectionType.connectionClass)), out _);
+                        nodeConnector.Connect(node.GetComponentsInChildren<NodeConnector>().First(n => n.connectionType.connectionClass == FlipConnection(nodeConnector.connectionType.connectionClass)), out _);
                         createdNewNodes = true;
                         Debug.Log("Created new node!");
                     }
@@ -273,6 +288,25 @@ namespace IDK.Node_Related_Scripts.connection_stuff
             p += ttt * p3;        // t^3 * p3
 
             return p;
+        }
+        void UpdateConnectionType()
+        {
+            if (connectionType.first == null)
+                connectionType.first = new ConnectionType.VirtualPort();
+            if (connectionType.second == null && connected)
+                connectionType.second = new ConnectionType.VirtualPort();
+            else if (!connected)
+                connectionType.second = null;
+            if (connectionType.first != null)
+            {
+                connectionType.first.connectedNode = papa.GetNodeInstanceID();
+                connectionType.first.portIndex = index;
+            }
+            if (connectionType.second != null)
+            {
+                connectionType.second.connectedNode = connected.papa.GetNodeInstanceID();
+                connectionType.second.portIndex = connected.index;
+            }
         }
     }
 }

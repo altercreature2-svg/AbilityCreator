@@ -1,5 +1,8 @@
 ﻿
 
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using IDK.Help;
 using Landfall.TABS;
 using Newtonsoft.Json.Linq;
 using Sirenix.Utilities;
@@ -10,73 +13,37 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SetFieldNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            object[] components = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveAnything).GetValuePoolSmart(unit).GetValues<object>();
-            Debug.Log("Setting Fields for " + components.Length + " components!");
-            foreach (var component in components)
+            string fieldName = env.GetField(0);
+            var objectsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveAnything);
+            foreach (var obj in objectsEnum)
             {
-                Debug.Log($"FieldName:{fields[0]}");
-                object fieldInfo = Refelection.GetFieldInfo(component.GetType(),fields[0]);
-                Debug.Log($"Field :{fieldInfo}");
-                object value = fields[1];
-
-                Type type = null;
-                if (fieldInfo is FieldInfo info)
-                    type = info.FieldType;
-                if (fieldInfo is PropertyInfo info1)
-                    type = info1.PropertyType;
-                try
+                if (obj.value is null)
+                    continue;
+                object info = obj.GetFieldInfo(fieldName);
+                if (info is FieldInfo fieldInfo)
                 {
-                    if ((string)value == "null")
-                    {
-                        value = null;
-                    }
-                    else if ((string)value == "new")
-                    {
-                        value = Activator.CreateInstance(type);
-                    }
-                    else
-                        value = Convert.ChangeType(value, type);
-                } catch 
-                {
-                    try
-                    {
-                        if (IsDesendantOf(type,typeof(UnityEngine.Object)))
-                        {
-                            if (type.IsSerializable)
-                            {
-                                value = JsonUtility.FromJson(fields[1], type);
-                            }
-                        }
-                    }catch { }
+                    object value = SmartStringConverter.Convert(fieldInfo.FieldType, env.GetField(1));
+                    fieldInfo.SetValue(obj, value);
                 }
-                Debug.Log("value:" + value);
-                if (fieldInfo is FieldInfo field)
-                    field.SetValue(component, value);
-                if (fieldInfo is PropertyInfo property)
-                    property.SetValue(component, value);
+                else if (info is PropertyInfo propertyInfo)
+                {
+                    object value = SmartStringConverter.Convert(propertyInfo.PropertyType, env.GetField(1));
+                    propertyInfo.SetValue(obj, value);
+                }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public bool IsDesendantOf(Type type1, Type Desendant)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
-            Type type = type1;
-            for (int i = 0; i < 8; i++)
-            {
-                if (type.BaseType == Desendant)
-                    return true;
-                else
-                    type = type.BaseType;
-                    
-            }
-            return false;
+            return null;
         }
+       
     }
     
 }

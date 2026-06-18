@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9A0A0D28-6653-4AF2-9A8B-57D34D40D05E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>HiddenUnits</RootNamespace>
+    <AssemblyName>HiddenUnits</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="AstarPathfindingProject" />
+    <Reference Include="BepInEx">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="bolt">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\bolt.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard" />
+    <Reference Include="TGCore" />
+    <Reference Include="Unity.Entities" />
+    <Reference Include="Unity.Mathematics" />
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule" />
+    <Reference Include="UnityEngine.AudioModule" />
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\Korkia's Personal Project\Mod Name\bin\Output\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule" />
+    <Reference Include="UnityEngine.PhysicsModule" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AchillesArmor.cs" />
+    <Compile Include="AchillesArmorEvent.cs" />
+    <Compile Include="AddEffectIfTargetingSelf.cs" />
+    <Compile Include="Afterimage.cs" />
+    <Compile Include="AngelBubble.cs" />
+    <Compile Include="AttachWebToMage.cs" />
+    <Compile Include="BillyKeys.cs" />
+    <Compile Include="BillyLaser.cs" />
+    <Compile Include="ChickenSticks.cs" />
+    <Compile Include="ClubSpell.cs" />
+    <Compile Include="DodgeMovePhoenix.cs" />
+    <Compile Include="DreadSwords.cs" />
+    <Compile Include="EmperorPoofEffect.cs" />
+    <Compile Include="HadesEgg.cs" />
+    <Compile Include="HadesSpawnObjects.cs" />
+    <Compile Include="HadesTotem.cs" />
+    <Compile Include="HadezHands.cs" />
+    <Compile Include="HammerBounceRig.cs" />
+    <Compile Include="HarmonyPatches\ArmorProjectilePatch.cs" />
+    <Compile Include="HarmonyPatches\ArmorWeaponPatch.cs" />
+    <Compile Include="HUAddons.cs" />
+    <Compile Include="HUChangeLayerOfRigibodies.cs" />
+    <Compile Include="HULauncher.cs" />
+    <Compile Include="HUMain.cs" />
+    <Compile Include="Landfall\TABS\AI\Components\Modifiers\CircleTarget.cs" />
+    <Compile Include="Landfall\TABS\AI\Systems\Modifiers\CircleTargetSystem.cs" />
+    <Compile Include="Laser.cs" />
+    <Compile Include="MapCringe.cs" />
+    <Compile Include="MeleeWeaponLightning.cs" />
+    <Compile Include="MeleeWeaponSteal.cs" />
+    <Compile Include="OdinShield.cs" />
+    <Compile Include="PhoenixWings.cs" />
+    <Compile Include="ProjectileHitScale.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.cs" />
+    <Compile Include="RootBehavior.cs" />
+    <Compile Include="SecretUnlockMultiple.cs" />
+    <Compile Include="ShrinkParent.cs" />
+    <Compile Include="SpawnWall.cs" />
+    <Compile Include="SwordAfterimages.cs" />
+    <Compile Include="ThorBehavior.cs" />
+    <Compile Include="TriggerChickenStickRoam.cs" />
+    <Compile Include="TriggerCollisionWeapon.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resources" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

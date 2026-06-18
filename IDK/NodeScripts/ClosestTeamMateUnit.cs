@@ -1,4 +1,6 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.AI.Systems;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,55 +8,46 @@ using System.Linq;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ClosestTeamMateUnit : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            Debug.Log("Units Length:" + units.Length);
-            for (int i = 0; i < units.Length; i++)
+            
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                Unit ClosestUnit = GetClosestUnit(units[i].data.mainRig.transform, units[i].Team);
-                valuePool.AddValue(ClosestUnit);
+                if (!(item.value is Unit u))
+                    continue;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit, GetClosestUnit(env));
             }
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public Unit GetClosestUnit(Transform mainRig, Team team)
+        public Unit GetClosestUnit(NodeEnv env)
         {
-            var allUnits = World.Active.GetOrCreateManager<TeamSystem>().GetAllUnits().Where(n => n.Team == team);
+            
+            var allUnits = World.Active.GetOrCreateManager<TeamSystem>().GetAllUnits().Where(n => n.Team == env.unit.Team);
             float closest = 999;
             Unit closestUnit = null;
-            Unit me = mainRig.transform.root.GetComponent<Unit>();
             foreach (var unit  in allUnits)
             {
-                if (unit == me)
+                if (unit == env.unit)
                     continue;
-                float distance = Vector3.Distance(mainRig.position, unit.data.mainRig.position);
-                Debug.Log("distance:" + distance);
+                float distance = Vector3.Distance(env.unit.data.mainRig.position, unit.data.mainRig.position);
                 if (distance < closest)
                 {
-                    Debug.Log("Closest So Far! " + unit.unitBlueprint.Entity.Name);
                     closest = distance;
                     closestUnit = unit;
                 }
             }
 
-
             if (closestUnit == null)
-            {
-                closestUnit = me;
-            }
-            Debug.Log($"Found closest unit! ({closestUnit.unitBlueprint.Entity.Name})");
+                closestUnit = env.unit;
+            
             return closestUnit;
         }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

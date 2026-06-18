@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public class FixNodeSystem : MonoBehaviour
     {
@@ -14,7 +14,7 @@ namespace IDK
                     return false;
                 }
                 string[] fields = nodeScene.fields2[i].Split(separator: new string[] { "###" }, System.StringSplitOptions.RemoveEmptyEntries);
-                if (AbilityCreator.nodeDatabase[nodeScene.blueprints2[i]].fields.Count != fields.Length)
+                if (AbilityCreator.nodeDatabase[nodeScene.blueprints2[i]].nodeFields.Count != fields.Length)
                 {
                     return false;
                 } 

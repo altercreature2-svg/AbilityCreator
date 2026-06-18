@@ -1,57 +1,67 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetComponentNode : IValueNode
     {
-        public override bool IsDynamic()
+        System.Type component;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return false;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            return null;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            foreach (var gameObj in gameObjects)
+            var objs = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveComponent);
+            string option1 = env.GetField(1);
+            string option2 = env.GetField(2);
+            bool getFirstOnly = option1 == "First";
+            bool getComponentsInChildren = option2 != "Don't";
+             
+            foreach (var item in objs)
             {
-                if (fields[0] == "First")
-                {
-                    if (fields[1] == "Don't")
-                        valuePool.AddValue(gameObj.GetComponent(AbilityCreator.components[fields[0]]));
-                    else
-                        valuePool.AddValue(gameObj.GetComponentInChildren(AbilityCreator.components[fields[0]]));
+                if (!(item.value is GameObject obj))
+                    continue;
 
-                }
-                else
+                switch (getFirstOnly)
                 {
-                    if (fields[1] == "Don't")
-                    {
-                        Component[] array = gameObj.GetComponents(AbilityCreator.components[fields[0]]);
-                        foreach (Component item in array)
+                    case true:
+                        switch (getComponentsInChildren)
                         {
-                            valuePool.AddValue(item);
+                            case true:
+                                env.AddValue(NodeBlueprint.ConnectionClass.GiveComponent, 
+                                    env.cacheSystem.GetCachedComponentInChildren(component, obj));
+                                break;
+                            case false:
+                                env.AddValue(NodeBlueprint.ConnectionClass.GiveComponent,
+                                    env.cacheSystem.GetCachedComponent(component, obj));
+                                break;
                         }
-                        
-                    }
-                    else
-                    {
-                        Component[] array = gameObj.GetComponentsInChildren(AbilityCreator.components[fields[0]]);
-                        foreach (Component item in array)
+                        break;
+                    case false:
+                        switch (getComponentsInChildren)
                         {
-                            valuePool.AddValue(item);
+                            case true:
+                                env.AddValues(NodeBlueprint.ConnectionClass.GiveComponent,
+                                    ((IEnumerable)env.cacheSystem.GetCachedComponentsInChildren(component, obj)).Cast<object>().ToArray());
+                                break;
+                            case false:
+                                env.AddValues(NodeBlueprint.ConnectionClass.GiveComponent,
+                                    ((IEnumerable)env.cacheSystem.GetCachedComponents(component, obj)).Cast<object>().ToArray());
+                                break;
                         }
-
-                    }
+                        break;
                 }
             }
-            savedNode.valuePools[unit] = valuePool;
-            return valuePool;
+            
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            component = AbilityCreator.components[env.GetField(0)];
+            return null;
         }
     }
 }

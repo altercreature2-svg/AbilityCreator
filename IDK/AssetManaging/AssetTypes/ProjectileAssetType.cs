@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.AssetManaging.AssetTypes
+namespace AC.AssetManaging.AssetTypes
 {
     public class ProjectileAssetType : AssetType<GameObject>
     {

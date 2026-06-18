@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     [HarmonyPatch(typeof(RangeWeapon), nameof(RangeWeapon.SetProjectileStats))]
     public class RangeWeaponProjectileStorerHarmonyPatch

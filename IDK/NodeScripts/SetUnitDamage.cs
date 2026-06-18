@@ -1,28 +1,79 @@
-﻿using Landfall.TABS;
-using System.Collections;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections.Generic;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SetUnitDamage : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        float value;
+        string mode;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            for (int i = 0; i < units.Length; i++)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
+                if (!(item.value is Unit u))
+                    continue;
+                Weapon[] allWeapons = env.cacheSystem.GetCachedComponentsInChildren<Weapon>(u.gameObject);
+                for (int i = 0; i < allWeapons.Length; i++)
+                {
 
-                SetDamage(units[i], fields[0].QuickParse(), fields[1]);
+                    SetDamageForWeapon(env, allWeapons[i], value, mode);
+                }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            value = env.GetField(0).QuickParse();
+            mode = env.GetField(1);
+            return null;
+        }
+        private void SetDamageForWeapon(NodeEnv env, Weapon weapon, float value, string mode) // NOT anything for optomizations ig
+        {
+            float oldLevelMultiplier = weapon.levelMultiplier;
+            switch (mode)
+            {
+                case "Set":
+                    weapon.levelMultiplier = value;
+                    break;
+                case "Add":
+                    weapon.levelMultiplier += value;
+                    break;
+                case "Multiply":
+                    weapon.levelMultiplier *= value;
+                    break;
+                case "Set (%)":
+                    weapon.levelMultiplier = (weapon.levelMultiplier / 100) * value;
+                    break;
+                case "Add (%)":
+                    weapon.levelMultiplier += (weapon.levelMultiplier / 100) * value;
+                    break;
+                default:
+                    break;
+            }
+            Level level = env.cacheSystem.GetCachedComponent<Level>(weapon.gameObject);
+            if (level)
+                level.levelMultiplier = weapon.levelMultiplier;
+            if (weapon is MeleeWeapon meleeWeapon)
+            {
+                CollisionWeapon collisionWeapon = (CollisionWeapon)env.cacheSystem.GetCachedComponent<CollisionWeapon>(meleeWeapon.gameObject);
+                if (!collisionWeapon)
+                    return;
+                collisionWeapon.damage /= oldLevelMultiplier;
+                collisionWeapon.damage *= meleeWeapon.levelMultiplier;
+            }
+        }
+
         private void SetDamage(Unit unit, float value, string field)
         {
             Weapon[] weapons = unit.GetComponentsInChildren<Weapon>();
             for (int i = 0; i < weapons.Length; i++)
             {
                 float oldLevelMultiplier = weapons[i].levelMultiplier;
-                
+
                 if (field == "Set")
                     weapons[i].levelMultiplier = value;
                 if (field == "Add")

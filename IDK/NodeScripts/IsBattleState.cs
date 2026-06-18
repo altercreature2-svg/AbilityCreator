@@ -1,24 +1,22 @@
-﻿using Landfall.TABS;
-using Landfall.TABS.GameMode;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS.GameState;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class IsBattleState : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        GameStateManager service;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            LegacySavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.Trigger);
-            var service = ServiceLocator.GetService<GameStateManager>();
-            if (service.GameState == GameState.BattleState)
-            {
-                yield return nodeRunner.RunNode(nodeToTrigger);
-            }
-            yield return null;
-            
+            if (!(service.GameState is GameState.BattleState)) yield break;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            service = ServiceLocator.GetService<GameStateManager>();
+            return null;
         }
     }
 }

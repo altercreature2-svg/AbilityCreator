@@ -1,4 +1,4 @@
-﻿using IDK.NodeScripts;
+﻿using AC.NodeScripts;
 using Landfall.TABS;
 using Landfall.TABS_Input;
 using System.Collections;
@@ -8,7 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace IDK
+namespace AC
 {
     public class MyModalPanel : MonoBehaviour
     {

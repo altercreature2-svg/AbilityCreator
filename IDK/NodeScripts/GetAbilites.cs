@@ -1,31 +1,35 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
+using Landfall.TABS.AI.Systems;
 using Landfall.TABS.UnitEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetAbilites : IValueNode
     {
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            Debug.Log("Units node:" + connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit));
-            Debug.Log("Units Length: " + units.Length);
-            foreach (var unitIndex in units)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveGameObject);
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                valuePool.AddRange(unitIndex.GetComponentsInChildren<SpecialAbility>().Select(n => n.gameObject).ToArray());
+                if (!(item.value is Unit u))
+                    continue;
+                SpecialAbility[] specialAbilities = env.cacheSystem.GetCachedComponentsInChildren<SpecialAbility>(env.unit.gameObject);
+                foreach (var specialAbility in specialAbilities)
+                {
+                    env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, specialAbility);
+                }
+                
             }
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

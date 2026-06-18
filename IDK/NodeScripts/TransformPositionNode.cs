@@ -1,41 +1,63 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class TransformPositionNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public float x, y, z;
+        public bool local;
+        public bool set;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            yield return null;
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            if (fields[3] == "Global")
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            Vector3 vector = new Vector3(x, y, z);
+            foreach (var item in gameObjects)
             {
-                foreach (var gameObj in gameObjects)
+                if (!(item.value is GameObject go))
+                    continue;
+                Transform transform = go.transform; 
+                switch (local)
                 {
-
-                    if (fields[4] == "Add")
-                        gameObj.transform.position += new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse());
-                    else
-                        gameObj.transform.position = new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse());
+                    case true:
+                        switch (set)
+                        {
+                            case true:
+                                SetLocalPosition(go, vector);
+                                break;
+                            case false:
+                                AddLocalPosition(go, vector);
+                                break;
+                        }
+                        break;
+                    case false:
+                        switch (set)
+                        {
+                            case true:
+                                transform.position = vector;
+                                break;
+                            case false:
+                                transform.position += vector;
+                                break;
+                        }
+                        break;
                 }
             }
-            else
-            {
-                foreach (var gameObj in gameObjects)
-                {
-                    if (fields[4] == "Add")
-                        AddLocalPosition(gameObj, new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
-                    else
-                        SetLocalPosition(gameObj, new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse()));
-                }
-
-            }
-
-            yield return savedNode.TriggerConnection(nodeRunner);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            local = env.GetField(3) != "Global";
+            set = env.GetField(4) != "Add";
+            x = env.GetField(0).QuickParse();
+            y = env.GetField(1).QuickParse();
+            z = env.GetField(2).QuickParse();
+            return null;
         }
         public void SetLocalPosition(GameObject me, Vector3 vector3)
         {

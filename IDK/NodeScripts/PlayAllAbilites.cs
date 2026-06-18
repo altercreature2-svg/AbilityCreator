@@ -1,29 +1,38 @@
-﻿using Landfall.TABS;
+﻿using AC.Help;
+using AC.Help_Componets;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class PlayAllAbilites : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            for (int o = 0; o < units.Length; o++)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in units)
             {
-                var Condentials = units[o].GetComponentsInChildren<ConditionalEvent>();
-                for (int s = 0; s < Condentials.Length; s++)
+                if (!(item.value is Unit u))
+                    continue;
+                var condos = env.cacheSystem.GetCachedComponentsInChildren<ConditionalEvent>(u.gameObject);
+                for (int i = 0; i < condos.Length; i++)
                 {
-                    for (int n = 0; n < Condentials[s].events.Length; n++)
+                    for (int j = 0; j < condos[i].events.Length; j++)
                     {
-                        Condentials[s].events[n].continuousEvent.Invoke();
-
+                        condos[i].events[j].continuousEvent.Invoke();
+                        condos[i].events[j].turnOnEvent.Invoke();
                     }
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

@@ -1,38 +1,38 @@
-﻿using IDK.Node_Related_Scripts;
+﻿using AC.Node_Related_Scripts;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetDistanceFrom : IValueNode
     {
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            foreach (var unitIndex in units)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveVariable);
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in units)
             {
-                foreach (var gameObj in gameObjects)
+                if (!(item.value is Unit u))
+                    continue;
+                foreach (var item2 in gameObjects)
                 {
-
-                    valuePool.AddValue(new Variable()
+                    if (!(item2.value is GameObject go))
+                        continue;
+                    env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, new Variable()
                     {
-                        value = Vector3.Distance(unitIndex.data.mainRig.position, gameObj.transform.position)
-                    }) ;
+                        value = Vector3.Distance(u.data.mainRig.position, go.transform.position)
+                    });
                 }
             }
-            return valuePool;
-
+            env.AddValue(NodeBlueprint.ConnectionClass.GiveVariable, AbilityCreator.abilites[env.GetField(0)]);
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override bool IsDynamic()
-        {
-            return true;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }

@@ -1,53 +1,71 @@
-﻿using DM;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using DM;
 using HarmonyLib;
+using IDK.Help;
 using Landfall.TABS;
 using Landfall.TABS.UnitEditor;
-using Sirenix.Serialization;
-using Sirenix.Utilities;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
-using static Stitcher.TransformCatalog;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddProps : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
+            var unitEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var goEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
             AssetLoader assetLoader = ContentDatabase.Instance().AssetLoader;
-            foreach (var unitIndex in units)
+            bool isClothes = env.GetField(0) == "Clothes";
+            if (isClothes)
             {
-                if (fields[0] == "Clothes")
+                foreach (var item in unitEnum)
                 {
-                    UnitRig rig = unitIndex.GetComponentInChildren<UnitRig>();
-                    CharacterItem[] characterItems = gameObjects.Where(n => n.GetComponent<PropItem>()).Select(n => n.GetComponent<CharacterItem>()).ToArray();
-                    GameObject[] cleanProps = characterItems.Select(n => assetLoader.GetAsset<GameObject>(n.Entity.GUID)).ToArray();
-                    cleanProps.Do(n => Debug.Log("Prop:" + n));
-                    rig.SpawnProps(cleanProps, characterItems.Select(n => n.PropData).ToArray(), unitIndex.RigType, unitIndex.Team);
-                }
-
-                else
-                {
-                    SpecialAbility[] specialAbilities = gameObjects.Where(n => n.GetComponent<SpecialAbility>()).Select(n => n.GetComponent<SpecialAbility>()).ToArray();
-                    GameObject[] cleanAbilites = specialAbilities.Select(n => assetLoader.GetAsset<GameObject>(n.Entity.GUID)).Where(n=>n).ToArray();
-                    cleanAbilites.Do(n => AddAbility(n));
-                    void AddAbility(GameObject gameObject)
+                    if (!(item.value is Unit unit))
+                        continue;
+                    UnitRig rig = env.cacheSystem.GetCachedComponent<UnitRig>(unit.gameObject);
+                    FixedPool<GameObject> cleanProps = new FixedPool<GameObject>(goEnum.Length);
+                    foreach (var item2 in goEnum)
                     {
-                        Debug.Log("Adding ability");
-                        GameObject ability = Object.Instantiate(gameObject, unitIndex.transform);
-                        unitIndex.CallMethod("SetTeamColors", new object[] { ability, unitIndex.Team });
+                        if (!(item2.value is GameObject gameObject))
+                            continue;
+                        cleanProps.Insert(assetLoader.GetAsset<GameObject>(env.cacheSystem.GetCachedComponent<PropItem>(gameObject).Entity.GUID));
+                    }
+                    Stitcher.TransformCatalog catalog = new Stitcher.TransformCatalog(rig.gameObject, Stitcher.TransformCatalog.RigType.Human, "M_");
+                    for (int i = 0; i < cleanProps.Length; i++)
+                    {
+                        if (cleanProps[i])
+                        {
+                            GameObject obj = rig.SpawnProp(cleanProps[i].GetComponent<CharacterItem>(), new PropItemData(), Stitcher.TransformCatalog.RigType.Human, unit.Team, catalog);
+                            env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, obj);
+                        }
                     }
                 }
             }
-            
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            else
+            {
+                foreach (var item in unitEnum)
+                {
+                    if (!(item.value is Unit unit))
+                        continue;
+                    foreach (var item2 in goEnum)
+                    {
+                        if (!(item2.value is GameObject ability))
+                            continue;
+                        GameObject abiltiy = Object.Instantiate(ability, unit.api.GetHipPosition(), Quaternion.identity, unit.transform);
+                        FastTeamColor.SetTeamColors(abiltiy, unit.Team);
+                        env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, abiltiy);
+                    }
+                }
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

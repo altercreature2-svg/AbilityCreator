@@ -1,28 +1,32 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.GameMode;
 using Landfall.TABS.GameState;
+using Landfall.TABS.UnitEditor;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class IsAlive : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            LegacySavedNode nodeToTrigger = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.Trigger);
-            Unit[] units = savedNode.connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            var service = ServiceLocator.GetService<GameStateManager>();
-            for (int i = 0; i < units.Length; i++)
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                if (!units[i].dead)
-                    yield return nodeRunner.RunNode(nodeToTrigger);
+                if (!(item.value is Unit u))
+                    continue;
+                if (u.data.Dead) continue;
+                yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
             }
-                
             
-            
-            
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

@@ -1,21 +1,16 @@
 ﻿
 
 using BitCode.Platform.Steamworks;
-using IDK.Node_Related_Scripts.connection_stuff;
+using AC.Node_Related_Scripts.connection_stuff;
 using System.Collections;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public static class BundleManager
     {
-        public enum LeftRight
-        {
-            Left,
-            Right,
-        }
         public static GameObject node;
         public static GameObject empty;
         public static GameObject connecterTrig;

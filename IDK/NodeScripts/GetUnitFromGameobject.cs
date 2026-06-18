@@ -1,4 +1,6 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.AI.Systems;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,25 +8,25 @@ using System.Linq;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class GetUnitFromGameobject : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveUnit);
+            var gameObjectsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in gameObjectsEnum)
+            {
+                if (!(item.value is GameObject go))
+                    continue;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit, env.cacheSystem.GetCachedComponent<Unit>(go));
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = new ValuePool();
-            GameObject[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            valuePool.AddRange(units.Select(n => n.transform.root.GetComponent<Unit>()).ToArray());
-            return valuePool;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
         {
             return null;
         }
-
     }
 }

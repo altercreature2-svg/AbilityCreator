@@ -1,4 +1,7 @@
-﻿using Landfall.TABC;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABC;
 using Landfall.TABS;
 using System;
 using System.Collections;
@@ -7,26 +10,34 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class AddGlobalForceNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            ValuePool valuePool = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit);
+            var gameobjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in gameobjects)
+            {
+                float x = env.GetField(0).QuickParse();
+                float y = env.GetField(1).QuickParse();
+                float z = env.GetField(2).QuickParse();
+                Vector3 vector = new Vector3(x, y, z);
+                if (!(item.value is GameObject go))
+                    continue;
+                Rigidbody rb = env.cacheSystem.GetCachedComponent<Rigidbody>(go);
+                MoveTransform mt = env.cacheSystem.GetCachedComponent<MoveTransform>(go);
+                if (rb)
+                    rb.AddForce(vector * 10);
+                if (mt)
+                    mt.velocity += vector;
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
 
-            Rigidbody[] rbs = valuePool.GetValues<Rigidbody>();
-            foreach (var rigidbody in rbs)
-            {
-                rigidbody.AddForce(fields[0].QuickParse() * 10, fields[1].QuickParse() * 10, fields[2].QuickParse() * 10);
-            }
-            MoveTransform[] moveTransforms = valuePool.GetValues<GameObject>().Select(n => n.GetComponent<MoveTransform>()).Where(n => n).ToArray();
-            foreach (var moveTransform in moveTransforms)
-            {
-                moveTransform.velocity += new Vector3(fields[0].QuickParse(), fields[1].QuickParse(), fields[2].QuickParse());
-            }
-            yield return savedNode.TriggerConnection(nodeRunner);
-            
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

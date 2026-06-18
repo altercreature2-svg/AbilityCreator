@@ -1,101 +1,79 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class ParryProjectile : IBehaviorNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        bool playSlice;
+        bool reflect;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            for (int o = 0; o < gameObjs.Length; o++)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            
+            foreach (var item in gameObjects)
             {
+                if (!(item.value is GameObject projectile))
+                    continue;
 
+                Vector3 spawnRot = env.unit.data ?
+                        projectile.transform.position - env.unit.data.mainRig.transform.position :
+                        projectile.transform.position - env.unit.data.torso.position;
+                Vector3 sliceDir = env.unit.data ?
+                    Vector3.Cross((projectile.transform.position - env.unit.data.torso.transform.position).normalized, env.unit.data.characterForwardObject.forward).normalized :
+                    Vector3.forward;
+                Vector3 normal = env.unit.data.torso.position - projectile.transform.position;
 
-                GameObject projectile = gameObjs[o];
-                Vector3 spawnRot;
-                Vector3 sliceDir;
-                Vector3 normal = unit.data.torso.position - projectile.transform.position;
-                Transform rig = unit.data.torso;
-                bool reflect = fields[1] == "Reflect";
-                ProjectileHit component2 = projectile.GetComponent<ProjectileHit>();
-                if (component2)
+                ProjectileHit projectileHit = env.cacheSystem.GetCachedComponent<ProjectileHit>(projectile);
+                if (projectileHit)
                 {
-                    if ((bool)component2)
+                    if (projectileHit.destroyOnHit)
                     {
-
-                        if (component2.destroyOnRefect)
-                        {
-                            Object.Destroy(component2.gameObject);
-                        }
+                        Object.Destroy(projectileHit.gameObject);
+                        continue;
                     }
-
-
-                    MoveTransform component3 = projectile.GetComponent<MoveTransform>();
-
-                    if (reflect)
+                    MoveTransform moveTransform = env.cacheSystem.GetCachedComponent<MoveTransform>(projectile);
+                    RaycastTrail raycastTrail = env.cacheSystem.GetCachedComponent<RaycastTrail>(projectile);
+                    if (reflect && moveTransform)
+                        moveTransform.velocity = Vector3.Reflect(moveTransform.velocity, normal) * Random.Range(0.3f, .5f) * 1.25f;
+                    if (raycastTrail)
+                        raycastTrail.ignoredFrames = 3;
+                    
+                    if (playSlice)
+                        PlaySlice(projectile.transform.position, Quaternion.LookRotation(spawnRot, sliceDir), env);
+                    if (!env.cacheSystem.GetCachedComponentInChildren<ProjectileRotate>(projectile) && reflect)
                     {
-
-                        component3.velocity = Vector3.Reflect(component3.velocity, normal) * 1.25f;
-                        component3.velocity *= UnityEngine.Random.Range(0.3f, 0.5f);
-
-                    }
-                    projectile.GetComponent<RaycastTrail>().ignoredFrames = 3;
-                    if ((bool)unit.data)
-                    {
-                        spawnRot = projectile.transform.position - unit.data.mainRig.transform.position;
-                        sliceDir = Vector3.Cross((projectile.transform.position - rig.transform.position).normalized, unit.data.characterForwardObject.forward).normalized;
-                    }
-                    else
-                    {
-                        spawnRot = projectile.transform.position - rig.position;
-                        sliceDir = Vector3.forward;
-                    }
-                    if (fields[0] == "Play Slice")
-                        PlaySlice(projectile.transform.position, Quaternion.LookRotation(spawnRot, sliceDir));
-
-
-
-
-
-                    if (!projectile.transform.GetChild(0).gameObject.GetComponent<ProjectileRotate>() && reflect)
-                    {
-
-                        projectile.transform.rotation = Quaternion.LookRotation(projectile.GetComponent<TeamHolder>().spawner.transform.GetComponentInChildren<DataHandler>().mainRig.transform.position - unit.data.torso.position);
-
+                        TeamHolder teamHolder = env.cacheSystem.GetCachedComponent<TeamHolder>(projectile);
+                        DataHandler spawner = env.cacheSystem.GetCachedComponent<Unit>(teamHolder.spawner.transform.root.gameObject).data;
+                        projectile.transform.rotation = Quaternion.LookRotation(spawner.mainRig.transform.position - spawner.torso.position);
                     }
                 }
                 else
                 {
-                    sliceDir = Vector3.Cross((projectile.transform.position - rig.transform.position).normalized, unit.data.characterForwardObject.forward).normalized;
-                    spawnRot = projectile.transform.position - unit.data.mainRig.transform.position;
-                    if (fields[0] == "Play Slice")
-                    {
-                        PlaySlice(projectile.transform.position, Quaternion.LookRotation(spawnRot, sliceDir));
-                    }
+                    if (playSlice)
+                        PlaySlice(projectile.transform.position, Quaternion.LookRotation(spawnRot, sliceDir), env);
                     if (reflect)
-                    {
-                        projectile.GetComponent<Rigidbody>()?.AddForce(-300*(unit.data.torso.position - projectile.transform.position));
-                    }
+                        env.cacheSystem.GetCachedComponent<Rigidbody>(projectile)?.AddForce(-300 * normal);
                 }
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
-        private void PlaySlice(Vector3 pos, Quaternion rot)
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            playSlice = env.GetField(0) == "Play Slice";
+            reflect = env.GetField(1) == "Reflect";
+            return null;
+        }
+        private void PlaySlice(Vector3 pos, Quaternion rot, NodeEnv env)
         {
             GameObject obj = UnityEngine.Object.Instantiate(AbilityCreator.sliceEffect, null);
             obj.transform.position = pos;
             obj.transform.rotation = rot;
-            obj.GetComponent<CodeAnimation>()?.PlayIn();
+            env.cacheSystem.GetCachedComponent<CodeAnimation>(obj)?.PlayIn();
             obj.AddComponent<RemoveAfterSeconds>().seconds = 0.5f;
         }
     }

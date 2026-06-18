@@ -1,21 +1,25 @@
-﻿using IDK.Node_Related_Scripts.connection_stuff;
+﻿using AC.Node_Related_Scripts.connection_stuff;
+using AC.Node_Related_Scripts.ConnectionStuff;
+using IDK.Node_Related_Scripts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace IDK
+namespace AC
 {
     public class NodeComponent : MonoBehaviour
     {
+        [Obsolete]
         public class LegacyConnection
         {
             public NodeBlueprint.ConnectionClass connectionsType;
             public LegacySavedNode savedNode;
             public override string ToString()
             {
-                return $"{connectionsType} > {savedNode?.Blueprint?.Name}";
+                return $"{connectionsType} > {savedNode?.Blueprint?.nodeName}";
             }
         }
         public LineRenderer line;
@@ -23,10 +27,9 @@ namespace IDK
         public bool GetValueAtRuntime;
         public NodeBlueprint nodeBlueprint;
         public Button button;
-        public LegacySavedNode corispondingNode;
         public NodeManager NodeManager { get { return FindObjectOfType<NodeManager>(); } }
 
-        public Dictionary<NodeBlueprint.ConnectionClass, NodeConnector> Connections
+        public Dictionary<ConnectionType, NodeConnector> Connections
         {
             get
             {
@@ -148,9 +151,7 @@ namespace IDK
 
         public int GetNodeInstanceID()
         {
-            var objects = FindObjectsOfType<NodeComponent>().Where(n => n != this);
-            int instanceID = objects.Count();
-            return instanceID;
+            return NodeIDHelper.GetID(this);
         }
         public void OnPointerClick()
         {

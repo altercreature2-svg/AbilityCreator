@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace IDK
+namespace AC
 {
     public class Code : GameStateListener
     {

@@ -1,22 +1,21 @@
-﻿using IDK.Node_Related_Scripts.NodeRunning.Instructions;
-using System;
+﻿using AC.Node_Related_Scripts.NodeRunning.Instructions;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace IDK.Node_Related_Scripts.NodeRunning
+namespace AC.Node_Related_Scripts.NodeRunning
 {
     public class NodeContextManager
     {
-        public NodeRegistery Registery {get; private set;}
+        public NodeRegistery Registery { get; private set; }
         public List<NodeContext> RootContexts { get; private set; }
-        
-        public NodeContextManager(List<NodeContext> nodeContexts) 
+        public List<NodeContext> AllContexts { get; private set; }
+        public Dictionary<VirtualNode, NodeContext> contextCache = new Dictionary<VirtualNode, NodeContext>();
+
+        public NodeContextManager(List<NodeContext> nodeContexts)
         {
             Registery = new NodeRegistery();
             RootContexts = nodeContexts;
+            AllContexts = nodeContexts;
         }
         public void AddContext(NodeContext context)
         {
@@ -24,9 +23,16 @@ namespace IDK.Node_Related_Scripts.NodeRunning
         }
         public NodeContext GetContext(VirtualNode node)
         {
+            if (contextCache.TryGetValue(node, out NodeContext outContext))
+                return outContext;
+
             foreach (NodeContext context in RootContexts)
             {
-                if (SearchContext(context, node, out NodeContext context1)) return context;
+                if (SearchContext(context, node, out NodeContext context1))
+                {
+                    contextCache.Add(node, context1);
+                    return context;
+                }
             }
             Debug.LogError("wtf??? no context for:" + node);
             return null;
@@ -39,7 +45,7 @@ namespace IDK.Node_Related_Scripts.NodeRunning
                 context = nodeContext;
                 return true;
             }
-            if (nodeContext.children.Length == 0)
+            if ((nodeContext.children?.Length ?? 0) == 0)
             {
                 context = null;
                 return false;
@@ -50,8 +56,8 @@ namespace IDK.Node_Related_Scripts.NodeRunning
                 context = temp;
                 return recursive;
             }
-            return false;   
+            return false;
         }
-        
+
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IDK.AssetManaging.AssetTypes
+namespace AC.AssetManaging.AssetTypes
 {
     public abstract class AssetType<T> : AssetBaseType
     {

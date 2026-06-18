@@ -1,4 +1,9 @@
-﻿using IDK.Help_Componets;
+﻿using AC.Help;
+using AC.Help_Componets;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using BitCode.Extensions;
+using Landfall.TABC;
 using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,23 +11,38 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class HoldPostionNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            GameObject[] bodyParts = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            bool x = fields[1] != "Off";
-            bool y = fields[2] != "Off";
-            bool z = fields[3] != "Off";
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            float pause = env.GetField(0).QuickParse();
+            float length = env.GetField(0).QuickParse();
+            bool x = env.GetField(1) != "Off";
+            bool y = env.GetField(2) != "Off";
+            bool z = env.GetField(3) != "Off";
+            FixedPool<GameObject> pool = new FixedPool<GameObject>(gameObjects.Length);
+            foreach (var item in gameObjects)
             {
-                unitIndex.gameObject.AddComponent<HoldPosition>().Go(fields[0].QuickParse(), bodyParts.Select(n=>n.GetComponent<Rigidbody>()).ToArray(), x, y, z);
+                if (!(item.value is GameObject go))
+                    continue;
+                pool.Insert(go);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
 
+            foreach (var item in units)
+            {
+                if (!(item.value is Unit u))
+                    continue;
+                u.gameObject.AddComponent<HoldPosition>().Go(length, pool.ToArray().Select(n => env.cacheSystem.GetCachedComponent<Rigidbody>(n)).ToArray(), x, y, z);
+            }
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
     }
 }

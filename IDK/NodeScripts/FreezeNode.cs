@@ -1,32 +1,46 @@
-﻿using Landfall.TABS;
+﻿using AC.Help;
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using BitCode.Extensions;
+using Landfall.TABS;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class FreezeNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            foreach (var unitIndex in units)
+            var units = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            float pause = env.GetField(0).QuickParse();
+            FixedPool<Unit> pool = new FixedPool<Unit>(units.Length); 
+            foreach (var item in units)
             {
-                unitIndex.gameObject.AddComponent<FreezeBody>().Freeze();
-                unitIndex.gameObject.AddComponent<UnitDontWalkFor>().time = fields[0].QuickParse();
-                unitIndex.gameObject.GetComponent<UnitDontWalkFor>().Go();
-                unitIndex.gameObject.AddComponent<StopAttacks>().StopAttacksFor(fields[0].QuickParse());
+                if (!(item.value is Unit u))
+                    continue;
+                u.gameObject.AddComponent<FreezeBody>().Freeze();
+                u.gameObject.AddComponent<StopAttacks>().StopAttacksFor(pause);
+                UnitDontWalkFor unitDontWalkFor = u.gameObject.AddComponent<UnitDontWalkFor>();
+                unitDontWalkFor.time = pause;
+                unitDontWalkFor.Go();
             }
-
-            yield return savedNode.TriggerConnection(nodeRunner);
-            yield return new WaitForSeconds(fields[0].QuickParse());
-            foreach (var unitIndex in units)
+            env.runner.StartCoroutine(UnfreezeAfterPause(pool.ToArray(), pause));
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
+        }
+        public IEnumerator UnfreezeAfterPause(Unit[] unitsToUnfreeze, float pause)
+        {
+            yield return new WaitForSeconds(pause);
+            foreach (var unit in unitsToUnfreeze)
             {
-                unitIndex.gameObject.AddComponent<FreezeBody>().UnFreeze();
+                unit.gameObject.GetOrAddComponent<FreezeBody>().UnFreeze();
             }
-            
-
         }
     }
 }

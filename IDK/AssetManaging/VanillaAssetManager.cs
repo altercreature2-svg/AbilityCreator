@@ -1,92 +1,100 @@
-﻿using IDK.AssetManaging.AssetTypes;
+﻿using AC.AssetManaging.AssetTypes;
+using IDK.Node_Related_Scripts;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace IDK.AssetManaging
+namespace AC.AssetManaging
 {
     public class VanillaAssetManager
     {
+        // Optimized with String.Replace for better readability and performance
+        private static readonly string[] SuffixedToRemove = {
+            "_1 Prefabs_VB", "_1 Weapons_VB", "_4 Moves_VB",
+            "_2 Projectiles_VB", "_3 Effects_VB", "_0 UnitBases_VB"
+        };
+
         public static string CleanName(string name)
         {
-            name = (name.Contains("_1 Prefabs_VB") ? name.Replace("_1 Prefabs_VB", "") : (name.Contains("_1 Weapons_VB") ? name.Replace("_1 Weapons_VB", "") : name));
-            name = (name.Contains("_4 Moves_VB") ? name.Replace("_4 Moves_VB", "") : (name.Contains("_2 Projectiles_VB") ? name.Replace("_2 Projectiles_VB", "") : name));
-            name = (name.Contains("_3 Effects_VB") ? name.Replace("_3 Effects_VB", "") : (name.Contains("_0 UnitBases_VB") ? name.Replace("_0 UnitBases_VB", "") : name));
+            if (string.IsNullOrEmpty(name)) return name;
+
+            foreach (var suffix in SuffixedToRemove)
+            {
+                if (name.Contains(suffix))
+                {
+                    return name.Replace(suffix, "");
+                }
+            }
             return name;
         }
-        public Dictionary<AssetBaseType, Dictionary<string,object>> assets;
-        private Dictionary<string, Dictionary<string, object>> cache = new Dictionary<string, Dictionary<string, object>>();
+
+        // Changed outer key to 'string' (AssetType Name) for O(1) direct lookups
+        public Dictionary<string, Dictionary<string, object>> assets = new Dictionary<string, Dictionary<string, object>>();
 
         public VanillaAssetManager()
         {
-            List<AssetBaseType> assetTypes = new List<AssetBaseType>
+            var assetTypes = new List<AssetBaseType>
             {
-                new ExplosionAssetType(),
-                new ParticleAssetType(),
-                new ProjectileAssetType(),
-                new SoundAssetType(),
-                new SpriteAssetType(),
-                new UnitAssetType(),
-                new WeaponAssetType(),
-                new AbilityAssetType(),
-                new ClothingAssetType(),
-                new ComponentAssetType(),
-                new EffectAssetType(),
+                new ExplosionAssetType(), new ParticleAssetType(), new ProjectileAssetType(),
+                new SoundAssetType(), new SpriteAssetType(), new UnitAssetType(),
+                new WeaponAssetType(), new AbilityAssetType(), new ClothingAssetType(),
+                new ComponentAssetType(), new EffectAssetType(),
             };
-            assets = new Dictionary<AssetBaseType, Dictionary<string, object>>();
-            for (int i = 0; i < assetTypes.Count; i++)
-            {
-                Dictionary<string, object> data = assetTypes[i].UntypedData();
-                assets.Add(assetTypes[i], data);
-            }
-            RefreshCache();
-            for (int i = 0; i < assets.Count; i++)
-            {
-                string fileText = "";
-                AssetBaseType type = assets.Keys.ElementAt(i);
 
-                for (int o = 0; o < assets[type].Count; o++)
-                {
-                    KeyValuePair<string, object> pair = assets.Values.ElementAt(i).ElementAt(o);
-                    fileText += ">" + pair.Key + "\n";
-                }
-                File.WriteAllText(Path.Combine(AbilityCreator.path, type.GetName() + ".txt"), fileText);
-            }
-        }
-        public void RefreshCache()         
-        {
-            cache.Clear();
-            for (int i = 0; i < assets.Count; i++)
+            // 1. Populate the dictionary efficiently
+            foreach (var type in assetTypes)
             {
-                AssetBaseType type = assets.Keys.ElementAt(i);
-                Dictionary<string, object> dict = assets.First(x => x.Key.GetName() == type.GetName()).Value;
-                cache.Add(type.GetName(), dict);
+                assets.Add(type.GetName(), type.UntypedData());
+            }
+
+            // 2. Write files using StringBuilder (avoids massive GC allocations)
+            StringBuilder sb = new StringBuilder();
+            foreach (var typePair in assets)
+            {
+                sb.Clear();
+                foreach (var assetPair in typePair.Value)
+                {
+                    sb.Append('>').Append(assetPair.Key).AppendLine();
+                }
+
+                string targetPath = Path.Combine(FilePaths.AbilityCreatorPath, $"{typePair.Key}.txt");
+                File.WriteAllText(targetPath, sb.ToString());
             }
         }
+
+        // Direct O(1) dictionary lookup. No loops, instantly fast.
         public T GetAsset<T>(string assetType, string assetName)
         {
-            return (T)assets.Where(x => x.Key.GetName() == assetType).FirstOrDefault().Value.Where(x => x.Key == assetName).FirstOrDefault().Value;
+            if (assets.TryGetValue(assetType, out var typeDict))
+            {
+                if (typeDict.TryGetValue(assetName, out var asset))
+                {
+                    return (T)asset;
+                }
+            }
+            return default;
         }
+
+        // Drastically faster array conversion using casting copies
         public T[] GetAllAssets<T>(string assetType)
         {
-            return assets.Where(x => x.Key.GetName() == assetType).FirstOrDefault().Value.Select(n => (T)n.Value).ToArray();
-        }
-        public Dictionary<string,T> GetOld<T>(string assetType)
-        {
-            if (cache.ContainsKey(assetType))
+            if (assets.TryGetValue(assetType, out var typeDict))
             {
-                return cache[assetType].ToDictionary(kvp => kvp.Key, kvp => (T)kvp.Value);
+                return typeDict.Values.Cast<T>().ToArray();
             }
-            Dictionary<string, object> dict = assets.First(x => x.Key.GetName() == assetType).Value;
+            return Array.Empty<T>();
+        }
 
-            var result = dict.ToDictionary(
-                kvp => kvp.Key,
-                kvp => (T)kvp.Value
-            );
-            return result;
+        // Cleaned up type casting lookup
+        public Dictionary<string, T> GetOld<T>(string assetType)
+        {
+            if (assets.TryGetValue(assetType, out var typeDict))
+            {
+                return typeDict.ToDictionary(kvp => kvp.Key, kvp => (T)kvp.Value);
+            }
+            return new Dictionary<string, T>();
         }
     }
 }

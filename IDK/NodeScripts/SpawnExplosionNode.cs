@@ -1,62 +1,52 @@
-﻿using Landfall.TABS;
-using Landfall.TABS.AI.Components;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using IDK.Help;
+using Landfall.TABS;
 using Photon.Bolt.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using TFBGames;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class SpawnExplosionNode : IBehaviorNode
     {
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
+        public EasyPool easyPool;
+        public GameObject prefab;
+        public float damage;
+        public Team team;
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return savedNode.GetValuePool(unit);
-        }
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
-        {
-            GameObject[] gameObjs = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<GameObject>();
-            ValuePool valuePool = savedNode.GetValuePool(unit);
-            valuePool.ClearValues();
-            for (int o = 0; o < gameObjs.Length; o++)
+            var objs = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in objs)
             {
-                var explosion = Object.Instantiate(AbilityCreator.explosions[fields[0]]);
-                explosion.transform.position = gameObjs[o].transform.position;
-                Debug.Log("Summoned explosion: " + explosion.name);
-
-                explosion.transform.forward = gameObjs[o].transform.forward;
-                if (gameObjs[o].transform.root.GetComponent<Unit>())
-                {
-                    if (explosion.GetComponentInChildren<TeamHolder>())
-                    {
-                        explosion.GetComponentInChildren<TeamHolder>().team = gameObjs[o].transform.root.GetComponent<Unit>().Team;
-                    }
-                    explosion.SetActive(true);
-                    if (explosion.GetComponentInChildren<TeamHolder>())
-                    {
-                        explosion.GetComponentInChildren<TeamHolder>().team = gameObjs[o].transform.root.GetComponent<Unit>().Team;
-                    }
-                    for (int l = 0; l < explosion.GetComponentsInChildren<Explosion>().Length; l++)
-                    {
-                        explosion.GetComponentsInChildren<Explosion>()[l].damage = fields[1].QuickParse();
-                        if (fields[2] == "My team")
-                        {
-                            typeof(Explosion).GetField("team", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(explosion.GetComponentsInChildren<Explosion>()[l], gameObjs[o].transform.root.GetComponent<Unit>().Team);
-                            typeof(Explosion).GetField("ownUnit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(explosion.GetComponentsInChildren<Explosion>()[l], gameObjs[o].transform.root.GetComponent<Unit>());
-                        }
-                        else
-                        {
-                            typeof(Explosion).GetField("team", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(explosion.GetComponentsInChildren<Explosion>()[l], TeamUtlity.GetOtherTeam(gameObjs[o].transform.root.GetComponent<Unit>().Team));
-                            typeof(Explosion).GetField("ownUnit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(explosion.GetComponentsInChildren<Explosion>()[l], gameObjs[o].transform.root.GetComponent<Unit>());
-                        }
-                    }
-                }
-                
-                valuePool.AddValue(explosion);               
+                if (!(item.value is GameObject go))
+                    continue;
+                Transform transform = go.transform;
+                GameObject explosion = easyPool.Spawn(transform.position, transform.rotation);
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveGameObject, explosion);
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            prefab = AbilityCreator.explosions[env.GetField(0)];
+            damage = env.GetField(1).QuickParse();
+            team = env.GetField(2) == "My team" ? env.unit.Team : env.unit.Team.Reverse();
+            easyPool = new EasyPool(prefab, go => OnSpawn(env,go));
+            return null;
+        }
+        public void OnSpawn(NodeEnv env, GameObject go)
+        {
+            TeamHolder[] teamHolders = env.cacheSystem.GetCachedComponentsInChildren<TeamHolder>(go);
+            Explosion explosion = env.cacheSystem.GetCachedComponent<Explosion>(go);
+            foreach (var teamHolder in teamHolders)
+            {
+                teamHolder.team = team;
+            }
+            explosion?.SetField("team", team);
+            explosion?.SetField("ownUnit", env.unit);
         }
     }
 }

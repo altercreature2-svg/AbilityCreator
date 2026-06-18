@@ -1,31 +1,33 @@
-﻿using System.Collections;
+﻿using IDK.Node_Related_Scripts;
+using System.Collections;
 using System.IO;
 using UnityEngine;
 
-namespace IDK.ExampleAbilites
+namespace AC.ExampleAbilites
 {
     public class UpdateSaveManager : MonoBehaviour
     {
+        public const string Version = "3.0.0";
         public static void Handle()
         {
-            if (!File.Exists(AbilityCreator.path + "/SAVE"))
+            if (!File.Exists(FilePaths.AbilityCreatorPath + "/SAVE"))
             {
-                FileStream fileStream = File.Create(AbilityCreator.path + "/SAVE");
+                FileStream fileStream = File.Create(FilePaths.AbilityCreatorPath + "/SAVE");
                 fileStream.Close();
-                File.WriteAllText(AbilityCreator.path + "/SAVE", "2.6.0");
+                File.WriteAllText(FilePaths.AbilityCreatorPath + "/SAVE", Version);
                 ExampleManager.WriteAll();
                 return;
             }
             else
             {
-                if (File.ReadAllText(AbilityCreator.path + "/SAVE").Contains("2.6.0"))
+                if (File.ReadAllText(FilePaths.AbilityCreatorPath + "/SAVE").Contains(Version))
                 {
                     return;
                 }
                 else
                 {
                     ExampleManager.WriteAll();
-                    File.WriteAllText(AbilityCreator.path + "/SAVE", "2.6.0");
+                    File.WriteAllText(FilePaths.AbilityCreatorPath + "/SAVE", Version);
                 }
             }
         }

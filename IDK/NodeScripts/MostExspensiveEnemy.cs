@@ -1,4 +1,6 @@
-﻿using Landfall.TABS;
+﻿using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
+using Landfall.TABS;
 using Landfall.TABS.AI.Systems;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,29 +8,29 @@ using System.Linq;
 using Unity.Entities;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class MostExspensiveEnemy : IValueNode
     {
-        public override bool IsDynamic()
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-            return true;
-        }
-        public override ValuePool GetDynamicValue(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            ValuePool valuePool = new ValuePool();
-            Unit[] units = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveUnit).GetValuePoolSmart(unit).GetValues<Unit>();
-            Debug.Log("Units Length:" + units.Length);
-            for (int i = 0; i < units.Length; i++)
+            env.ClearValue(NodeBlueprint.ConnectionClass.GiveUnit);
+            var unitsEnum = env.GetValues(NodeBlueprint.ConnectionClass.ReciveUnit);
+            foreach (var item in unitsEnum)
             {
-                Unit expensiveUnit = GetMostExpensiveUnit(units[i], units[i].Team);
-                valuePool.AddValue(expensiveUnit);
+                if (!(item.value is Unit u))
+                    continue;
+                env.AddValue(NodeBlueprint.ConnectionClass.GiveUnit, GetMostExpensiveUnit(env.unit, env.unit.Team.Reverse()));
             }
-            return valuePool;
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
+        }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
         }
         public Unit GetMostExpensiveUnit(Unit meUnit, Team team)
         {
-            var allUnits = World.Active.GetOrCreateManager<TeamSystem>().GetAllUnits().Where(n => n.Team == TeamUtlity.GetOtherTeam(team));
+            var allUnits = World.Active.GetOrCreateManager<TeamSystem>().GetTeamUnits(team);
             float closest = 999;
             Unit closestUnit = null;
             Unit me = meUnit;
@@ -52,10 +54,6 @@ namespace IDK.NodeScripts
             }
             Debug.Log($"Found closest meUnit! ({closestUnit.unitBlueprint.Entity.Name})");
             return closestUnit;
-        }
-        public override ValuePool GetValuePool(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields)
-        {
-            return null;
         }
 
     }

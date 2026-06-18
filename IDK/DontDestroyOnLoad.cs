@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace IDK
+namespace AC
 {
     public class DontDestroyOnLoad
     {

@@ -1,23 +1,26 @@
 ﻿
 
+using AC.Node_Related_Scripts.NodeRunning;
+using AC.Node_Related_Scripts.NodeRunning.Instructions.Courtines;
 using Landfall.TABS;
 using Landfall.TABS.UnitEditor;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IDK.NodeScripts
+namespace AC.NodeScripts
 {
     public class DestroyNode : IBehaviorNode
     {
-        public override IEnumerator RunNode(LegacySavedNode savedNode, Unit unit, List<NodeComponent.LegacyConnection> connections, string[] fields, NodeRunner nodeRunner)
+        public IEnumerator<CoroutineReturn> Execute(NodeEnv env)
         {
-
-            Object[] gameObjects = connections.GetNode(NodeBlueprint.ConnectionClass.ReciveGameObject).GetValuePoolSmart(unit).GetValues<Object>();
-            Debug.Log($"{gameObjects.Length} objects to destroy!");
-            foreach (var gameObj in gameObjects)
+            var gameObjects = env.GetValues(NodeBlueprint.ConnectionClass.ReciveGameObject);
+            foreach (var item in gameObjects)
             {
-                if (gameObj is GameObject @object)
+                if (!(item.value is UnityEngine.Object obj))
+                    continue;
+                if (obj is GameObject @object)
                 {
                     CharacterItem characterItem = @object.GetComponent<CharacterItem>();
                     Debug.Log("prop to destroy:" + characterItem);
@@ -27,14 +30,16 @@ namespace IDK.NodeScripts
                         Debug.Log("Removed prop!");
                         continue;
                     }
-                    
                 }
-                
-                Object.Destroy(gameObj);
-                Debug.Log("Destroyed:" + gameObj.name + "!");
+                UnityEngine.Object.Destroy(obj);
+                Debug.Log("Destroyed:" + obj.name + "!");
             }
-            yield return savedNode.TriggerConnection(nodeRunner);
-
+            yield return new CoroutineReturn(CoroutineReturn.CourtineType.ContinueBranch);
         }
+        public IEnumerator<CoroutineReturn> Cache(NodeEnv env)
+        {
+            return null;
+        }
+        
     }
 }
